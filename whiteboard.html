@@ -1,0 +1,3581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>السبورة التعليمية الذكية - منصة الهليهي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js for PDF import -->
+    
+
+    <style>
+        :root { 
+            --primary: #0f5d57; /* لون سكوليكا الأخضر */
+            --primary-dark: #0a423e; 
+            --accent: #f59e0b;
+            --bg-stage: #e4e7eb;
+        }
+        * { box-sizing: border-box; direction: rtl; }
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            margin: 0; padding: 0; overflow: hidden;
+            background-color: var(--bg-stage); /* لون الخلفية الرمادي المحترف */
+            touch-action: none; user-select: none;
+            -webkit-user-select: none; height: 100vh;
+            display: flex; flex-direction: column;
+        }
+        #board { display: block; width: 100%; height: 100%; }
+        #laser-pointer { pointer-events: none; transition: opacity 0.1s; }
+        #text-input {
+            background: rgba(255,255,255,0.97); border: 2px dashed #2563eb;
+            outline: none; font-family: 'Cairo', sans-serif; padding: 6px 12px;
+            border-radius: 10px; resize: both; overflow: hidden;
+            min-width: 140px; box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+            color: #0f172a; font-weight: 700; direction: rtl; text-align: right;
+        }
+
+        /* ── Unified Tool Button ── */
+        .tool-btn { transition: all 0.2s cubic-bezier(0.16,1,0.3,1); border-radius: 12px; position: relative; }
+        .tool-btn:hover { transform: scale(1.12); }
+        .tool-btn.active { transform: scale(1.12); box-shadow: 0 4px 14px rgba(37,99,235,0.3); background: #dbeafe; color: #2563eb; }
+
+        .color-wrapper { transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .color-wrapper.active { transform: scale(1.25); border-color: #1e293b !important; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1e293b; }
+        .color-picker { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+        /* ── Modals ── */
+        .modal-overlay { background: rgba(15,23,42,0.65); backdrop-filter: blur(8px); }
+
+        /* ── Scrollbar ── */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+        /* ── Top Header ── */
+        #top-header-container { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), margin-bottom 0.35s ease; position: relative; z-index: 50; }
+        #top-header-container.collapsed { transform: translateY(-100%); margin-bottom: -56px; }
+
+        /* ── Toggle Handle Buttons (HIGH CONTRAST) ── */
+        .toggle-handle-btn {
+            background: #2563eb !important; color: #ffffff !important;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.5) !important;
+            border: 2.5px solid #ffffff !important;
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            /* CRITICAL: prevent movement on hover */
+            transform: none !important;
+        }
+        .toggle-handle-btn:hover {
+            background: #1d4ed8 !important;
+            box-shadow: 0 6px 20px rgba(37,99,235,0.65) !important;
+            transform: none !important;
+        }
+        .toggle-handle-btn i { pointer-events: none; }
+
+        /* ── Right Toolbar ── */
+        .right-bar-container {
+            transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+            position: fixed; right: 12px; top: 50%; transform: translateY(-50%); z-index: 50;
+        }
+        .right-bar-container.collapsed { transform: translateY(-50%) translateX(calc(100% + 24px)); }
+
+        /* ── Bottom Toolbar ── */
+        .bottom-bar-container {
+            transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 40;
+        }
+        .bottom-bar-container.collapsed { transform: translateX(-50%) translateY(calc(100% + 20px)); }
+
+        /* ── Shape Group Dropdown ── */
+        #shape-dropdown {
+            position: absolute; bottom: 110%; right: 0;
+            background: white; border: 1px solid #e2e8f0;
+            border-radius: 14px; padding: 6px; display: none;
+            flex-direction: column; gap: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100; min-width: 130px;
+        }
+        #shape-dropdown.open { display: flex; }
+        .shape-opt { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; color: #334155; transition: background 0.15s; }
+        .shape-opt:hover { background: #f0f9ff; color: #0ea5e9; }
+
+        /* ── Mind Map ── */
+        .mindmap-node {
+            position: absolute; cursor: move;
+            background: white; border: 2px solid #2563eb;
+            border-radius: 12px; padding: 6px 14px;
+            font-family: 'Cairo', sans-serif; font-weight: 700;
+            font-size: 13px; color: #1e293b; user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            min-width: 80px; text-align: center; direction: rtl;
+            white-space: nowrap;
+        }
+        .mindmap-node.selected { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.35); }
+        #mindmap-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+        #mindmap-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 35;
+        }
+        #mindmap-overlay > * {
+            pointer-events: auto;
+        }
+
+        /* ── Toast ── */
+        #toast-container { position: fixed; top: 70px; left: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast-msg { pointer-events: auto; animation: toastIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards; display: flex; align-items: center; gap: 10px; padding: 11px 18px; border-radius: 14px; color: #fff; font-weight: 700; font-size: 0.83rem; box-shadow: 0 10px 25px rgba(0,0,0,0.16); max-width: 360px; }
+        .toast-success { background: linear-gradient(135deg,#10b981,#059669); }
+        .toast-error   { background: linear-gradient(135deg,#ef4444,#dc2626); }
+        .toast-warning { background: linear-gradient(135deg,#f59e0b,#d97706); }
+        .toast-info    { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+        @keyframes toastIn { 0%{opacity:0;transform:translateY(-15px) scale(0.95)} 100%{opacity:1;transform:none} }
+
+        /* ── Stamps ── */
+        .stamp-btn { font-size: 22px; cursor: pointer; padding: 6px; border-radius: 10px; transition: background 0.15s, transform 0.15s; user-select: none; }
+        .stamp-btn:hover { background: #f0f9ff; transform: scale(1.2); }
+        .stamp-btn.active-stamp { background: #dbeafe; transform: scale(1.2); }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+        }
+        .stamp-tab { padding: 4px 8px; font-size: 11px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; color: #64748b; }
+        .stamp-tab.active { background: #2563eb; color: #fff; }
+        .stamp-tab:hover:not(.active) { background: #f1f5f9; }
+        .stamp-tab-content { display: none; }
+        .stamp-tab-content.active { display: grid; }
+        .celebration-stamp { font-size: 13px; font-weight: 800; padding: 6px 10px; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .celebration-stamp:hover { transform: scale(1.08); }
+        #pdf-viewer-panel .pdf-page-wrapper { position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+        #pdf-viewer-panel .pdf-page-wrapper canvas { display: block; width: 100%; }
+        #pdf-viewer-panel .pdf-draw-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+</head>
+<body id="body-bg">
+
+    <!-- Toast -->
+    <div id="toast-container"></div>
+
+    <!-- Hidden Inputs -->
+    <div id="laser-pointer" class="fixed w-4 h-4 bg-red-500 rounded-full shadow-[0_0_15px_4px_rgba(239,68,68,0.8)] opacity-0 z-40 transform -translate-x-1/2 -translate-y-1/2"></div>
+    <textarea id="text-input" class="fixed hidden z-40" placeholder="اكتب هنا باللغة العربية..."></textarea>
+    <input type="file" id="image-upload" accept="image/*" class="hidden">
+    <input type="file" id="frame-upload" accept="image/*" class="hidden" onchange="handleFrameUpload(event)">
+
+    <!-- ═══════════════════════════════════════════
+         1. الشريط العلوي
+         ═══════════════════════════════════════════ -->
+    <div id="top-header-container" class="bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-md p-2.5 flex items-center justify-between gap-2 flex-wrap relative">
+
+        <!-- يمين: رجوع + اسم الدرس + الصف + المجموعة -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="admin.html" class="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-blue-100 transition-colors">
+                <i class="fas fa-arrow-right"></i><span class="hidden md:inline">الرئيسية</span>
+            </a>
+            <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+            <input type="text" id="lesson-name" placeholder="اسم الدرس..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs md:text-sm font-bold text-slate-800 outline-none focus:border-blue-500 w-36 md:w-52 transition-all text-right" dir="rtl">
+
+            <!-- الصف الدراسي -->
+            <select id="wb-grade-select" onchange="onGradeChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5 text-xs md:text-sm font-bold text-slate-800 outline-none focus:border-blue-500 cursor-pointer max-w-[140px]" dir="rtl">
+                <option value="">⏳ جاري تحميل الصفوف...</option>
+            </select>
+
+            <!-- المجموعة -->
+            <select id="wb-group-select" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5 text-xs md:text-sm font-bold text-slate-800 outline-none focus:border-blue-500 cursor-pointer max-w-[140px]" dir="rtl">
+                <option value="">جميع المجموعات</option>
+            </select>
+        </div>
+
+        <!-- يسار: أزرار الإجراءات -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="openSavedBoardsModal()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-folder-open text-purple-600"></i><span class="hidden sm:inline">المحفوظة</span>
+            </button>
+            <button onclick="saveCurrentBoardToCloud()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm">
+                <i class="fas fa-cloud"></i><span class="hidden sm:inline">حفظ بالسحابة</span>
+            </button>
+            <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+            <!-- الصفحات -->
+            <div class="flex items-center bg-slate-100 rounded-xl p-1 gap-1">
+                <button onclick="prevPage()" class="tool-btn text-slate-600 hover:bg-white p-1.5 rounded-lg text-xs font-bold" title="الصفحة السابقة"><i class="fas fa-chevron-right"></i></button>
+                <span id="page-indicator" class="text-xs font-extrabold text-blue-700 px-2">صفحة 1/1</span>
+                <button onclick="goToNextPageOnly()" class="tool-btn text-slate-600 hover:bg-white p-1.5 rounded-lg text-xs font-bold" title="الصفحة التالية (لن تضيف صفحة)"><i class="fas fa-chevron-left"></i></button>
+                <button onclick="addNewPage()" class="bg-blue-600 hover:bg-blue-700 text-white p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm" title="إضافة صفحة جديدة"><i class="fas fa-plus"></i><span class="hidden sm:inline">جديدة</span></button>
+                <button onclick="deleteCurrentPage()" class="bg-red-50 hover:bg-red-100 text-red-600 p-1.5 rounded-lg text-xs font-bold" title="حذف الصفحة الحالية"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <button onclick="openSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-xs" title="إعدادات السبورة"><i class="fas fa-cog text-base"></i></button>
+            <button onclick="saveWhiteboardToLibrary()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-3 py-2 rounded-xl text-xs md:text-sm shadow-md flex items-center gap-2 transition-all">
+                <i class="fas fa-cloud-upload-alt"></i><span>حفظ وإرسال للمكتبة</span>
+            </button>
+        </div>
+
+        <!-- زر طي الشريط العلوي -->
+        <button id="toggle-top-btn" onclick="toggleTopHeader()" class="toggle-handle-btn absolute bottom-[-18px] left-1/2 -translate-x-1/2 h-5 w-12 rounded-b-xl flex items-center justify-center text-xs font-bold z-50" title="طي / إظهار الشريط العلوي">
+            <i id="toggle-top-icon" class="fas fa-chevron-up"></i>
+        </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         2. الشريط الأيمن
+         ═══════════════════════════════════════════ -->
+    <div id="right-bar-container" class="right-bar-container pointer-events-auto flex items-center">
+
+        <!-- زر الطي (خارج الشريط تماماً على اليسار منه) -->
+        <button id="toggle-right-btn" onclick="toggleRightBar()" class="toggle-handle-btn absolute -left-9 top-1/2 -translate-y-1/2 w-9 h-14 rounded-l-2xl flex items-center justify-center font-bold text-sm z-50 shadow-2xl" title="طي / إظهار الشريط">
+            <i id="toggle-right-icon" class="fas fa-chevron-right pointer-events-none"></i>
+        </button>
+
+        <div class="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl p-2 flex flex-col items-center gap-1.5 border border-slate-200">
+            <button id="btn-laser" class="tool-btn text-slate-500 hover:bg-red-50 hover:text-red-500 p-2" title="مؤشر ليزر"><i class="ph ph-crosshair text-xl"></i></button>
+            <div class="w-6 h-px bg-slate-200"></div>
+            <div class="relative" id="pen-group">
+                <button id="btn-pen" class="tool-btn active p-2 flex items-center gap-0.5" title="قلم [P]" onclick="togglePenMenu()">
+                    <i class="ph ph-pen-nib text-xl"></i>
+                    <i class="fas fa-caret-down text-[9px]"></i>
+                </button>
+                <div id="pen-menu" class="hidden absolute top-0 right-full mr-2 bg-white rounded-xl shadow-xl border border-slate-200 p-3 w-[260px] flex flex-col gap-3 z-[100]" dir="rtl">
+                    <div class="flex gap-2">
+                        <button type="button" class="pen-type-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-bold border-2 border-slate-200 hover:border-teal-500 text-slate-700" data-pen="pen">قلم</button>
+                        <button type="button" class="pen-type-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-bold border-2 border-slate-200 hover:border-teal-500 text-slate-700" data-pen="nib">خط عربي</button>
+                        <button type="button" class="pen-type-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-bold border-2 border-slate-200 hover:border-teal-500 text-slate-700" data-pen="chalk">طباشير</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" class="pen-type-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-bold border-2 border-slate-200 hover:border-teal-500 text-slate-700" data-pen="rainbow">قوس قزح</button>
+                        <button type="button" class="pen-type-btn flex-1 py-1.5 px-2 rounded-lg text-sm font-bold border-2 border-slate-200 hover:border-teal-500 text-slate-700" data-pen="magic">حبر يختفي</button>
+                    </div>
+                    <label class="flex items-center justify-between mt-1 cursor-pointer">
+                        <span class="text-sm font-bold text-slate-700">ضغط القلم</span>
+                        <input type="checkbox" id="chk-pressure" checked class="w-5 h-5 accent-teal-600 cursor-pointer">
+                    </label>
+                </div>
+            </div>
+            <button id="btn-highlighter" class="tool-btn text-slate-500 hover:bg-yellow-50 hover:text-yellow-600 p-2" title="تظليل [H]"><i class="ph ph-highlighter text-xl"></i></button>
+            <button id="btn-eraser" class="tool-btn text-slate-500 hover:bg-pink-50 hover:text-pink-600 p-2" title="ممحاة [E]"><i class="ph ph-eraser text-xl"></i></button>
+            <div class="w-6 h-px bg-slate-200"></div>
+            <!-- ألوان القلم -->
+            <div class="flex flex-col gap-1.5 my-0.5">
+                <div class="color-wrapper active relative w-6 h-6 rounded-full border-2 border-slate-800 cursor-pointer" data-color="#000000" style="background:#000000;"><input type="color" class="color-picker" value="#000000"></div>
+                <div class="color-wrapper relative w-6 h-6 rounded-full border-2 border-transparent cursor-pointer" data-color="#dc2626" style="background:#dc2626;"><input type="color" class="color-picker" value="#dc2626"></div>
+                <div class="color-wrapper relative w-6 h-6 rounded-full border-2 border-transparent cursor-pointer" data-color="#2563eb" style="background:#2563eb;"><input type="color" class="color-picker" value="#2563eb"></div>
+                <div class="color-wrapper relative w-6 h-6 rounded-full border-2 border-transparent cursor-pointer" data-color="#16a34a" style="background:#16a34a;"><input type="color" class="color-picker" value="#16a34a"></div>
+                <div class="color-wrapper relative w-6 h-6 rounded-full border-2 border-transparent cursor-pointer" data-color="#d97706" style="background:#d97706;"><input type="color" class="color-picker" value="#d97706"></div>
+                <div class="color-wrapper relative w-6 h-6 rounded-full border-2 border-transparent cursor-pointer" data-color="#9333ea" style="background:#9333ea;"><input type="color" class="color-picker" value="#9333ea"></div>
+            </div>
+            <div class="w-6 h-px bg-slate-200"></div>
+            <button id="btn-undo" class="tool-btn p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600" title="تراجع [Ctrl+Z]"><i class="ph ph-arrow-counter-clockwise text-xl"></i></button>
+            <button id="btn-redo" class="tool-btn p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600" title="إعادة [Ctrl+Y]"><i class="ph ph-arrow-clockwise text-xl"></i></button>
+            <button id="btn-clear" class="tool-btn p-2 text-red-400 hover:bg-red-50 hover:text-red-600" title="مسح الصفحة"><i class="ph ph-trash text-xl"></i></button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         3. الشريط السفلي
+         ═══════════════════════════════════════════ -->
+    <div id="bottom-bar-container" class="bottom-bar-container pointer-events-none flex flex-col items-center">
+
+        <!-- زر طي الشريط السفلي -->
+        <button id="toggle-bottom-btn" onclick="toggleBottomBar()" class="pointer-events-auto toggle-handle-btn absolute -top-7 left-1/2 -translate-x-1/2 h-7 w-14 rounded-t-2xl flex items-center justify-center font-bold text-xs z-50 shadow-2xl" title="طي / إظهار الشريط السفلي">
+            <i id="toggle-bottom-icon" class="fas fa-chevron-down pointer-events-none"></i>
+        </button>
+
+        <div class="pointer-events-auto bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl p-2 flex flex-row items-center justify-center gap-1.5 border border-slate-200 max-w-4xl">
+
+            <button id="btn-select" class="tool-btn text-slate-500 hover:bg-purple-50 hover:text-purple-600 p-2" title="تحديد [S]"><i class="ph ph-cursor text-xl"></i></button>
+            <button id="btn-hand" class="tool-btn text-slate-500 hover:bg-amber-50 hover:text-amber-600 p-2" title="تحريك [M]"><i class="ph ph-hand-palm text-xl"></i></button>
+            <div class="h-6 w-px bg-slate-300 mx-0.5"></div>
+
+            <button id="btn-text" class="tool-btn text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 p-2" title="نص [T]"><i class="ph ph-text-t text-xl"></i></button>
+
+            <!-- إدراج صورة -->
+            <div class="relative">
+                <button id="btn-media" onclick="toggleMediaDropdown()" class="tool-btn text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 p-2 flex items-center gap-0.5" title="إدراج صورة أو PDF">
+                    <i class="ph ph-image text-xl"></i>
+                    <i class="fas fa-caret-down text-[9px]"></i>
+                </button>
+                <div id="media-dropdown" class="hidden absolute bottom-110% right-0 bg-white border border-slate-200 rounded-2xl p-2 flex flex-col gap-1.5 shadow-xl z-50 min-w-[140px]" style="bottom: 110%;">
+                    <button onclick="triggerImageUpload()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                        <i class="ph ph-image text-lg"></i> إدراج صورة
+                    </button>
+                    
+                </div>
+            </div>
+
+            <!-- جدول -->
+            <button onclick="openTableModal()" class="tool-btn text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 p-2" title="إنشاء جدول"><i class="ph ph-table text-xl"></i></button>
+
+            <!-- الأشكال (مجمّعة) -->
+            <div class="relative" id="shapes-group">
+                <button id="btn-shapes" onclick="toggleShapeDropdown()" class="tool-btn text-slate-500 hover:bg-sky-50 hover:text-sky-600 p-2 flex items-center gap-0.5" title="الأشكال الهندسية">
+                    <i id="shape-icon" class="ph ph-line-segment text-xl"></i>
+                    <i class="fas fa-caret-down text-[9px]"></i>
+                </button>
+                <div id="shape-dropdown">
+                    <div class="shape-opt" onclick="selectShape('line')"><i class="ph ph-line-segment text-lg text-sky-500"></i> خط مستقيم</div>
+                    <div class="shape-opt" onclick="selectShape('rect')"><i class="ph ph-rectangle text-lg text-violet-500"></i> مستطيل</div>
+                    <div class="shape-opt" onclick="selectShape('circle')"><i class="ph ph-circle text-lg text-pink-500"></i> دائرة / بيضاوي</div>
+                    <div class="shape-opt" onclick="selectShape('arrow')"><i class="ph ph-arrow-left text-lg text-amber-500"></i> سهم</div>
+                </div>
+            </div>
+
+            <!-- المخططات والخرائط الذهنية -->
+            <button id="btn-mindmap" onclick="insertQuickMindMap()" class="tool-btn text-slate-500 hover:bg-fuchsia-50 hover:text-fuchsia-600 p-2" title="خريطة ذهنية / مخطط">
+                <i class="ph ph-graph text-xl"></i>
+            </button>
+
+            <!-- الطوابع والرموز -->
+            <div class="relative" id="stamps-group">
+                <button id="btn-stamps" onclick="toggleStampsDropdown()" class="tool-btn text-slate-500 hover:bg-orange-50 hover:text-orange-600 p-2 flex items-center gap-0.5" title="طوابع ورموز">
+                    <i class="ph ph-star text-xl"></i>
+                    <i class="fas fa-caret-down text-[9px]"></i>
+                </button>
+                <div id="stamps-dropdown" class="hidden absolute bottom-full right-0 bg-white border border-slate-200 rounded-2xl p-3 shadow-xl z-50 min-w-[220px]" style="bottom: 110%;">
+                    <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
+                        <div class="flex gap-1">
+                            <div class="stamp-tab active" onclick="switchStampTab(0)">تقييم</div>
+                            <div class="stamp-tab" onclick="switchStampTab(1)">احتفالية</div>
+                            <div class="stamp-tab" onclick="switchStampTab(2)">رموز</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stamp-tab-content active grid grid-cols-4 gap-2" id="stamp-tab-0">
+                        <span class="stamp-btn" onclick="selectStamp('check')" title="صح">✅</span>
+                        <span class="stamp-btn" onclick="selectStamp('wrong')" title="خطأ">❌</span>
+                        <span class="stamp-btn" onclick="selectStamp('star')" title="نجمة">⭐</span>
+                        <span class="stamp-btn" onclick="selectStamp('thumbsup')" title="إعجاب">👍</span>
+                        <span class="stamp-btn" onclick="selectStamp('excellent')" title="ممتاز">💯</span>
+                        <span class="stamp-btn" onclick="selectStamp('love')" title="حب">❤️</span>
+                    </div>
+                    
+                    <div class="stamp-tab-content flex flex-col gap-1.5" id="stamp-tab-1">
+                        <div class="celebration-stamp bg-gradient-to-r from-amber-400 to-orange-500 text-white" onclick="selectStamp('أحسنت!')">أحسنت! 🎉</div>
+                        <div class="celebration-stamp bg-gradient-to-r from-emerald-400 to-green-500 text-white" onclick="selectStamp('ممتاز')">ممتاز ⭐</div>
+                        <div class="celebration-stamp bg-gradient-to-r from-cyan-400 to-blue-500 text-white" onclick="selectStamp('الله ينور')">الله ينور 🌟</div>
+                        <div class="celebration-stamp bg-gradient-to-r from-fuchsia-400 to-purple-500 text-white" onclick="selectStamp('رائع')">رائع 🏆</div>
+                        <div class="celebration-stamp bg-gradient-to-r from-rose-400 to-red-500 text-white" onclick="selectStamp('مبدع')">مبدع 💎</div>
+                        <div class="celebration-stamp bg-gradient-to-r from-indigo-400 to-violet-500 text-white" onclick="selectStamp('بطل')">بطل 🦸</div>
+                    </div>
+
+                    <div class="stamp-tab-content grid grid-cols-6 gap-1" id="stamp-tab-2">
+                        <span class="stamp-btn" onclick="selectStamp('❓')" title="سؤال">❓</span>
+                        <span class="stamp-btn" onclick="selectStamp('❗')" title="تنبيه">❗</span>
+                        <span class="stamp-btn" onclick="selectStamp('💡')" title="فكرة">💡</span>
+                        <span class="stamp-btn" onclick="selectStamp('📌')" title="تدوين">📌</span>
+                        <span class="stamp-btn" onclick="selectStamp('🔴')" title="دائرة حمراء">🔴</span>
+                        <span class="stamp-btn" onclick="selectStamp('🟡')" title="دائرة صفراء">🟡</span>
+                        <span class="stamp-btn" onclick="selectStamp('🟢')" title="دائرة خضراء">🟢</span>
+                        <span class="stamp-btn" onclick="selectStamp('⚡')" title="برق">⚡</span>
+                        <span class="stamp-btn" onclick="selectStamp('📚')" title="كتب">📚</span>
+                        <span class="stamp-btn" onclick="selectStamp('✏️')" title="قلم">✏️</span>
+                        <span class="stamp-btn" onclick="selectStamp('🎯')" title="هدف">🎯</span>
+                    </div>
+
+                    <div class="mt-2 pt-2 border-t border-slate-100 flex justify-between items-center">
+                        <p class="text-[9px] text-slate-400 font-semibold">انقر للإدراج</p>
+                        <button onclick="toggleSoundMute()" id="btn-sound-mute" class="text-xs text-slate-500 hover:text-slate-800"><i class="fas fa-volume-up"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-6 w-px bg-slate-300 mx-0.5"></div>
+
+            <!-- سمك الخط -->
+            <div class="flex items-center gap-1 px-1">
+                <input type="range" id="size-slider" min="1" max="50" value="4" class="accent-blue-600 h-2 w-16 md:w-24 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="h-6 w-px bg-slate-300 mx-0.5"></div>
+
+            <!-- زوم -->
+            <div class="flex items-center bg-slate-100 rounded-xl p-0.5">
+                <button id="btn-zoom-out" class="tool-btn text-slate-500 hover:bg-white p-1"><i class="ph ph-magnifying-glass-minus text-lg"></i></button>
+                <span id="zoom-level" class="text-xs font-bold text-slate-600 w-10 text-center">100%</span>
+                <button id="btn-zoom-in" class="tool-btn text-slate-500 hover:bg-white p-1"><i class="ph ph-magnifying-glass-plus text-lg"></i></button>
+            </div>
+
+            <div class="h-6 w-px bg-slate-300 mx-0.5"></div>
+            <button id="btn-fullscreen" class="tool-btn p-2 text-slate-500 hover:bg-blue-50 hover:text-blue-600" title="ملء الشاشة"><i class="ph ph-corners-out text-xl"></i></button>
+            <button id="btn-export" class="tool-btn p-2 text-slate-500 hover:bg-green-50 hover:text-green-600" title="تصدير"><i class="ph ph-export text-xl"></i></button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODALS
+         ═══════════════════════════════════════════ -->
+
+    <!-- Modal: إعدادات السبورة -->
+    <div id="modal-settings" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-[500px] max-w-[95vw] relative border border-slate-100 text-right max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeModal('modal-settings')" class="absolute top-4 left-4 text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            <div class="flex items-center gap-2 mb-4 text-blue-600 pb-3 border-b border-slate-100">
+                <i class="fas fa-cog text-2xl"></i>
+                <h3 class="text-xl font-extrabold text-slate-800">إعدادات السبورة والإطار</h3>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4">
+                    <label class="block text-sm font-extrabold text-slate-800 mb-1 flex items-center gap-2"><i class="fas fa-image text-blue-600"></i> إطار السبورة المخصص:</label>
+                    <p class="text-xs text-slate-500 font-semibold mb-3 leading-relaxed">قم بتصميم صورة إطار بخلفية شفافة. <br><strong class="text-blue-700">المقاس الموصى به: 1920 × 1080 بيكسل (بصيغة PNG).</strong></p>
+                    <div id="frame-preview-container" class="hidden mb-3">
+                        <div class="relative rounded-xl border border-slate-300 overflow-hidden bg-white max-h-36 flex items-center justify-center">
+                            <img id="frame-preview-img" src="" class="max-h-36 object-contain" alt="معاينة الإطار">
+                            <button onclick="removeCustomFrame()" class="absolute top-2 left-2 bg-red-600 text-white rounded-lg p-1.5 text-xs font-bold shadow-md hover:bg-red-700"><i class="fas fa-trash"></i> حذف</button>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('frame-upload').click()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs flex justify-center items-center gap-2 shadow-sm"><i class="fas fa-upload"></i> رفع صورة الإطار</button>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <label class="block text-sm font-extrabold text-slate-800">تثبيت السبورة من الحركة:</label>
+                        <p class="text-xs text-slate-500 font-semibold">يجعل السبورة صفحة واحدة ثابتة للإطار المخصص.</p>
+                    </div>
+                    <input type="checkbox" id="chk-lock-pan" onchange="toggleLockPan(this.checked)" class="w-6 h-6 accent-blue-600 cursor-pointer">
+                </div>
+
+                <div class="bg-teal-50/70 border border-teal-200/80 rounded-2xl p-4">
+                    <label class="block text-sm font-extrabold text-slate-800 mb-2 flex items-center gap-2"><i class="ph ph-grid-four text-teal-600 text-lg"></i> خلفية الصفحة الحالية:</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" onclick="setBgState(0)" data-bgopt="0" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 bg-white hover:border-teal-500 transition-all">بيضاء</button>
+                        <button type="button" onclick="setBgState(1)" data-bgopt="1" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 bg-white hover:border-teal-500 transition-all">سطور</button>
+                        <button type="button" onclick="setBgState(2)" data-bgopt="2" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 bg-white hover:border-teal-500 transition-all">شبكة</button>
+                        <button type="button" onclick="setBgState(4)" data-bgopt="4" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2 text-xs font-bold text-teal-700 bg-teal-50 hover:border-teal-500 transition-all col-span-2">📝 أسطر الخط العربي</button>
+                    </div>
+                </div>
+                <button onclick="saveSettingsUI()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-md">حفظ الإعدادات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: السبورات المحفوظة -->
+    <div id="modal-saved-boards" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-[700px] max-w-[95vw] max-h-[85vh] flex flex-col relative border border-slate-100 text-right">
+            <button onclick="closeModal('modal-saved-boards')" class="absolute top-4 left-4 text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-purple-600">
+                    <i class="ph ph-folder-open text-3xl"></i>
+                    <h3 class="text-xl font-extrabold text-slate-800">السبورات المحفوظة</h3>
+                </div>
+                <input type="text" id="search-saved-boards" oninput="filterSavedBoardsList(this.value)" placeholder="بحث..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-purple-500 w-40" dir="rtl">
+            </div>
+            <div id="saved-boards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar p-1 flex-1 max-h-[55vh]">
+                <div class="text-center py-10 col-span-full text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>جاري الجلب...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: إنشاء جدول -->
+    <div id="modal-table" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-[400px] max-w-[95vw] relative border border-slate-100 text-right">
+            <button onclick="closeModal('modal-table')" class="absolute top-4 left-4 text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            <div class="flex items-center gap-2 mb-4 text-blue-600"><i class="ph ph-table text-3xl"></i><h3 class="text-xl font-extrabold text-slate-800">تصميم جدول (RTL)</h3></div>
+            <div class="flex flex-col gap-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">عدد الصفوف:</label><input type="number" id="tbl-rows" min="1" max="20" value="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-center"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">عدد الأعمدة:</label><input type="number" id="tbl-cols" min="1" max="15" value="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-center"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">لون رأس الجدول:</label><input type="color" id="tbl-header-bg" value="#dbeafe" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">لون خلفية الخلايا:</label><input type="color" id="tbl-cell-bg" value="#ffffff" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">لون الحدود:</label><input type="color" id="tbl-border-color" value="#93c5fd" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">حجم الخط:</label><input type="number" id="tbl-font-size" min="10" max="40" value="16" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-center"></div>
+                </div>
+                <button onclick="insertTableToCanvas()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2"><i class="ph ph-plus-circle text-xl"></i> إضافة الجدول</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: خريطة ذهنية -->
+    <div id="modal-mindmap" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-[480px] max-w-[95vw] relative border border-slate-100 text-right">
+            <button onclick="closeModal('modal-mindmap')" class="absolute top-4 left-4 text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            <div class="flex items-center gap-2 mb-4 text-fuchsia-600"><i class="ph ph-graph text-3xl"></i><h3 class="text-xl font-extrabold text-slate-800">إنشاء خريطة ذهنية / مخطط</h3></div>
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">الفكرة الرئيسية:</label>
+                    <input type="text" id="mm-root-text" placeholder="مثال: اللغة العربية" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-right" dir="rtl">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">الأفكار الفرعية (سطر لكل فكرة):</label>
+                    <textarea id="mm-children-text" placeholder="النحو&#10;الصرف&#10;البلاغة&#10;الأدب" rows="5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-right resize-none" dir="rtl"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">لون العقدة الرئيسية:</label><input type="color" id="mm-root-color" value="#2563eb" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">لون العقد الفرعية:</label><input type="color" id="mm-child-color" value="#7c3aed" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">اتجاه الأفكار الفرعية:</label>
+                    <select id="mm-direction" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold">
+                        <option value="below">تحت الفكرة</option>
+                        <option value="right">على اليمين</option>
+                        <option value="left">على اليسار</option>
+                    </select>
+                </div>
+                <div class="bg-blue-50 rounded-xl p-3 text-xs text-blue-700 font-semibold">
+                    <i class="fas fa-info-circle"></i> بعد الإضافة: انقر مرتين على أي فكرة لتعديل نصها، وانقر على زر <strong>＋</strong> تحت أي فكرة لإضافة فكرة فرعية منها.
+                </div>
+                <button onclick="insertMindMapToCanvas()" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2"><i class="ph ph-graph text-xl"></i> إضافة الخريطة للسبورة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: تعديل نص عقدة الخريطة الذهنية -->
+    <div id="modal-mm-edit" class="fixed inset-0 modal-overlay z-[110] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-2xl shadow-2xl p-5 w-80 relative border border-slate-100 text-right">
+            <button onclick="closeModal('modal-mm-edit')" class="absolute top-3 left-3 text-slate-400 hover:text-red-500"><i class="ph ph-x"></i></button>
+            <h4 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2"><i class="ph ph-pencil text-fuchsia-600"></i> تعديل نص الفكرة</h4>
+            <input type="text" id="mm-edit-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-right mb-3" dir="rtl" placeholder="أدخل نص الفكرة...">
+            <div class="flex gap-2">
+                <button onclick="confirmMmEdit()" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2 rounded-xl text-sm">حفظ التعديل</button>
+                <button onclick="closeModal('modal-mm-edit')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-sm">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: تصدير -->
+    <div id="modal-export" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 w-80 text-center relative border border-slate-100">
+            <button onclick="closeModal('modal-export')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            <i class="ph ph-export text-4xl text-green-500 mb-3 block"></i>
+            <h3 class="text-xl font-bold text-slate-800 mb-4">تصدير السبورة</h3>
+            <div class="flex flex-col gap-3">
+                <button id="btn-export-png" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"><i class="ph ph-image text-xl"></i> تصدير صورة (PNG)</button>
+                <button id="btn-export-pdf" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"><i class="ph ph-file-pdf text-xl"></i> تصدير جميع الصفحات (PDF)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: جاري الحفظ -->
+    <div id="modal-saving" class="fixed inset-0 modal-overlay z-[100] hidden flex items-center justify-center pointer-events-auto" dir="rtl">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 w-96 text-center relative border border-slate-100">
+            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">جاري الحفظ والإرسال...</h3>
+            <p id="saving-status-text" class="text-xs text-slate-500 font-semibold">يتم تحويل السبورة لملف PDF ورفعه لمكتبة الطلاب...</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         السبورة (Canvas)
+    <!-- PDF Viewer Panel -->
+    <div id="pdf-viewer-panel" class="hidden" style="display:none !important;" class="hidden fixed inset-0 z-30 flex" dir="rtl">
+        <div id="pdf-panel-left" class="bg-slate-900 flex flex-col" style="width: 50%;">
+            <div class="bg-slate-800 p-2 flex items-center justify-between gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <button onclick="closePdfViewer()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-times"></i></button>
+                    <span id="pdf-file-name" class="text-xs text-slate-300 font-bold truncate max-w-[120px]">ملف PDF</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="pdfPrevPage()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-chevron-right"></i></button>
+                    <span id="pdf-page-indicator" class="text-xs text-slate-300 font-bold">0/0</span>
+                    <button onclick="pdfNextPage()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-chevron-left"></i></button>
+                    <div class="w-px h-4 bg-slate-600 mx-1"></div>
+                    <button onclick="pdfZoomIn()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-search-plus"></i></button>
+                    <button onclick="pdfZoomOut()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-search-minus"></i></button>
+                    <button onclick="pdfRotate()" class="text-slate-400 hover:text-white p-1"><i class="fas fa-redo"></i></button>
+                    <button onclick="pdfFitWidth()" class="text-slate-400 hover:text-white p-1 text-[10px] font-bold">FIT</button>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="setPdfViewMode('pdf')" class="text-[9px] bg-slate-700 text-slate-300 hover:bg-slate-600 px-2 py-1 rounded font-bold">الملف</button>
+                    <button onclick="setPdfViewMode('split')" class="text-[9px] bg-blue-600 text-white px-2 py-1 rounded font-bold">مقسم</button>
+                    <button onclick="setPdfViewMode('whiteboard')" class="text-[9px] bg-slate-700 text-slate-300 hover:bg-slate-600 px-2 py-1 rounded font-bold">السبورة</button>
+                </div>
+            </div>
+            <div id="pdf-pages-container" class="flex-1 overflow-auto p-4 flex flex-col items-center gap-4 custom-scrollbar" style="direction: ltr;"></div>
+        </div>
+        <div id="pdf-splitter" class="w-2 bg-slate-700 hover:bg-blue-500 cursor-col-resize flex-shrink-0 transition-colors flex items-center justify-center">
+            <div class="w-0.5 h-8 bg-slate-500 rounded"></div>
+        </div>
+        <div id="pdf-panel-right" class="flex-1 relative overflow-hidden bg-white"></div>
+    </div>
+
+    <div class="flex-1 relative w-full h-full overflow-hidden" id="canvas-wrapper">
+        <!-- Mind Map Overlay -->
+        <canvas id="mindmap-canvas"></canvas>
+        <div id="mindmap-overlay"></div>
+        <!-- Main Drawing Canvas -->
+        <canvas id="board"></canvas>
+    </div>
+
+    <script>
+    // ════════════════════════════════════════════════════════
+    // CONFIG
+    // ════════════════════════════════════════════════════════
+    const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzbvZlrbxbj8mHDAU1ZRn3t16CirhrdH6yj8FrokXnCDXfjNAIxPGwIyNO7lMmi2qO2KQ/exec';
+
+    function runGS(action, ...params) {
+        return new Promise((resolve) => {
+            const employeeCode = localStorage.getItem('adminCode') || localStorage.getItem('employeeCode') || '';
+            const payload = { action, params: [...params, employeeCode] };
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json && json.data !== undefined) resolve(json.data);
+                else if (json && json.success !== undefined) resolve(json);
+                else resolve(json);
+            })
+            .catch(err => {
+                console.error('runGS Error:', err);
+                resolve(null);
+            });
+        });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TOAST
+    // ════════════════════════════════════════════════════════
+    function showToast(type, message) {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        const icons = { success:'fas fa-check-circle', error:'fas fa-exclamation-circle', warning:'fas fa-exclamation-triangle', info:'fas fa-info-circle' };
+        t.className = `toast-msg toast-${type}`;
+        t.innerHTML = `<i class="${icons[type]||'fas fa-bell'} text-lg"></i><span>${message}</span>`;
+        c.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(-10px)'; setTimeout(()=>t.remove(),300); }, 3500);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // CANVAS CORE
+    // ════════════════════════════════════════════════════════
+    const canvas  = document.getElementById('board');
+    const ctx     = canvas.getContext('2d');
+    const laserDot = document.getElementById('laser-pointer');
+    const textInput = document.getElementById('text-input');
+    const imageUpload = document.getElementById('image-upload');
+
+    const TOOLS = ['pen','highlighter','eraser','select','hand','laser','text','line','rect','circle','arrow','stamp'];
+    const toolBtns = {};
+    TOOLS.forEach(t => { const el = document.getElementById(`btn-${t}`); if (el) toolBtns[t] = el; });
+
+    let pages = [{ elements: [], redoElements: [], bgState: 1 }];
+    let currentPageIndex = 0;
+    let elements      = pages[0].elements;
+    let redoElements  = pages[0].redoElements;
+    let bgState       = pages[0].bgState;
+
+    let currentTool = 'pen';
+    let selectedShape = 'line';   // أداة الشكل النشطة
+
+    // ━━━ DRAWING STATE ━━━━━━━━━━━━━━━━━
+    let isDrawing    = false;
+    let isPointerDown = false;    // FIX: تتبع حالة الضغط الفعلي
+    let activePointerId = null;   // FIX: تتبع المؤشر النشط
+    let startX = 0, startY = 0;
+    let currentElement = null;
+    let selectedElement = null;
+    let additionalSelected = [];
+    let dragStartPositions = null;
+    let dragAnchorX = 0, dragAnchorY = 0;
+    let isDragging   = false;
+    let dragOffsetX  = 0, dragOffsetY = 0;
+    // ━━━ MARQUEE SELECT ━━━━━━━━━━━━━━━━
+    let isMarqueeSelecting = false;
+    let marqueeStart = { x: 0, y: 0 };
+    let marqueeCurrent = { x: 0, y: 0 };
+    let marqueeAdditive = false;
+
+    // ━━━ PAN / ZOOM ━━━━━━━━━━━━━━━━━━━
+    let zoom = 1, panX = 0, panY = 0;
+    let isPanning = false, panStartX = 0, panStartY = 0;
+    let isPanLocked = false;
+
+    // ━━━ MISC ━━━━━━━━━━━━━━━━━━━━━━━━━
+    let customFrameImage = null;
+    let brushColor = '#000000';
+    let brushSize  = 4;
+    let activePenMode = 'pen'; // أنواع الأقلام
+    let usePressure = true;    // تفعيل ضغط القلم
+    let currentStamp = '⭐';
+    let currentBoardId = 'board_' + Date.now();
+
+    function resizeCanvas() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        canvas.width  = wrapper.clientWidth  || window.innerWidth;
+        canvas.height = wrapper.clientHeight || window.innerHeight;
+        // sync mindmap canvas
+        const mc = document.getElementById('mindmap-canvas');
+        mc.width  = canvas.width;
+        mc.height = canvas.height;
+        redraw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    function hexToRgb(hex) {
+        hex = (hex || '#000000').replace('#','');
+        if (hex.length === 3) hex = hex.split('').map(x=>x+x).join('');
+        const num = parseInt(hex, 16) || 0;
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    // ════════════════════════════════════════════════════════
+    // CUSTOM CURSOR
+    // ════════════════════════════════════════════════════════
+    function updateCanvasCursor() {
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+            const r = Math.max(8, Math.min(brushSize * 2 + 4, 22));
+            const baseColor = currentTool === 'highlighter' ? '#fbbf24' : brushColor;
+            const rgb = hexToRgb(baseColor);
+            const dot = `rgba(${rgb.r},${rgb.g},${rgb.b},0.95)`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${r*2}" height="${r*2}">
+                <circle cx="${r}" cy="${r}" r="${Math.max(3, r*0.4)}" fill="${dot}" stroke="white" stroke-width="1.2"/>
+            </svg>`;
+            canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}') ${r} ${r}, crosshair`;
+        } else if (currentTool === 'eraser') {
+            const r = Math.max(brushSize * 2, 12);
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${r*2}" height="${r*2}"><circle cx="${r}" cy="${r}" r="${r-1}" fill="rgba(255,255,255,0.7)" stroke="black" stroke-width="1.5"/></svg>`;
+            canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}') ${r} ${r}, cell`;
+        } else if (currentTool === 'stamp') {
+            canvas.style.cursor = 'copy';
+        } else if (currentTool === 'hand') {
+            canvas.style.cursor = isPanning ? 'grabbing' : 'grab';
+        } else if (currentTool === 'text') {
+            canvas.style.cursor = 'text';
+        } else if (currentTool === 'select') {
+            canvas.style.cursor = 'default';
+        } else {
+            canvas.style.cursor = 'crosshair';
+        }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // BACKGROUND
+    // ════════════════════════════════════════════════════════
+    function drawBackground() {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = bgState === 3 ? '#0f172a' : '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        if (bgState === 4) {
+            // 📝 أسطر الخط العربي (زي كراسة المدرسين)
+            const lineGap = 70; 
+            const headerOffset = 80; 
+            for (let y = headerOffset; y < canvas.height; y += lineGap) {
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(canvas.width - 40, y); ctx.stroke();
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath(); ctx.moveTo(40, y - lineGap/2); ctx.lineTo(canvas.width - 40, y - lineGap/2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(40, y + 15); ctx.lineTo(canvas.width - 40, y + 15); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        } else if (bgState === 1) {
+            // مسطرة عادية
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+            const step = 40 * zoom;
+            for (let y = panY % step; y < canvas.height; y += step) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+        } else if (bgState === 2) {
+            // شبكة مربعات
+            ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
+            const step = 30 * zoom;
+            for (let x = panX % step; x < canvas.width; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = panY % step; y < canvas.height; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+        }
+        if (customFrameImage) ctx.drawImage(customFrameImage, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
+
+    function redraw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        ctx.save();
+        ctx.translate(panX, panY);
+        ctx.scale(zoom, zoom);
+        elements.forEach(el => drawElement(el));
+        if (currentElement) drawElement(currentElement);
+        getSelectedList().forEach(el => drawSelectionBox(el, el === selectedElement));
+        // ✨ رسم مستطيل التحديد (Marquee)
+        if (isMarqueeSelecting) {
+            const mx1 = Math.min(marqueeStart.x, marqueeCurrent.x);
+            const my1 = Math.min(marqueeStart.y, marqueeCurrent.y);
+            const mw = Math.abs(marqueeCurrent.x - marqueeStart.x);
+            const mh = Math.abs(marqueeCurrent.y - marqueeStart.y);
+            ctx.save();
+            ctx.fillStyle = 'rgba(37,99,235,0.10)';
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 1.5 / zoom;
+            ctx.setLineDash([6/zoom, 4/zoom]);
+            ctx.fillRect(mx1, my1, mw, mh);
+            ctx.strokeRect(mx1, my1, mw, mh);
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+        ctx.restore();
+        if (typeof updateMindmapAddButtons === 'function') updateMindmapAddButtons();
+        if (typeof updateTableOverlayButtons === 'function') updateTableOverlayButtons();
+        // 💾 إعادة تشغيل مؤقت الحفظ التلقائي (30 ثانية من آخر تغيير)
+        if (typeof scheduleAutoSave === 'function') scheduleAutoSave();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // DRAW ELEMENT
+    // ════════════════════════════════════════════════════════
+    function drawElement(el) {
+        ctx.beginPath();
+        ctx.strokeStyle = el.color || '#000';
+        ctx.fillStyle   = el.color || '#000';
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+        if (el.type === 'pen' || el.type === 'highlighter') {
+            ctx.globalAlpha = el.type === 'highlighter' ? 0.35 : 1.0;
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            
+            if (el.points && el.points.length > 0) {
+                for (let i = 1; i < el.points.length; i++) {
+                    const p1 = el.points[i - 1];
+                    const p2 = el.points[i];
+                    
+                    let currentSize = p2.size !== undefined ? p2.size : el.size;
+                    if (el.type === 'highlighter') currentSize *= 3;
+                    
+                    if (el.penMode === 'nib') {
+                        const dx = p2.x - p1.x; const dy = p2.y - p1.y;
+                        const angle = Math.abs(Math.atan2(dy, dx)); 
+                        const angleFactor = Math.abs(Math.sin(angle)); 
+                        currentSize = currentSize * (0.4 + angleFactor * 1.5);
+                    } else if (el.penMode === 'chalk') {
+                        currentSize = currentSize * (0.8 + Math.random() * 0.4);
+                        ctx.globalAlpha = 0.85;
+                    } else if (el.penMode === 'rainbow') {
+                        ctx.strokeStyle = `hsl(${(Date.now() / 10 + i * 5) % 360}, 100%, 50%)`;
+                    }
+
+                    ctx.beginPath();
+                    ctx.lineWidth = Math.max(1, currentSize);
+                    ctx.moveTo(p1.x, p1.y);
+                    
+                    if (i < el.points.length - 1) {
+                        const p3 = el.points[i + 1];
+                        const mx = (p2.x + p3.x) / 2;
+                        const my = (p2.y + p3.y) / 2;
+                        ctx.quadraticCurveTo(p2.x, p2.y, mx, my);
+                    } else {
+                        ctx.lineTo(p2.x, p2.y);
+                    }
+                    ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1.0;
+
+        } else if (el.type === 'line') {
+            ctx.moveTo(el.x1, el.y1); ctx.lineTo(el.x2, el.y2); ctx.stroke();
+
+        } else if (el.type === 'arrow') {
+            drawArrow(el.x1, el.y1, el.x2, el.y2, el.color, el.size);
+
+        } else if (el.type === 'rect') {
+            ctx.strokeRect(el.x, el.y, el.w, el.h);
+
+        } else if (el.type === 'circle') {
+            const rx = Math.abs(el.w)/2, ry = Math.abs(el.h)/2;
+            const cx = el.x + el.w/2, cy = el.y + el.h/2;
+            ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); ctx.stroke();
+
+        } else if (el.type === 'text') {
+            ctx.globalAlpha = 1.0;
+            const fontSize = (el.size || 4) * 6;
+            const lineHeight = fontSize * 1.4;
+            ctx.font = `bold ${fontSize}px Amiri, Tajawal, sans-serif`;
+            ctx.direction = 'rtl'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+            if (el.runs && el.runs.length > 0) {
+                let curX = el.x;
+                let curY = el.y;
+                for (const run of el.runs) {
+                    if (!run.text) continue;
+                    ctx.fillStyle = run.color || '#000';
+                    const parts = run.text.split('\n');
+                    for (let i = 0; i < parts.length; i++) {
+                        if (i > 0) { curY += lineHeight; curX = el.x; }
+                        if (parts[i]) {
+                            ctx.fillText(parts[i], curX, curY);
+                            curX -= ctx.measureText(parts[i]).width;
+                        }
+                    }
+                }
+            } else {
+                ctx.fillStyle = el.color || '#000';
+                const lines = (el.text || '').split('\n');
+                lines.forEach((line, idx) => {
+                    if (line) ctx.fillText(line, el.x, el.y + idx * lineHeight);
+                });
+            }
+
+        } else if (el.type === 'stamp') {
+            const sz = el.size || 40;
+            if (el.emoji === 'check') {
+                ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(el.x, el.y, sz/2, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = sz/8; ctx.beginPath();
+                ctx.moveTo(el.x - sz/6, el.y); ctx.lineTo(el.x - sz/16, el.y + sz/6); ctx.lineTo(el.x + sz/5, el.y - sz/6); ctx.stroke();
+            } else if (el.emoji === 'wrong') {
+                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(el.x, el.y, sz/2, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = sz/8; ctx.beginPath();
+                ctx.moveTo(el.x - sz/5, el.y - sz/5); ctx.lineTo(el.x + sz/5, el.y + sz/5);
+                ctx.moveTo(el.x + sz/5, el.y - sz/5); ctx.lineTo(el.x - sz/5, el.y + sz/5); ctx.stroke();
+            } else if (el.emoji === 'star') {
+                const spikes = 5, outer = sz/2, inner = sz/4;
+                ctx.fillStyle = '#fbbf24'; ctx.beginPath();
+                for(let i=0;i<spikes*2;i++){
+                    const r = i%2===0 ? outer : inner;
+                    const a = i * Math.PI/spikes - Math.PI/2;
+                    ctx.lineTo(el.x + Math.cos(a)*r, el.y + Math.sin(a)*r);
+                }
+                ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.stroke();
+            } else if (['thumbsup','excellent','love'].includes(el.emoji)) {
+                ctx.fillStyle = el.emoji==='love'?'#fecdd3':(el.emoji==='excellent'?'#cffafe':'#fef3c7');
+                ctx.beginPath(); ctx.arc(el.x, el.y, sz/2, 0, Math.PI*2); ctx.fill();
+                ctx.font = `${sz*0.6}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const char = el.emoji==='thumbsup'?'👍':(el.emoji==='excellent'?'💯':'❤️');
+                ctx.fillText(char, el.x, el.y);
+            } else if (['أحسنت!','ممتاز','الله ينور','رائع','مبدع','بطل'].includes(el.emoji)) {
+                ctx.font = `bold ${sz*0.5}px Cairo, sans-serif`;
+                const tw = ctx.measureText(el.emoji).width;
+                const rw = tw + sz, rh = sz;
+                
+                const grad = ctx.createLinearGradient(el.x - rw/2, el.y - rh/2, el.x + rw/2, el.y + rh/2);
+                if(el.emoji==='أحسنت!') { grad.addColorStop(0,'#fbbf24'); grad.addColorStop(1,'#f97316'); }
+                else if(el.emoji==='ممتاز') { grad.addColorStop(0,'#34d399'); grad.addColorStop(1,'#10b981'); }
+                else { grad.addColorStop(0,'#38bdf8'); grad.addColorStop(1,'#3b82f6'); }
+                
+                ctx.fillStyle = grad;
+                ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
+                roundRect(ctx, el.x - rw/2, el.y - rh/2, rw, rh, rh/2);
+                ctx.fill();
+                ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(el.emoji, el.x, el.y);
+            } else {
+                ctx.font = `${sz}px serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(el.emoji, el.x, el.y);
+            }
+
+        } else if (el.type === 'image' && el.imgObj) {
+            ctx.drawImage(el.imgObj, el.x, el.y, el.w, el.h);
+
+        } else if (el.type === 'table') {
+            drawTableElement(el);
+
+        } else if (el.type === 'mindmap') {
+            drawMindmapElement(el);
+        }
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, size) {
+        const headLen = Math.max(14, size * 3);
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        ctx.strokeStyle = color; ctx.fillStyle = color;
+        ctx.lineWidth = size;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI/7), y2 - headLen * Math.sin(angle - Math.PI/7));
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI/7), y2 - headLen * Math.sin(angle + Math.PI/7));
+        ctx.closePath(); ctx.fill();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RTL TABLE RENDERING
+    // ════════════════════════════════════════════════════════
+    function getTblTotalW(tbl) { return tbl.colWidths ? tbl.colWidths.reduce((a,b)=>a+b,0) : tbl.cols * (tbl.cellWidth||130); }
+    function getTblTotalH(tbl) { return tbl.rowHeights ? tbl.rowHeights.reduce((a,b)=>a+b,0) : tbl.rows * (tbl.cellHeight||45); }
+    function getTblColW(tbl, c) { return tbl.colWidths ? tbl.colWidths[c] : (tbl.cellWidth||130); }
+    function getTblRowH(tbl, r) { return tbl.rowHeights ? tbl.rowHeights[r] : (tbl.cellHeight||45); }
+    
+    function drawTableElement(tbl) {
+        ctx.save();
+        const totalW = getTblTotalW(tbl);
+        const totalH = getTblTotalH(tbl);
+
+        ctx.fillStyle = tbl.cellBg;
+        ctx.fillRect(tbl.x, tbl.y, totalW, totalH);
+        ctx.fillStyle = tbl.headerBg;
+        ctx.fillRect(tbl.x, tbl.y, totalW, getTblRowH(tbl, 0));
+
+        ctx.strokeStyle = tbl.borderColor; ctx.lineWidth = 2;
+        let curY = tbl.y;
+        for (let r = 0; r <= tbl.rows; r++) {
+            ctx.beginPath(); ctx.moveTo(tbl.x, curY); ctx.lineTo(tbl.x + totalW, curY); ctx.stroke();
+            if(r < tbl.rows) curY += getTblRowH(tbl, r);
+        }
+        let curX = tbl.x;
+        for (let c = 0; c <= tbl.cols; c++) {
+            ctx.beginPath(); ctx.moveTo(curX, tbl.y); ctx.lineTo(curX, tbl.y + totalH); ctx.stroke();
+            if(c < tbl.cols) {
+                const rtlC = tbl.cols - 1 - c;
+                curX += getTblColW(tbl, rtlC);
+            }
+        }
+
+        if (tbl.selectedCell) {
+            const sc = tbl.selectedCell;
+            const rtlC = tbl.cols - 1 - sc.c;
+            let cx = tbl.x, cy = tbl.y;
+            for(let i=0; i<rtlC; i++) cx += getTblColW(tbl, tbl.cols - 1 - i);
+            for(let i=0; i<sc.r; i++) cy += getTblRowH(tbl, i);
+            const cw = getTblColW(tbl, sc.c);
+            const ch = getTblRowH(tbl, sc.r);
+            
+            ctx.fillStyle = 'rgba(37,99,235,0.13)';
+            ctx.fillRect(cx, cy, cw, ch);
+            ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 3;
+            ctx.strokeRect(cx, cy, cw, ch);
+        }
+
+        ctx.fillStyle = tbl.textColor || '#0f172a';
+        ctx.font = `bold ${tbl.fontSize || 16}px Cairo, sans-serif`;
+        ctx.direction = 'rtl'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        let rowY = tbl.y;
+        for (let r = 0; r < tbl.rows; r++) {
+            const ch = getTblRowH(tbl, r);
+            let colX = tbl.x;
+            for (let c = 0; c < tbl.cols; c++) { // c here is left-to-right on screen, so c=0 is rtlC=cols-1
+                const rtlC = tbl.cols - 1 - c;
+                const cw = getTblColW(tbl, rtlC);
+                const text = (tbl.data[r] && tbl.data[r][rtlC]) ? tbl.data[r][rtlC] : '';
+                if (text) {
+                    ctx.fillText(text, colX + cw / 2, rowY + ch / 2);
+                }
+                colX += cw;
+            }
+            rowY += ch;
+        }
+        ctx.restore();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MIND MAP RENDERING
+    // ════════════════════════════════════════════════════════
+    function drawMindmapElement(mm) {
+        if (!mm.nodes || mm.nodes.length === 0) return;
+        ctx.save();
+        const root = mm.nodes[0];
+        // رسم الوصلات
+        mm.connections.forEach(conn => {
+            const from = mm.nodes.find(n => n.id === conn.from);
+            const to   = mm.nodes.find(n => n.id === conn.to);
+            if (!from || !to) return;
+            ctx.strokeStyle = conn.color || '#94a3b8';
+            ctx.lineWidth   = 2;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(from.x + (from.w||80)/2, from.y + (from.h||32)/2);
+            const mx = (from.x + (from.w||80)/2 + to.x + (to.w||80)/2) / 2;
+            ctx.bezierCurveTo(mx, from.y + (from.h||32)/2, mx, to.y + (to.h||32)/2, to.x + (to.w||80)/2, to.y + (to.h||32)/2);
+            ctx.stroke();
+        });
+        // رسم العقد
+        mm.nodes.forEach(node => {
+            const nw = node.w || 100, nh = node.h || 36;
+            // خلفية العقدة
+            ctx.fillStyle = node.color || '#2563eb';
+            roundRect(ctx, node.x, node.y, nw, nh, 10);
+            ctx.fill();
+            // نص العقدة
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${node.fontSize || 13}px Cairo, sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.direction = 'rtl';
+            ctx.fillText(node.text, node.x + nw/2, node.y + nh/2);
+            // حدود التحديد
+            if (mm.selectedNodeId === node.id) {
+                ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+                roundRect(ctx, node.x - 3, node.y - 3, nw + 6, nh + 6, 12);
+                ctx.stroke();
+            }
+        });
+        ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // SELECTION BOX
+    // ════════════════════════════════════════════════════════
+    function getSelectedList() {
+        const list = [];
+        if (selectedElement) list.push(selectedElement);
+        additionalSelected.forEach(el => { if (el && el !== selectedElement && !list.includes(el)) list.push(el); });
+        return list;
+    }
+
+    function isElementSelected(el) {
+        return el === selectedElement || additionalSelected.includes(el);
+    }
+
+    function clearAllSelection() {
+        selectedElement = null;
+        additionalSelected = [];
+    }
+
+    function setSingleSelection(el) {
+        selectedElement = el;
+        additionalSelected = [];
+    }
+
+    function toggleSelection(el) {
+        if (el === selectedElement) {
+            if (additionalSelected.length > 0) {
+                selectedElement = additionalSelected.shift();
+            } else {
+                selectedElement = null;
+            }
+        } else if (additionalSelected.includes(el)) {
+            additionalSelected = additionalSelected.filter(x => x !== el);
+        } else if (el) {
+            additionalSelected.push(el);
+        }
+    }
+
+    function drawSelectionBox(el, isPrimary) {
+        if (isPrimary === undefined) isPrimary = true;
+        // ✨ لا ترسم إطار الخريطة كلها لو فيه عقدة محددة جواها
+        if (el.type === 'mindmap' && el.selectedNodeId) return;
+        const box = getBox(el);
+        ctx.save();
+        ctx.strokeStyle = isPrimary ? '#2563eb' : '#f59e0b';
+        ctx.lineWidth = (isPrimary ? 1.8 : 1.4) / zoom;
+        ctx.setLineDash(isPrimary ? [] : [8/zoom, 5/zoom]);
+        ctx.strokeRect(box.x - 4/zoom, box.y - 4/zoom, box.w + 8/zoom, box.h + 8/zoom);
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // مقابض التحجيم للعنصر الأساسي فقط (صور/مستطيلات/دوائر)
+        if (isPrimary && (el.type === 'image' || el.type === 'rect' || el.type === 'circle')) {
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 2 / zoom;
+            const hSize = 10 / zoom;
+            const handles = [
+                { x: box.x - 4, y: box.y - 4 },
+                { x: box.x + box.w + 4, y: box.y - 4 },
+                { x: box.x - 4, y: box.y + box.h + 4 },
+                { x: box.x + box.w + 4, y: box.y + box.h + 4 }
+            ];
+            handles.forEach(h => {
+                ctx.fillRect(h.x - hSize / 2, h.y - hSize / 2, hSize, hSize);
+                ctx.strokeRect(h.x - hSize / 2, h.y - hSize / 2, hSize, hSize);
+            });
+            ctx.restore();
+        }
+    }
+
+    function getBox(el) {
+        if (el.type === 'image') {
+            return { x: el.x, y: el.y, w: el.w || 100, h: el.h || 100 };
+        }
+        if (el.type === 'pen' || el.type === 'highlighter') {
+            const xs = el.points.map(p=>p.x), ys = el.points.map(p=>p.y);
+            const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+            return {x:minX, y:minY, w:maxX-minX, h:maxY-minY};
+        } else if (el.type==='line'||el.type==='arrow') {
+            return {x:Math.min(el.x1,el.x2),y:Math.min(el.y1,el.y2),w:Math.abs(el.x2-el.x1),h:Math.abs(el.y2-el.y1)};
+        } else if (el.type==='stamp') {
+            return {x:el.x-20,y:el.y-20,w:40,h:40};
+        } else if (el.type==='table') {
+            return {x:el.x, y:el.y, w:getTblTotalW(el), h:getTblTotalH(el)};
+        } else if (el.type==='mindmap') {
+            if (!el.nodes||el.nodes.length===0) return {x:0,y:0,w:0,h:0};
+            const xs=el.nodes.map(n=>n.x), ys=el.nodes.map(n=>n.y);
+            return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs)+120,h:Math.max(...ys)-Math.min(...ys)+40};
+        } else if (el.type==='text') {
+            const fontSize = (el.size || 4) * 6;
+            const lineHeight = fontSize * 1.4;
+            ctx.save();
+            ctx.font = `bold ${fontSize}px Amiri, Tajawal, sans-serif`;
+            ctx.direction = 'rtl';
+            let fullText = '';
+            if (el.runs && el.runs.length) fullText = el.runs.map(r => r.text || '').join('');
+            else fullText = el.text || '';
+            const lines = fullText.split('\n');
+            let maxW = 0;
+            lines.forEach(line => {
+                const w = ctx.measureText(line).width;
+                if (w > maxW) maxW = w;
+            });
+            ctx.restore();
+            return {x: el.x - maxW, y: el.y, w: maxW, h: lineHeight * Math.max(1, lines.length)};
+        } else {
+            return {x:el.x||0,y:el.y||0,w:el.w||0,h:el.h||0};
+        }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // COORDS
+    // ════════════════════════════════════════════════════════
+    function getCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - rect.left - panX) / zoom, y: (clientY - rect.top - panY) / zoom };
+    }
+
+    // ════════════════════════════════════════════════════════
+    // POINTER EVENTS - FIX for ghost drawing bug
+    // ════════════════════════════════════════════════════════
+    let tblResizeState = null;
+    function onPointerDown(e) {
+        // 🖊️ القلم له أولوية مطلقة على اللمس (يمنع تداخل الكف)
+        if (e.pointerType === 'pen' && activePointerId !== null && activePointerId !== e.pointerId) {
+            try { canvas.releasePointerCapture(activePointerId); } catch(_) {}
+            if (isDrawing && currentElement && currentElement.points && currentElement.points.length > 1) {
+                elements.push(currentElement); redoElements.length = 0;
+            }
+            currentElement = null; isDrawing = false; isPointerDown = false; activePointerId = null;
+        }
+        // 👆 اللمس يُرفض لو فيه قلم/ماوس شغال
+        if (e.pointerType === 'touch' && activePointerId !== null) return;
+
+        if (activePointerId !== null && e.pointerId !== activePointerId) return;
+        activePointerId = e.pointerId;
+        canvas.setPointerCapture(e.pointerId);
+        isPointerDown = true;
+
+        const coords = getCoords(e);
+
+        if (activeImageResizeState) {
+            const handle = activeImageResizeState.handle;
+            const el = activeImageResizeState.el;
+            const start = activeImageResizeState.startPos;
+            const dx = coords.x - activeImageResizeState.startCoords.x;
+            const dy = coords.y - activeImageResizeState.startCoords.y;
+
+            if (handle === 'br') {
+                el.w = Math.max(20, start.w + dx);
+                el.h = Math.max(20, start.h + dy);
+            } else if (handle === 'bl') {
+                el.x = start.x + dx;
+                el.w = Math.max(20, start.w - dx);
+                el.h = Math.max(20, start.h + dy);
+            } else if (handle === 'tr') {
+                el.y = start.y + dy;
+                el.w = Math.max(20, start.w + dx);
+                el.h = Math.max(20, start.h - dy);
+            } else if (handle === 'tl') {
+                el.x = start.x + dx;
+                el.y = start.y + dy;
+                el.w = Math.max(20, start.w - dx);
+                el.h = Math.max(20, start.h - dy);
+            }
+            redraw();
+            return;
+        }
+        startX = coords.x; startY = coords.y;
+
+        // Check corner resize handle hit for selected image/shape
+        if (currentTool === 'select' && selectedElement) {
+            const handleId = hitTestResizeHandle(coords, selectedElement);
+            if (handleId) {
+                activeImageResizeState = {
+                    handle: handleId,
+                    el: selectedElement,
+                    startCoords: coords,
+                    startPos: { x: selectedElement.x, y: selectedElement.y, w: selectedElement.w, h: selectedElement.h }
+                };
+                return;
+            }
+        }
+
+        // أداة اليد أو زر الماوس الأوسط
+        if ((currentTool === 'hand' || e.button === 1) && !isPanLocked) {
+            isPanning = true;
+            panStartX = (e.touches ? e.touches[0].clientX : e.clientX) - panX;
+            panStartY = (e.touches ? e.touches[0].clientY : e.clientY) - panY;
+            updateCanvasCursor();
+            return;
+        }
+
+        if (currentTool === 'laser') { laserDot.style.opacity='1'; updateLaser(e); return; }
+
+        // ━━━ STAMP ━━━
+        if (currentTool === 'stamp') {
+            const sz = brushSize * 8 + 20;
+            elements.push({ type:'stamp', emoji: currentStamp, x: coords.x, y: coords.y, size: sz, color: brushColor });
+            redoElements.length = 0;
+            
+            if (['أحسنت!','ممتاز','الله ينور','رائع','مبدع','بطل'].includes(currentStamp)) {
+                spawnConfetti(coords.x, coords.y);
+                playStampSound('celebration');
+            } else if (currentStamp === 'check') {
+                playStampSound('check');
+            } else if (currentStamp === 'wrong') {
+                playStampSound('wrong');
+            }
+            
+            redraw();
+            return;
+        }
+
+        // Table border resize detection
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const el = elements[i];
+            if (el.type === 'table' && currentTool === 'select') {
+                let colX = el.x;
+                for (let c = 0; c < el.cols; c++) {
+                    const rtlC = el.cols - 1 - c;
+                    colX += getTblColW(el, rtlC);
+                    if (Math.abs(coords.x - colX) < 5) {
+                        tblResizeState = { elIdx: i, type: 'col', index: rtlC, startVal: getTblColW(el, rtlC), startPos: coords.x };
+                        canvas.style.cursor = 'col-resize';
+                        return;
+                    }
+                }
+                let rowY = el.y;
+                for (let r = 0; r < el.rows; r++) {
+                    rowY += getTblRowH(el, r);
+                    if (Math.abs(coords.y - rowY) < 5) {
+                        tblResizeState = { elIdx: i, type: 'row', index: r, startVal: getTblRowH(el, r), startPos: coords.y };
+                        canvas.style.cursor = 'row-resize';
+                        return;
+                    }
+                }
+            }
+        }
+
+        // ━━━ TABLE CLICK ━━━
+        let clickedTable = false;
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const el = elements[i];
+            if (el.type === 'table') {
+                const box = getBox(el);
+                if (coords.x >= box.x && coords.x <= box.x + box.w && coords.y >= box.y && coords.y <= box.y + box.h) {
+                    clickedTable = true;
+                    selectedElement = el;
+                    
+                    let cx = el.x; let r = 0, rtlC = 0;
+                    for (let c = 0; c < el.cols; c++) {
+                        const cw = getTblColW(el, el.cols - 1 - c);
+                        if (coords.x >= cx && coords.x <= cx + cw) { rtlC = c; break; }
+                        cx += cw;
+                    }
+                    let cy = el.y;
+                    for (let row = 0; row < el.rows; row++) {
+                        const ch = getTblRowH(el, row);
+                        if (coords.y >= cy && coords.y <= cy + ch) { r = row; break; }
+                        cy += ch;
+                    }
+                    
+                    const actualC = el.cols - 1 - rtlC;
+                    el.selectedCell = { r: Math.max(0, Math.min(r, el.rows-1)), c: Math.max(0, Math.min(actualC, el.cols-1)) };
+                    if (currentTool === 'select') {
+                        isDragging = true; dragOffsetX = coords.x - el.x; dragOffsetY = coords.y - el.y;
+                    }
+                    redraw(); break;
+                }
+            }
+        }
+        if (clickedTable && currentTool !== 'eraser') return;
+
+        // ━━━ MINDMAP CLICK ━━━
+        let clickedMM = false;
+        if (currentTool === 'select') {
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const el = elements[i];
+                if (el.type === 'mindmap' && el.nodes) {
+                    for (const node of el.nodes) {
+                        const nw = node.w || 100, nh = node.h || 36;
+                        if (coords.x >= node.x && coords.x <= node.x + nw && coords.y >= node.y && coords.y <= node.y + nh) {
+                            setSingleSelection(el);
+                            dragStartPositions = null;
+                            el.selectedNodeId = node.id;
+                            el._dragNode = node;
+                            el._dragOffX = coords.x - node.x;
+                            el._dragOffY = coords.y - node.y;
+                            isDragging = true;
+                            clickedMM = true;
+                            redraw(); break;
+                        }
+                    }
+                    if (clickedMM) break;
+                }
+            }
+        }
+        if (clickedMM) return;
+
+        // ━━━ SELECT ━━━
+        if (currentTool === 'select') {
+            const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+            let hitEl = null;
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const box = getBox(elements[i]);
+                if (coords.x >= box.x && coords.x <= box.x + box.w && coords.y >= box.y && coords.y <= box.y + box.h) {
+                    hitEl = elements[i];
+                    break;
+                }
+            }
+
+            // ✨ Shift/Ctrl + Click = إضافة/إزالة من التحديد
+            if (additive && hitEl) {
+                toggleSelection(hitEl);
+                redraw(); return;
+            }
+
+            if (hitEl) {
+                // لو العنصر ضمن التحديد الحالي → اسحب الكل
+                if (!isElementSelected(hitEl)) {
+                    setSingleSelection(hitEl);
+                    elements.forEach(el => { if (el.type === 'mindmap') el.selectedNodeId = null; });
+                }
+                // جهّز نقاط بداية السحب لكل عنصر محدد
+                dragStartPositions = getSelectedList().map(el => ({
+                    el,
+                    x: el.x !== undefined ? el.x : 0,
+                    y: el.y !== undefined ? el.y : 0,
+                    x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2,
+                    points: el.points ? el.points.map(p => ({ x: p.x, y: p.y })) : null,
+                    nodes: el.type === 'mindmap' && el.nodes ? el.nodes.map(n => ({ x: n.x, y: n.y })) : null
+                }));
+                dragAnchorX = coords.x;
+                dragAnchorY = coords.y;
+                isDragging = true;
+                redraw(); return;
+            }
+
+            // ✨ ضغط على فراغ → ابدأ التحديد المستطيل (Marquee)
+            isMarqueeSelecting = true;
+            marqueeStart = { x: coords.x, y: coords.y };
+            marqueeCurrent = { x: coords.x, y: coords.y };
+            marqueeAdditive = additive;
+            if (!additive) {
+                clearAllSelection();
+                elements.forEach(el => { if (el.type === 'mindmap') el.selectedNodeId = null; });
+            }
+            redraw(); return;
+        }
+
+        // ━━━ START DRAWING ━━━
+        isDrawing = true;
+
+        let pressureSize = brushSize;
+        if (usePressure && e.pressure && e.pressure > 0 && e.pointerType === 'pen') {
+            pressureSize = brushSize * (0.2 + e.pressure * 1.5);
+        }
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+            currentElement = { type: currentTool, color: brushColor, size: pressureSize, penMode: activePenMode, points: [{x:startX, y:startY, size: pressureSize}] };
+        } else if (currentTool === 'eraser') {
+            eraseAtCoords(coords);
+        } else if (currentTool === 'line' || currentTool === 'arrow') {
+            currentElement = { type: currentTool, color: brushColor, size: brushSize, x1:startX, y1:startY, x2:startX, y2:startY };
+        } else if (currentTool === 'rect' || currentTool === 'circle') {
+            currentElement = { type: currentTool, color: brushColor, size: brushSize, x:startX, y:startY, w:0, h:0 };
+        } else if (currentTool === 'text') {
+            isDrawing = false;
+            isPointerDown = false;
+            activePointerId = null;
+            try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+            showTextInput(coords.x, coords.y, e.clientX, e.clientY);
+            return;
+        }
+    }
+
+    function onPointerMove(e) {
+        if (tblResizeState) {
+            const coords = getCoords(e);
+            const el = elements[tblResizeState.elIdx];
+            const delta = tblResizeState.type === 'col' ? (coords.x - tblResizeState.startPos) : (coords.y - tblResizeState.startPos);
+            const newVal = Math.max(40, tblResizeState.startVal + delta);
+            if (tblResizeState.type === 'col') {
+                el.colWidths[tblResizeState.index] = newVal;
+            } else {
+                el.rowHeights[tblResizeState.index] = newVal;
+            }
+            redraw();
+            return;
+        }
+        
+        // FIX: إلغاء الرسم إن لم يكن المؤشر مضغوطاً
+        if (!isPointerDown && (currentTool === 'pen' || currentTool === 'highlighter' || currentTool === 'eraser')) return;
+        if (e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+
+        if (isPanning && !isPanLocked) {
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            panX = cx - panStartX; panY = cy - panStartY;
+            redraw(); return;
+        }
+
+        if (currentTool === 'laser') { updateLaser(e); return; }
+
+        const coords = getCoords(e);
+
+        // ✨ تحديث مستطيل التحديد
+        if (isMarqueeSelecting) {
+            marqueeCurrent = { x: coords.x, y: coords.y };
+            redraw();
+            return;
+        }
+
+        if (isDragging && selectedElement) {
+            // حالة خاصة: سحب عقدة خريطة ذهنية
+            if (selectedElement.type === 'mindmap' && selectedElement._dragNode) {
+                const node = selectedElement._dragNode;
+                node.x = coords.x - selectedElement._dragOffX;
+                node.y = coords.y - selectedElement._dragOffY;
+                redraw(); return;
+            }
+            // التحديد المتعدد (أو المفرد عبر نفس المسار)
+            if (dragStartPositions && dragStartPositions.length > 0) {
+                const dx = coords.x - dragAnchorX;
+                const dy = coords.y - dragAnchorY;
+                dragStartPositions.forEach(sp => {
+                    const el = sp.el;
+                    if (el.type === 'pen' || el.type === 'highlighter') {
+                        if (sp.points) el.points = sp.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                    } else if (el.type === 'line' || el.type === 'arrow') {
+                        el.x1 = sp.x1 + dx; el.y1 = sp.y1 + dy;
+                        el.x2 = sp.x2 + dx; el.y2 = sp.y2 + dy;
+                    } else if (el.type === 'mindmap') {
+                        if (sp.nodes && el.nodes) {
+                            el.nodes.forEach((n, i) => {
+                                if (sp.nodes[i]) {
+                                    n.x = sp.nodes[i].x + dx;
+                                    n.y = sp.nodes[i].y + dy;
+                                }
+                            });
+                        }
+                    } else {
+                        el.x = sp.x + dx;
+                        el.y = sp.y + dy;
+                    }
+                });
+                redraw(); return;
+            }
+            // Fallback (احتياطي)
+            if (selectedElement.type === 'pen' || selectedElement.type === 'highlighter') {
+                const dx = coords.x - startX, dy = coords.y - startY;
+                selectedElement.points.forEach(p => { p.x += dx; p.y += dy; });
+                startX = coords.x; startY = coords.y;
+            } else if (selectedElement.type === 'line' || selectedElement.type === 'arrow') {
+                const dx = coords.x - dragOffsetX - selectedElement.x1;
+                const dy = coords.y - dragOffsetY - selectedElement.y1;
+                selectedElement.x1 += dx; selectedElement.y1 += dy;
+                selectedElement.x2 += dx; selectedElement.y2 += dy;
+            } else {
+                selectedElement.x = coords.x - dragOffsetX;
+                selectedElement.y = coords.y - dragOffsetY;
+            }
+            redraw(); return;
+        }
+
+        if (!isDrawing) return;
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+            // ضغط الواكوم
+            let pressureSize = brushSize;
+            if (usePressure && e.pressure && e.pressure > 0 && e.pointerType === 'pen') {
+                pressureSize = brushSize * (0.2 + e.pressure * 1.5);
+            }
+            currentElement.size = pressureSize;
+            currentElement.points.push({ x: coords.x, y: coords.y, size: pressureSize });
+            redraw();
+        } else if (currentTool === 'eraser') {
+            eraseAtCoords(coords);
+        } else if (currentTool === 'line' || currentTool === 'arrow') {
+            currentElement.x2 = coords.x; currentElement.y2 = coords.y; redraw();
+        } else if (currentTool === 'rect' || currentTool === 'circle') {
+            currentElement.w = coords.x - startX; currentElement.h = coords.y - startY; redraw();
+        }
+    }
+
+    function onPointerUp(e) {
+        if (activeImageResizeState) {
+            pages[currentPageIndex].elements = elements;
+            activeImageResizeState = null;
+        }
+        if (tblResizeState) { tblResizeState = null; updateCanvasCursor(); redraw(); return; }
+        // ✨ اعتماد التحديد بعد Marquee
+        if (isMarqueeSelecting) {
+            isMarqueeSelecting = false;
+            const mx1 = Math.min(marqueeStart.x, marqueeCurrent.x);
+            const my1 = Math.min(marqueeStart.y, marqueeCurrent.y);
+            const mx2 = Math.max(marqueeStart.x, marqueeCurrent.x);
+            const my2 = Math.max(marqueeStart.y, marqueeCurrent.y);
+            const mw = mx2 - mx1, mh = my2 - my1;
+            if (mw > 3 && mh > 3) {
+                const marqueeBox = { x: mx1, y: my1, w: mw, h: mh };
+                const hits = [];
+                elements.forEach(el => {
+                    if (el.type === 'mindmap_add_node') return;
+                    const box = getBox(el);
+                    if (!(box.x + box.w < marqueeBox.x || box.x > marqueeBox.x + marqueeBox.w ||
+                          box.y + box.h < marqueeBox.y || box.y > marqueeBox.y + marqueeBox.h)) {
+                        hits.push(el);
+                    }
+                });
+                if (hits.length > 0) {
+                    if (marqueeAdditive) {
+                        hits.forEach(h => { if (!isElementSelected(h)) additionalSelected.push(h); });
+                        if (!selectedElement && additionalSelected.length > 0) {
+                            selectedElement = additionalSelected.shift();
+                        }
+                    } else {
+                        selectedElement = hits[0];
+                        additionalSelected = hits.slice(1);
+                    }
+                }
+            }
+            activePointerId = null;
+            isPointerDown = false;
+            redraw();
+            return;
+        }
+        if (e.pointerId !== undefined && activePointerId !== null && e.pointerId !== activePointerId) return;
+        activePointerId = null;
+        isPointerDown = false;
+        isPanning  = false;
+        isDragging = false;
+        dragStartPositions = null;
+        if (currentTool !== 'laser') laserDot.style.opacity = '0';
+        if (selectedElement && selectedElement._dragNode) delete selectedElement._dragNode;
+        updateCanvasCursor();
+
+        if (isDrawing && currentElement) {
+            if (currentElement.type === 'pen' || currentElement.type === 'highlighter') {
+                if (currentElement.points.length > 1) {
+                    elements.push(currentElement);
+                    redoElements.length = 0;
+                }
+            } else if (currentElement.type === 'line' || currentElement.type === 'arrow') {
+                const dist = Math.hypot(currentElement.x2 - currentElement.x1, currentElement.y2 - currentElement.y1);
+                if (dist > 3) { elements.push(currentElement); redoElements.length = 0; }
+            } else if (currentElement.type === 'rect' || currentElement.type === 'circle') {
+                if (Math.abs(currentElement.w) > 3 && Math.abs(currentElement.h) > 3) { elements.push(currentElement); redoElements.length = 0; }
+            } else {
+                elements.push(currentElement); redoElements.length = 0;
+            }
+            currentElement = null;
+            redraw();
+        }
+        isDrawing = false;
+    }
+
+    // ━━━ التحكم في wheel (تقريب وتبعيد) ━━━
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        if (selectedElement && selectedElement.type === 'mindmap' && e.ctrlKey) {
+            const factor = e.deltaY < 0 ? 1.1 : 0.9;
+            const cx = selectedElement.nodes[0].x;
+            const cy = selectedElement.nodes[0].y;
+            selectedElement.nodes.forEach(n => {
+                const dx = n.x - cx;
+                const dy = n.y - cy;
+                n.x = cx + dx * factor;
+                n.y = cy + dy * factor;
+                n.w *= factor;
+                n.h *= factor;
+                if(n.fontSize) n.fontSize *= factor;
+            });
+            redraw();
+            return;
+        }
+        
+        if (isPanLocked) return;
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        panX = mx - (mx - panX) * factor;
+        panY = my - (my - panY) * factor;
+        zoom = Math.max(0.3, Math.min(zoom * factor, 6));
+        document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
+        redraw();
+    }, { passive: false });
+
+    // ━━━ Pointer Events (رئيسي) ━━━
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup',   onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
+
+    // ━━━ Touch Events (دعم اللمس) ━━━
+    let touchStartDist = 0;
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 2) {
+            // إلغاء أي رسم نشط عند بدء pinch
+            currentElement = null;
+            isDrawing = false;
+            touchStartDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 2 && touchStartDist > 0) {
+            const d = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const factor = d / touchStartDist;
+            zoom = Math.max(0.3, Math.min(zoom * factor, 6));
+            touchStartDist = d;
+            document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
+            redraw();
+        }
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { touchStartDist = 0; }, { passive: false });
+
+    // ════════════════════════════════════════════════════════
+    // ERASE
+    // ════════════════════════════════════════════════════════
+    function eraseAtCoords(coords) {
+        const eraserR = Math.max(brushSize * 2, 15);
+        elements = elements.filter(el => {
+            if (el.type === 'mindmap' || el.type === 'table') return true;
+            if (el.type === 'pen' || el.type === 'highlighter') {
+                return !el.points.some(p => Math.hypot(p.x - coords.x, p.y - coords.y) < eraserR);
+            }
+            const box = getBox(el);
+            return !(coords.x >= box.x - eraserR && coords.x <= box.x + box.w + eraserR &&
+                     coords.y >= box.y - eraserR && coords.y <= box.y + box.h + eraserR);
+        });
+        pages[currentPageIndex].elements = elements;
+        redraw();
+    }
+
+    function updateLaser(e) {
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        laserDot.style.left = cx + 'px';
+        laserDot.style.top = cy + 'px';
+        laserDot.style.opacity = '1';
+    }
+
+    // ════════════════════════════════════════════════════════
+    // KEYBOARD SHORTCUTS
+    // ════════════════════════════════════════════════════════
+    window.addEventListener('keydown', (e) => {
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag==='input'||tag==='textarea'||document.activeElement.isContentEditable) return;
+
+        // ━━━ جدول: تنقل ━━━
+        if (selectedElement && selectedElement.type === 'table' && selectedElement.selectedCell) {
+            const tbl = selectedElement, sc = tbl.selectedCell;
+            if (e.key==='ArrowRight')  { sc.c=Math.max(0,sc.c-1); redraw(); return; }
+            if (e.key==='ArrowLeft')   { sc.c=Math.min(tbl.cols-1,sc.c+1); redraw(); return; }
+            if (e.key==='ArrowUp')     { sc.r=Math.max(0,sc.r-1); redraw(); return; }
+            if (e.key==='ArrowDown')   { sc.r=Math.min(tbl.rows-1,sc.r+1); redraw(); return; }
+            if (e.key==='Tab')         { e.preventDefault(); if(e.shiftKey){if(sc.c>0)sc.c--;else if(sc.r>0){sc.r--;sc.c=tbl.cols-1;}}else{if(sc.c<tbl.cols-1)sc.c++;else if(sc.r<tbl.rows-1){sc.r++;sc.c=0;}} redraw(); return; }
+            if (e.key==='Backspace')   { if(tbl.data[sc.r]&&tbl.data[sc.r][sc.c])tbl.data[sc.r][sc.c]=tbl.data[sc.r][sc.c].slice(0,-1); redraw(); return; }
+            if (e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey) {
+                if(!tbl.data[sc.r]) tbl.data[sc.r]=[];
+                tbl.data[sc.r][sc.c]=(tbl.data[sc.r][sc.c]||'')+e.key; redraw(); return;
+            }
+        }
+
+        if ((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z') { e.preventDefault(); if(e.shiftKey)btnRedo();else btnUndoFn(); return; }
+        if ((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y') { e.preventDefault(); btnRedo(); return; }
+        if ((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d' && getSelectedList().length > 0) {
+            e.preventDefault();
+            const list = getSelectedList();
+            const clones = list.map(el => {
+                const clone = JSON.parse(JSON.stringify(el));
+                delete clone._dragNode;
+                clone.x = (clone.x||0) + 20; clone.y = (clone.y||0) + 20;
+                if (clone.x1 !== undefined) { clone.x1 += 20; clone.x2 += 20; }
+                if (clone.y1 !== undefined) { clone.y1 += 20; clone.y2 += 20; }
+                if (clone.points) clone.points = clone.points.map(p => ({ x: p.x + 20, y: p.y + 20 }));
+                if (clone.type === 'image' && el.imgObj) {
+                    const img = new Image(); img.src = el.imgSrc;
+                    clone.imgObj = img;
+                }
+                return clone;
+            });
+            clones.forEach(c => elements.push(c));
+            // حدد العناصر المستنسخة
+            additionalSelected = clones.slice(0, -1);
+            selectedElement = clones[clones.length - 1];
+            redoElements.length = 0;
+            redraw();
+            return;
+        }
+        if (e.key==='Delete'||(e.key==='Backspace'&&selectedElement&&selectedElement.type!=='table')) {
+            // حذف عقدة خريطة ذهنية محددة (لو أساسي)
+            if (selectedElement && selectedElement.type === 'mindmap' && selectedElement.selectedNodeId) {
+                const elIdx = elements.indexOf(selectedElement);
+                if (elIdx !== -1) {
+                    deleteMindmapNode(elIdx, selectedElement.selectedNodeId);
+                    return;
+                }
+            }
+            // حذف كل العناصر المحددة
+            const toDelete = getSelectedList();
+            if (toDelete.length > 0) {
+                elements = elements.filter(el => !toDelete.includes(el));
+                clearAllSelection();
+                showToast('info', toDelete.length === 1 ? 'تم حذف العنصر' : `تم حذف ${toDelete.length} عناصر`);
+                redraw();
+            }
+            return;
+        }
+
+        const k = e.key.toLowerCase();
+        if (k==='p') setTool('pen');
+        else if (k==='h') setTool('highlighter');
+        else if (k==='e') setTool('eraser');
+        else if (k==='t') setTool('text');
+        else if (k==='s') setTool('select');
+        else if (k==='m') setTool('hand');
+        else if (k==='l') selectShape('line');
+        else if (k==='r') selectShape('rect');
+        else if (k==='c') selectShape('circle');
+        else if (k==='escape') { selectedElement=null; redraw(); closeAllDropdowns(); }
+    });
+
+    function btnUndoFn() {
+        if(elements.length > 0) {
+            const popped = elements.pop();
+            if (popped.type === 'mindmap_add_node') {
+                popped.mindmap.nodes = popped.mindmap.nodes.filter(n => n.id !== popped.node.id);
+                popped.mindmap.connections = popped.mindmap.connections.filter(c => c.to !== popped.node.id);
+            }
+            redoElements.push(popped);
+            redraw();
+        }
+    }
+    function btnRedo() {
+        if(redoElements.length > 0) {
+            const popped = redoElements.pop();
+            if (popped.type === 'mindmap_add_node') {
+                popped.mindmap.nodes.push(popped.node);
+                popped.mindmap.connections.push(popped.connection);
+            }
+            elements.push(popped);
+            redraw();
+        }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TOOL MANAGEMENT
+    // ════════════════════════════════════════════════════════
+    function setTool(name) {
+        currentTool = name;
+        Object.keys(toolBtns).forEach(t => {
+            if (toolBtns[t]) toolBtns[t].classList.remove('active');
+        });
+        if (toolBtns[name]) toolBtns[name].classList.add('active');
+        // 🎯 الليزر: يظهر النقطة مباشرة، ويختفي مع أي أداة تانية
+        if (name !== 'laser') laserDot.style.opacity = '0';
+        updateCanvasCursor();
+        closeAllDropdowns();
+        if (name==='image') imageUpload.click();
+    }
+
+    function closeAllDropdowns() {
+        document.getElementById('shape-dropdown').classList.remove('open');
+        document.getElementById('stamps-dropdown').classList.add('hidden');
+        document.getElementById('media-dropdown').classList.add('hidden');
+        const pdfDd = document.getElementById('pdf-dropdown');
+        if (pdfDd) pdfDd.classList.add('hidden');
+    }
+
+    // إغلاق القوائم عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        const exceptions = ['shape-dropdown','stamps-dropdown','media-dropdown','pdf-dropdown','btn-shapes','btn-stamps','btn-media','btn-pdf-viewer','shapes-group','stamps-group','pdf-group'];
+        if (!exceptions.some(id => document.getElementById(id) && document.getElementById(id).contains(e.target))) {
+            closeAllDropdowns();
+        }
+    });
+
+    // ربط أزرار الأدوات
+    ['pen','highlighter','eraser','select','hand','text'].forEach(t => {
+        if (toolBtns[t]) toolBtns[t].addEventListener('click', () => setTool(t));
+    });
+    if (toolBtns['laser']) {
+        toolBtns['laser'].addEventListener('click', () => {
+            setTool(currentTool === 'laser' ? 'pen' : 'laser');
+        });
+    }
+
+    // ━━━ أزرار الأشكال ━━━
+    function toggleShapeDropdown() {
+        const d = document.getElementById('shape-dropdown');
+        const isOpen = d.classList.contains('open');
+        closeAllDropdowns();
+        if (!isOpen) d.classList.add('open');
+    }
+    function selectShape(shape) {
+        selectedShape = shape;
+        currentTool = shape;
+        const icons = { line:'ph-line-segment', rect:'ph-rectangle', circle:'ph-circle', arrow:'ph-arrow-left' };
+        document.getElementById('shape-icon').className = `ph ${icons[shape] || 'ph-line-segment'} text-xl`;
+        document.getElementById('btn-shapes').classList.add('active');
+        ['pen','highlighter','eraser','select','hand','laser','text'].forEach(t => {
+            if (toolBtns[t]) toolBtns[t].classList.remove('active');
+        });
+        document.getElementById('shape-dropdown').classList.remove('open');
+        updateCanvasCursor();
+    }
+
+    // ━━━ طوابع ━━━
+    function toggleStampsDropdown() {
+        const d = document.getElementById('stamps-dropdown');
+        const hidden = d.classList.contains('hidden');
+        closeAllDropdowns();
+        if (hidden) d.classList.remove('hidden');
+    }
+    function switchStampTab(index) {
+        document.querySelectorAll('.stamp-tab').forEach((t, i) => {
+            t.classList.toggle('active', i === index);
+        });
+        document.querySelectorAll('.stamp-tab-content').forEach((c, i) => {
+            if (i === index) {
+                c.classList.add('active');
+                if (c.classList.contains('flex')) c.style.display = 'flex';
+                else c.style.display = 'grid';
+            } else {
+                c.classList.remove('active');
+                c.style.display = 'none';
+            }
+        });
+    }
+    function selectStamp(emoji) {
+        currentStamp = emoji;
+        setTool('stamp');
+        document.getElementById('stamps-dropdown').classList.add('hidden');
+        // toast disabled
+    }
+
+    // ━━━ وسائط ━━━
+    function toggleMediaDropdown() {
+        const d = document.getElementById('media-dropdown');
+        const hidden = d.classList.contains('hidden');
+        closeAllDropdowns();
+        if (hidden) d.classList.remove('hidden');
+    }
+    function triggerImageUpload() { closeAllDropdowns(); imageUpload.value=''; imageUpload.click(); }
+
+    // إغلاق القوائم عند النقر خارجها
+    document.addEventListener('click', (e) => {
+        const exceptions = ['shape-dropdown','stamps-dropdown','media-dropdown','btn-shapes','btn-stamps','btn-media','shapes-group','stamps-group'];
+        if (!exceptions.some(id => document.getElementById(id) && document.getElementById(id).contains(e.target))) {
+            closeAllDropdowns();
+        }
+    });
+
+    // ━━━ ألوان وحجم ━━━
+    document.querySelectorAll('.color-wrapper').forEach(w => {
+        let clickTimer = null;
+        const picker = w.querySelector('.color-picker');
+
+        w.addEventListener('click', (e) => {
+            if (clickTimer) {
+                // ✨ ضغطتين = افتح color picker
+                clearTimeout(clickTimer);
+                clickTimer = null;
+                if (picker) {
+                    picker.value = w.getAttribute('data-color') || '#000000';
+                    try { picker.showPicker(); } catch(_) { picker.click(); }
+                }
+                return;
+            }
+            // ✨ ضغطة واحدة = غيّر اللون فوراً (بعد 250ms للتفرقة)
+            clickTimer = setTimeout(() => {
+                clickTimer = null;
+                document.querySelectorAll('.color-wrapper').forEach(x => {
+                    x.classList.remove('active');
+                    x.style.borderColor = 'transparent';
+                });
+                w.classList.add('active');
+                w.style.borderColor = '#1e293b';
+                brushColor = w.getAttribute('data-color');
+                updateCanvasCursor();
+                if (['eraser','laser','hand','select'].includes(currentTool)) setTool('pen');
+            }, 250);
+        });
+
+        if (picker) {
+            picker.addEventListener('input', (e) => {
+                const color = e.target.value;
+                w.setAttribute('data-color', color);
+                w.style.backgroundColor = color;
+                if (w.classList.contains('active')) brushColor = color;
+                updateCanvasCursor();
+            });
+        }
+    });
+
+    const sizeSlider = document.getElementById('size-slider');
+    sizeSlider.addEventListener('input', (e) => { brushSize = parseInt(e.target.value); updateCanvasCursor(); });
+
+    function setBgState(state) {
+        bgState = state;
+        pages[currentPageIndex].bgState = state;
+        updateBgButtonsInModal();
+        redraw();
+    }
+
+    function updateBgButtonsInModal() {
+        document.querySelectorAll('.bg-opt-btn').forEach(btn => {
+            const s = parseInt(btn.getAttribute('data-bgopt'), 10);
+            if (s === bgState) {
+                btn.classList.add('ring-2', 'ring-teal-500', 'border-teal-500');
+                btn.style.borderColor = '#14b8a6';
+            } else {
+                btn.classList.remove('ring-2', 'ring-teal-500', 'border-teal-500');
+                btn.style.borderColor = '';
+            }
+        });
+    }
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+        showCustomConfirm('مسح المحتوى', 'هل تريد مسح محتوى هذه الصفحة بالكامل؟', function() { elements.length = 0; redoElements.length = 0; if (pages[currentPageIndex]) { pages[currentPageIndex].elements = elements; pages[currentPageIndex].redoElements = redoElements; } redraw(); showToast('warning', 'تم مسح المحتوى بنجاح'); }); return;
+        elements.length = 0; redoElements.length = 0;
+        showToast('warning', 'تم مسح محتوى الصفحة');
+        redraw();
+    });
+
+    document.getElementById('btn-undo').addEventListener('click', btnUndoFn);
+    document.getElementById('btn-redo').addEventListener('click', btnRedo);
+
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        else document.exitFullscreen();
+    });
+
+    document.getElementById('btn-zoom-in').addEventListener('click', () => { zoom=Math.min(zoom*1.2,6); document.getElementById('zoom-level').textContent=Math.round(zoom*100)+'%'; redraw(); });
+    document.getElementById('btn-zoom-out').addEventListener('click', () => { zoom=Math.max(zoom/1.2,0.3); document.getElementById('zoom-level').textContent=Math.round(zoom*100)+'%'; redraw(); });
+
+    // ════════════════════════════════════════════════════════
+    // TEXT TOOL
+    // ════════════════════════════════════════════════════════
+    function showTextInput(canvasX, canvasY, screenX, screenY) {
+        // 🔥 لو فيه مربع نص مفتوح، احفظه الأول قبل فتح واحد جديد
+        if (textInput._commitFn) {
+            try { textInput._commitFn(); } catch(_) {}
+        }
+
+        const px = Math.max(10, Math.min(screenX, window.innerWidth - 220));
+        const py = Math.max(70, Math.min(screenY, window.innerHeight - 90));
+        textInput.style.left = px + 'px';
+        textInput.style.top  = py + 'px';
+        textInput.value = '';
+        textInput.classList.remove('hidden');
+        textInput.style.fontSize = `${Math.max(16, brushSize * 4 + 12)}px`;
+        textInput.style.width = '240px';
+        textInput.style.height = 'auto';
+        textInput.style.overflow = 'hidden';
+        textInput.style.minHeight = '48px';
+
+        function autoGrow() {
+            textInput.style.height = 'auto';
+            textInput.style.height = Math.max(48, textInput.scrollHeight) + 'px';
+        }
+        textInput.addEventListener('input', autoGrow);
+        textInput._inputFn = autoGrow;
+
+        let committed = false;
+        function commit() {
+            if (committed) return;
+            committed = true;
+            const val = textInput.value;
+            if (val && val.trim().length > 0) {
+                elements.push({ type:'text', text: val, runs:[{text: val, color: brushColor}], x: canvasX, y: canvasY, color: brushColor, size: brushSize });
+                redoElements.length = 0;
+                redraw();
+            }
+            textInput.classList.add('hidden');
+            textInput.removeEventListener('blur', commit);
+            textInput.removeEventListener('keydown', onKey);
+            textInput.removeEventListener('input', autoGrow);
+            textInput._commitFn = null;
+            textInput._keyFn = null;
+            textInput._inputFn = null;
+        }
+        function onKey(ev) {
+            // Enter = سطر جديد عادي (بدون preventDefault)
+            // Escape = حفظ وإغلاق
+            if (ev.key === 'Escape') { ev.preventDefault(); commit(); }
+        }
+
+        textInput.addEventListener('blur', commit);
+        textInput.addEventListener('keydown', onKey);
+        textInput._commitFn = commit;
+        textInput._keyFn = onKey;
+
+        setTimeout(() => { try { textInput.focus(); } catch(_) {} }, 30);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // IMAGE UPLOAD
+    // ════════════════════════════════════════════════════════
+    imageUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const img = new Image();
+            img.onload = () => {
+                const maxW = canvas.width * 0.5 / zoom;
+                const scale = Math.min(1, maxW / img.width);
+                elements.push({ type:'image', imgObj:img, imgSrc:evt.target.result, x:50/zoom, y:50/zoom, w:img.width*scale, h:img.height*scale });
+                redoElements.length = 0; redraw();
+                showToast('success', 'تم إدراج الصورة. استخدم أداة التحديد لتحريكها.');
+                setTool('select');
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    });
+
+    // ════════════════════════════════════════════════════════
+    // TABLE
+    // ════════════════════════════════════════════════════════
+    function openTableModal() { closeAllDropdowns(); document.getElementById('modal-table').classList.remove('hidden'); }
+
+    function insertTableToCanvas() {
+        const rows = parseInt(document.getElementById('tbl-rows').value) || 4;
+        const cols = parseInt(document.getElementById('tbl-cols').value) || 3;
+        const data = Array.from({length:rows}, () => Array(cols).fill(''));
+        const tblW = cols * 130, tblH = rows * 45;
+        const tableEl = {
+            type: 'table',
+            x: (canvas.width/2 - tblW/2 - panX) / zoom,
+            y: (canvas.height/2 - tblH/2 - panY) / zoom,
+            rows, cols,
+            colWidths: Array(cols).fill(130),
+            rowHeights: Array(rows).fill(45),
+            headerBg: document.getElementById('tbl-header-bg').value || '#dbeafe',
+            cellBg:   document.getElementById('tbl-cell-bg').value   || '#ffffff',
+            borderColor: document.getElementById('tbl-border-color').value || '#93c5fd',
+            fontSize: parseInt(document.getElementById('tbl-font-size').value) || 16,
+            textColor: '#0f172a', data, selectedCell: {r:0, c:0}
+        };
+        elements.push(tableEl); selectedElement = tableEl;
+        closeModal('modal-table');
+        showToast('success', 'تم إضافة الجدول! انقر على خلية وابدأ الكتابة فوراً.');
+        setTool('select'); redraw();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MIND MAP
+    // ════════════════════════════════════════════════════════
+    function measureNodeWidth(text, fontSize) {
+        ctx.font = `bold ${fontSize}px Cairo, sans-serif`;
+        return Math.max(80, ctx.measureText(text).width + 30);
+    }
+
+    function insertQuickMindMap() {
+        closeAllDropdowns();
+        const rootText = 'الموضوع الرئيسي';
+        const rootColor = '#2563eb';
+        
+        // موضع مركزي في السبورة
+        const cx = (canvas.width/2 - panX) / zoom;
+        const cy = (canvas.height/2 - panY) / zoom;
+        
+        const w = measureNodeWidth(rootText, 14);
+        const rootNode = { id:'root', text:rootText, x:cx - w/2, y:cy - 18, w:w, h:36, color:rootColor, fontSize:14 };
+        
+        elements.push({ type:'mindmap', nodes: [rootNode], connections: [], selectedNodeId:null });
+        redoElements.length = 0;
+        showToast('success', 'تم إضافة الخريطة الذهنية! انقر مرتين للتعديل، واستخدم + للإضافة.');
+        setTool('select'); redraw();
+    }
+
+    function insertMindMapToCanvas() {
+        const rootText = (document.getElementById('mm-root-text').value || '').trim() || 'الموضوع الرئيسي';
+        const childrenRaw = document.getElementById('mm-children-text').value || '';
+        const rootColor = document.getElementById('mm-root-color').value || '#2563eb';
+        const childColor = document.getElementById('mm-child-color').value || '#7c3aed';
+        const direction = document.getElementById('mm-direction')?.value || 'below';
+        const children = childrenRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+        const cx = (canvas.width/2 - panX) / zoom;
+        const cy = (canvas.height/2 - panY) / zoom;
+
+        const rootW = measureNodeWidth(rootText, 14);
+        const rootNode = { id: 'root', text: rootText, x: cx - rootW/2, y: cy - 18, w: rootW, h: 36, color: rootColor, fontSize: 14 };
+        const nodes = [rootNode];
+        const connections = [];
+
+        children.forEach((text, idx) => {
+            const id = 'node_' + Date.now() + '_' + idx;
+            const w = measureNodeWidth(text, 13);
+            let nx, ny;
+            if (direction === 'right') {
+                nx = rootNode.x + rootNode.w + 60;
+                ny = rootNode.y + (idx - (children.length - 1) / 2) * 55;
+            } else if (direction === 'left') {
+                nx = rootNode.x - w - 60;
+                ny = rootNode.y + (idx - (children.length - 1) / 2) * 55;
+            } else {
+                nx = rootNode.x + (idx - (children.length - 1) / 2) * 130;
+                ny = rootNode.y + rootNode.h + 60;
+            }
+            nodes.push({ id, text, x: nx, y: ny, w, h: 36, color: childColor, fontSize: 13 });
+            connections.push({ from: 'root', to: id, color: '#94a3b8', direction });
+        });
+
+        elements.push({ type: 'mindmap', nodes, connections, selectedNodeId: null });
+        redoElements.length = 0;
+        closeModal('modal-mindmap');
+        showToast('success', 'تم إضافة الخريطة الذهنية!');
+        setTool('select');
+        redraw();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TOOLBAR TOGGLES (FIX: arrows don't move on hover)
+    // ════════════════════════════════════════════════════════
+    let isTopCollapsed = false;
+    function toggleTopHeader() {
+        isTopCollapsed = !isTopCollapsed;
+        const c = document.getElementById('top-header-container');
+        const icon = document.getElementById('toggle-top-icon');
+        if (isTopCollapsed) { c.classList.add('collapsed'); icon.className = 'fas fa-chevron-down pointer-events-none'; }
+        else { c.classList.remove('collapsed'); icon.className = 'fas fa-chevron-up pointer-events-none'; }
+        setTimeout(resizeCanvas, 350);
+    }
+
+    let isRightCollapsed = false;
+    function toggleRightBar() {
+        isRightCollapsed = !isRightCollapsed;
+        const c = document.getElementById('right-bar-container');
+        const icon = document.getElementById('toggle-right-icon');
+        if (isRightCollapsed) { c.classList.add('collapsed'); icon.className = 'fas fa-chevron-left pointer-events-none'; }
+        else { c.classList.remove('collapsed'); icon.className = 'fas fa-chevron-right pointer-events-none'; }
+    }
+
+    let isBottomCollapsed = false;
+    function toggleBottomBar() {
+        isBottomCollapsed = !isBottomCollapsed;
+        const c = document.getElementById('bottom-bar-container');
+        const icon = document.getElementById('toggle-bottom-icon');
+        if (isBottomCollapsed) { c.classList.add('collapsed'); icon.className = 'fas fa-chevron-up pointer-events-none'; }
+        else { c.classList.remove('collapsed'); icon.className = 'fas fa-chevron-down pointer-events-none'; }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // SETTINGS
+    // ════════════════════════════════════════════════════════
+    function openSettingsModal() {
+        document.getElementById('modal-settings').classList.remove('hidden');
+        document.getElementById('chk-lock-pan').checked = isPanLocked;
+        updateBgButtonsInModal();
+        const sf = localStorage.getItem('wbFrameImage');
+        if (sf) { document.getElementById('frame-preview-img').src=sf; document.getElementById('frame-preview-container').classList.remove('hidden'); }
+        else { document.getElementById('frame-preview-container').classList.add('hidden'); }
+    }
+
+    function handleFrameUpload(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const b64 = evt.target.result;
+            localStorage.setItem('wbFrameImage', b64); loadCustomFrame(b64);
+            document.getElementById('frame-preview-img').src = b64;
+            document.getElementById('frame-preview-container').classList.remove('hidden');
+            isPanLocked = true; document.getElementById('chk-lock-pan').checked = true;
+            panX=0; panY=0; showToast('success','تم رفع وتطبيق الإطار وتثبيت السبورة!');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function loadCustomFrame(b64) {
+        if (!b64) { customFrameImage=null; redraw(); return; }
+        const img = new Image(); img.onload=()=>{customFrameImage=img;redraw();}; img.src=b64;
+    }
+
+    function removeCustomFrame() {
+        localStorage.removeItem('wbFrameImage'); customFrameImage=null;
+        document.getElementById('frame-preview-container').classList.add('hidden');
+        showToast('info','تم إزالة الإطار المخصص'); redraw();
+    }
+
+    function toggleLockPan(locked) {
+        isPanLocked = locked;
+        if (locked) { panX = 0; panY = 0; }
+        redraw();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MULTI-PAGE
+    // ════════════════════════════════════════════════════════
+    function updatePageIndicator() {
+        document.getElementById('page-indicator').textContent = `صفحة ${currentPageIndex+1} / ${pages.length}`;
+    }
+
+    function switchPage(index) {
+        if (index < 0 || index >= pages.length) return;
+        pages[currentPageIndex].elements    = elements;
+        pages[currentPageIndex].redoElements = redoElements;
+        pages[currentPageIndex].bgState     = bgState;
+        currentPageIndex = index;
+        elements     = pages[currentPageIndex].elements;
+        redoElements = pages[currentPageIndex].redoElements;
+        bgState      = pages[currentPageIndex].bgState;
+        selectedElement = null; currentElement = null; isDrawing = false;
+        updatePageIndicator(); redraw();
+    }
+
+    function nextPage() {
+        if (currentPageIndex < pages.length-1) switchPage(currentPageIndex+1);
+        else addNewPage();
+    }
+    // زر التالي فقط (لن يضيف صفحة جديدة)
+    function goToNextPageOnly() {
+        if (currentPageIndex < pages.length-1) switchPage(currentPageIndex+1);
+        else showToast('info', 'أنت على آخر صفحة - اضغط \u201cجديدة\u201d لإضافة صفحة');
+    }
+    function prevPage() { if(currentPageIndex>0) switchPage(currentPageIndex-1); }
+
+    function addNewPage() {
+        pages[currentPageIndex].elements    = elements;
+        pages[currentPageIndex].redoElements = redoElements;
+        pages[currentPageIndex].bgState     = bgState;
+        pages.push({elements:[],redoElements:[],bgState:bgState});
+        currentPageIndex = pages.length-1;
+        elements=[]; redoElements=[]; selectedElement=null; currentElement=null;
+        updatePageIndicator(); showToast('info','تم إضافة صفحة جديدة رقم '+(currentPageIndex+1)); redraw();
+    }
+
+    function deleteCurrentPage() {
+        if (pages.length === 1) { showToast('warning','لا يمكن حذف الصفحة الوحيدة'); return; }
+        showCustomConfirm('حذف الصفحة', `هل تريد حذف الصفحة رقم ${currentPageIndex+1} بالكامل؟`, function() {
+            pages.splice(currentPageIndex, 1);
+            if (currentPageIndex >= pages.length) currentPageIndex = pages.length - 1;
+            elements = pages[currentPageIndex].elements;
+            redoElements = pages[currentPageIndex].redoElements;
+            bgState = pages[currentPageIndex].bgState;
+            selectedElement = null; currentElement = null;
+            updatePageIndicator();
+            redraw();
+            showToast('success', 'تم حذف الصفحة بنجاح');
+        });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // CLOUD SAVE / LOAD
+    // ════════════════════════════════════════════════════════
+    let savedBoardsList = [];
+
+    function serializePagesForCloud() {
+        pages[currentPageIndex].elements    = elements;
+        pages[currentPageIndex].redoElements = redoElements;
+        pages[currentPageIndex].bgState     = bgState;
+
+        // نزيل imgObj لأنه لا يُسلسَل JSON ونزيل مؤشرات التراجع للمخططات عشان الحجم
+        const cleanPages = pages.map(p => ({
+            ...p,
+            elements: p.elements.filter(el => el.type !== 'mindmap_add_node').map(el => {
+                if (el.type==='image') return {...el, imgObj:undefined};
+                return el;
+            })
+        }));
+        return cleanPages;
+    }
+
+    function restorePagesFromCloud(parsedPages) {
+        return parsedPages.map(p => ({
+            ...p,
+            elements: p.elements.map(el => {
+                if (el.type==='image' && el.imgSrc) {
+                    const img = new Image(); img.src = el.imgSrc;
+                    return {...el, imgObj:img};
+                }
+                return el;
+            })
+        }));
+    }
+
+    function saveCurrentBoardToCloud() {
+        let employeeCode = localStorage.getItem('adminCode') || localStorage.getItem('employeeCode') || '';
+        if (!employeeCode) {
+            const inputCode = prompt('يرجى إدخال كود المعلم / الموظف للحفظ بالسحابة:');
+            if (inputCode && inputCode.trim()) {
+                employeeCode = inputCode.trim();
+                localStorage.setItem('adminCode', employeeCode);
+                localStorage.setItem('employeeCode', employeeCode);
+            } else {
+                showToast('warning', 'يجب تسجيل الدخول أولاً لحفظ السبورة');
+                return;
+            }
+        }
+        const lessonName = document.getElementById('lesson-name').value.trim() || 'سبورة بدون عنوان';
+        const cleanPages = serializePagesForCloud();
+        const boardPackage = {
+            id: currentBoardId, name: lessonName,
+            thumbnail: canvas.toDataURL('image/jpeg', 0.5),
+            data: JSON.stringify({
+                lessonName, grade: document.getElementById('wb-grade-select').value,
+                group: document.getElementById('wb-group-select').value,
+                pages: cleanPages
+            })
+        };
+        showToast('info','جاري الحفظ في السحابة...');
+        runGS('saveBoardToCloud', boardPackage)
+        .then(json => {
+            if (json && (json.success || (json.data && json.data.success))) showToast('success', 'تم حفظ السبورة بالسحابة!');
+            else showToast('error', 'فشل الحفظ: ' + (json ? (json.message || JSON.stringify(json)) : 'لم يرد الخادم'));
+        })
+        .catch(err => showToast('error', 'خطأ في الاتصال: ' + err.message));
+    }
+
+    function openSavedBoardsModal() {
+        document.getElementById('modal-saved-boards').classList.remove('hidden');
+        document.getElementById('saved-boards-grid').innerHTML = '<div class="text-center py-10 col-span-full text-slate-400 font-bold"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>جاري الجلب...</div>';
+        runGS('getAllBoards').then(boards => { savedBoardsList = boards || []; renderBoardsGrid(savedBoardsList); });
+    }
+
+    function renderBoardsGrid(list) {
+        const grid = document.getElementById('saved-boards-grid');
+        if (!list || list.length === 0) {
+            grid.innerHTML = '<div class="text-center py-10 col-span-full text-slate-400 font-bold">لا توجد سبورات محفوظة</div>';
+            return;
+        }
+        grid.innerHTML = list.map(b => {
+            const d = b.date ? new Date(b.date).toLocaleDateString('ar-EG') : '';
+            return `<div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                <img src="${b.thumbnail||''}" class="w-full h-28 object-cover rounded-xl bg-white mb-2 border border-slate-200" alt="${b.name}">
+                <div><h4 class="font-extrabold text-slate-800 text-sm truncate" title="${b.name}">${b.name||'سبورة'}</h4>
+                <p class="text-[11px] text-slate-400 font-semibold mb-3"><i class="far fa-clock"></i> ${d}</p></div>
+                <div class="flex gap-2">
+                    <button onclick="loadBoardFromCloud('${b.fileId}','${b.id}')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded-xl text-xs flex items-center justify-center gap-1"><i class="fas fa-folder-open"></i> فتح</button>
+                    <button onclick="deleteCloudBoard('${b.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-trash"></i></button>
+                </div></div>`;
+        }).join('');
+    }
+
+    function filterSavedBoardsList(q) {
+        const filtered = savedBoardsList.filter(b => (b.name||'').toLowerCase().includes(q.trim().toLowerCase()));
+        renderBoardsGrid(filtered);
+    }
+
+    function loadBoardFromCloud(fileId, boardId) {
+        showToast('info','جاري تحميل السبورة...');
+        closeModal('modal-saved-boards');
+        runGS('getBoardData', fileId).then(res => {
+            if (res && res.success && res.data) {
+                try {
+                    const parsed = JSON.parse(res.data);
+                    currentBoardId = boardId;
+                    if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
+                    if (parsed.grade) { document.getElementById('wb-grade-select').value = parsed.grade; onGradeChange(parsed.grade); }
+                    if (parsed.group) setTimeout(()=>{ document.getElementById('wb-group-select').value = parsed.group; }, 100);
+                    if (parsed.pages && parsed.pages.length > 0) {
+                        pages = restorePagesFromCloud(parsed.pages);
+                        currentPageIndex = 0;
+                        elements = pages[0].elements; redoElements = pages[0].redoElements; bgState = pages[0].bgState;
+                        selectedElement=null; currentElement=null; updatePageIndicator(); redraw();
+                        showToast('success','تم فتح السبورة بنجاح!');
+                    }
+                } catch(err) { showToast('error','فشل في تحليل بيانات السبورة'); }
+            } else { showToast('error','تعذر قراءة ملف السبورة'); }
+        });
+    }
+
+    function deleteCloudBoard(id) {
+        showCustomConfirm('حذف السبورة', 'هل تريد حذف هذه السبورة نهائياً من السحابة؟', function() {
+            runGS('deleteBoard', id).then(res => {
+                if (res && res.success) {
+                    showToast('success', 'تم الحذف بنجاح');
+                    openSavedBoardsModal();
+                } else {
+                    showToast('error', 'فشل الحذف');
+                }
+            });
+        });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // EXPORT & LIBRARY SAVE
+    // ════════════════════════════════════════════════════════
+    document.getElementById('btn-export').addEventListener('click', () => document.getElementById('modal-export').classList.remove('hidden'));
+
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    document.getElementById('btn-export-png').addEventListener('click', () => {
+        const lesson = document.getElementById('lesson-name').value.trim() || 'سبورة';
+        const link = document.createElement('a');
+        link.download = `${lesson}_صفحة${currentPageIndex+1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        closeModal('modal-export'); showToast('success','تم تنزيل صورة السبورة!');
+    });
+
+    function generateMultiPagePdf() {
+        const {jsPDF} = window.jspdf;
+        const isLand = canvas.width > canvas.height;
+        const pdf = new jsPDF({ orientation: isLand?'landscape':'portrait', unit:'px', format:[canvas.width,canvas.height] });
+        pages[currentPageIndex].elements = elements;
+        pages[currentPageIndex].bgState  = bgState;
+        pages.forEach((p, idx) => {
+            if (idx>0) pdf.addPage([canvas.width,canvas.height], isLand?'landscape':'portrait');
+            // رسم الصفحة مؤقتاً
+            const old = { elements, bgState, sel:selectedElement, cur:currentElement };
+            elements = p.elements; bgState = p.bgState; selectedElement=null; currentElement=null;
+            redraw();
+            // ضغط الصورة لصيغة JPEG بيسرع استخراج وحفظ الـ PDF أضعاف مضاعفة
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, canvas.width, canvas.height);
+            elements=old.elements; bgState=old.bgState; selectedElement=old.sel; currentElement=old.cur;
+        });
+        redraw();
+        return pdf;
+    }
+
+    document.getElementById('btn-export-pdf').addEventListener('click', () => {
+        const lesson = document.getElementById('lesson-name').value.trim() || 'سبورة_الشرح';
+        const pdf = generateMultiPagePdf();
+        pdf.save(`${lesson}.pdf`);
+        closeModal('modal-export'); showToast('success','تم تصدير PDF بنجاح!');
+    });
+
+    // ── حفظ وإرسال للمكتبة ──
+    function saveWhiteboardToLibrary() {
+        const lessonName = document.getElementById('lesson-name').value.trim();
+        const grade      = document.getElementById('wb-grade-select').value;
+        const group      = document.getElementById('wb-group-select').value;
+
+        if (!lessonName) { showToast('warning','أدخل اسم الدرس أولاً'); document.getElementById('lesson-name').focus(); return; }
+        if (!grade)      { showToast('warning','اختر الصف الدراسي المستهدف'); document.getElementById('wb-grade-select').focus(); return; }
+
+        document.getElementById('modal-saving').classList.remove('hidden');
+        document.getElementById('saving-status-text').textContent = 'يتم تحويل جميع صفحات السبورة لملف PDF...';
+
+        setTimeout(() => {
+            try {
+                const pdf = generateMultiPagePdf();
+                const rawUri = pdf.output('datauristring');
+                const base64 = rawUri.includes(',') ? rawUri.split(',')[1] : rawUri;
+
+                document.getElementById('saving-status-text').textContent = 'جاري الرفع لمكتبة الطلاب...';
+
+                runGS('saveWhiteboardPdfToLibrary', { lessonName, grade, group, pdfBase64: base64 })
+                .then(res => {
+                    document.getElementById('modal-saving').classList.add('hidden');
+                    if (res && res.success) {
+                        showToast('success', res.message || `✅ تم حفظ (${lessonName}) في مكتبة الطلاب بصفة (شرح) وإرسال إشعارات الواتساب!`);
+                        // حفظ تلقائي بالسحابة أيضاً
+                        saveCurrentBoardToCloud();
+                    } else {
+                        showToast('error', 'فشل الحفظ: ' + (res ? (res.message||JSON.stringify(res)) : 'لم يرد الخادم'));
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('modal-saving').classList.add('hidden');
+                    showToast('error', 'خطأ في الاتصال: ' + err.message);
+                });
+            } catch(err) {
+                document.getElementById('modal-saving').classList.add('hidden');
+                showToast('error','خطأ في إنشاء PDF: ' + err.message);
+            }
+        }, 200);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // LOAD GRADES & GROUPS - FROM getPlatformSettings (PUBLIC, no auth needed)
+    // الدالة دي PUBLIC_ACTION في backend = لا تحتاج auth
+    // وتجيب grades من جدول الربط + قاعدة بيانات الطلاب تلقائياً
+    // ════════════════════════════════════════════════════════
+    let platformSettings = { grades:[], groups:[], relations:[] };
+
+    async function loadGradesAndGroups() {
+        const gradeSelect = document.getElementById('wb-grade-select');
+        const groupSelect = document.getElementById('wb-group-select');
+        gradeSelect.innerHTML = '<option value="">⏳ جاري تحميل الصفوف...</option>';
+        groupSelect.innerHTML = '<option value="">⏳ جاري...</option>';
+
+        try {
+            // getPlatformSettings = PUBLIC_ACTION -> لا تحتاج كود موظف
+            // وتجيب الصفوف من جدول الربط + قاعدة بيانات الطلاب
+            const settings = await runGS('getPlatformSettings');
+
+            const gradesSet = new Set();
+            const groupsSet = new Set();
+            const relations = [];
+
+            if (settings) {
+                // grades واجدة فيها مباشرة من جدول الربط + سكان البيانات
+                (settings.grades  || []).forEach(g  => { if(g&&g.trim()) gradesSet.add(g.trim()); });
+                (settings.groups  || []).forEach(gr => { if(gr&&gr.trim()) groupsSet.add(gr.trim()); });
+                // relations = { type, grade, group }
+                (settings.relations || []).forEach(r => {
+                    if(r.grade&&r.group) relations.push(r);
+                    if(r.grade) gradesSet.add(r.grade.trim());
+                    if(r.group) groupsSet.add(r.group.trim());
+                });
+            }
+
+            platformSettings = {
+                grades:    [...gradesSet],
+                groups:    [...groupsSet],
+                relations: relations
+            };
+
+            if (platformSettings.grades.length === 0) {
+                platformSettings.grades = ["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي"];
+            }
+            if (platformSettings.groups.length === 0) {
+                platformSettings.groups = ["مجموعة أ", "مجموعة ب", "أونلاين"];
+            }
+
+            gradeSelect.innerHTML = '<option value="">اختر الصف الدراسي</option>';
+            platformSettings.grades.forEach(g => gradeSelect.innerHTML += `<option value="${g}">${g}</option>`);
+
+            groupSelect.innerHTML = '<option value="">جميع المجموعات</option>';
+            platformSettings.groups.forEach(gr => groupSelect.innerHTML += `<option value="${gr}">${gr}</option>`);
+            showToast('success', `✅ تم تحميل الصفوف والمجموعات بنجاح`);
+
+        } catch(err) {
+            const fallbackGrades = ["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي"];
+            const fallbackGroups = ["مجموعة أ", "مجموعة ب", "أونلاين"];
+            gradeSelect.innerHTML = '<option value="">اختر الصف الدراسي</option>';
+            fallbackGrades.forEach(g => gradeSelect.innerHTML += `<option value="${g}">${g}</option>`);
+            groupSelect.innerHTML = '<option value="">جميع المجموعات</option>';
+            fallbackGroups.forEach(gr => groupSelect.innerHTML += `<option value="${gr}">${gr}</option>`);
+        }
+    }
+
+    function onGradeChange(selectedGrade) {
+        const groupSelect = document.getElementById('wb-group-select');
+        groupSelect.innerHTML = '<option value="">جميع المجموعات</option>';
+        if (!selectedGrade) {
+            platformSettings.groups.forEach(gr => groupSelect.innerHTML += `<option value="${gr}">${gr}</option>`);
+            return;
+        }
+        // فلترة المجموعات المرتبطة بهذا الصف
+        const gradeGroups = platformSettings.relations
+            .filter(r => r.grade === selectedGrade)
+            .map(r => r.group)
+            .filter((v,i,a) => v && a.indexOf(v)===i);
+
+        const toShow = gradeGroups.length > 0 ? gradeGroups : platformSettings.groups;
+        toShow.forEach(gr => { if(gr&&gr.trim()) groupSelect.innerHTML += `<option value="${gr}">${gr}</option>`; });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+        resizeCanvas();
+        updatePageIndicator();
+        setTool('pen');
+
+        // تحميل الإطار المخصص
+        const sf = localStorage.getItem('wbFrameImage');
+        if (sf) { loadCustomFrame(sf); isPanLocked=true; }
+
+        // تحميل الإعدادات المحفوظة دائماً
+        const savedPanLock = localStorage.getItem('wbPanLocked');
+        if (savedPanLock === 'true') { isPanLocked = true; panX=0; panY=0; }
+
+        // 🔄 استعادة آخر جلسة من الحفظ التلقائي
+        try {
+            const saved = localStorage.getItem('wb_autosave_latest');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed.pages && parsed.pages.length > 0) {
+                    const timeAgo = Math.round((Date.now() - parsed.updatedAt) / 60000);
+                    if (confirm(`يوجد شغل غير محفوظ من ${timeAgo} دقيقة. هل تريد استعادته؟`)) {
+                        pages = restorePagesFromCloud(parsed.pages);
+                        currentPageIndex = parsed.currentPageIndex || 0;
+                        currentBoardId = parsed.boardId || currentBoardId;
+                        elements = pages[currentPageIndex].elements;
+                        redoElements = pages[currentPageIndex].redoElements;
+                        bgState = pages[currentPageIndex].bgState;
+                        if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
+                        updatePageIndicator();
+                        redraw();
+                    } else {
+                        localStorage.removeItem('wb_autosave_latest');
+                    }
+                }
+            }
+        } catch(_) {}
+
+        // تحميل الصفوف والمجموعات من الشيت
+        loadGradesAndGroups();
+    });
+
+    // ════════════════════════════════════════════════════════
+    // MIND MAP - INTERACTIVE EDIT + ADD CHILD NODE
+    // ════════════════════════════════════════════════════════
+    // متغيرات تحرير الخريطة الذهنية
+    let mmEditingElement = null;  // عنصر الخريطة قيد التعديل
+    let mmEditingNodeId  = null;  // معرف العقدة قيد التعديل
+
+    // ألوان المستويات للخريطة الذهنية
+    const MM_LEVEL_COLORS = [
+        '#2563eb', // مستوى 0 - أزرق
+        '#7c3aed', // مستوى 1 - بنفسجي
+        '#0891b2', // مستوى 2 - سماوي
+        '#059669', // مستوى 3 - أخضر
+        '#d97706', // مستوى 4 - برتقالي
+        '#dc2626', // مستوى 5 - أحمر
+        '#db2777', // مستوى 6 - وردي
+        '#0d9488', // مستوى 7 - تركواز
+        '#ca8a04', // مستوى 8 - أصفر غامق
+        '#9333ea', // مستوى 9 - بنفسجي فاتح
+    ];
+
+    function getMmNodeLevel(mm, nodeId) {
+        // حساب مستوى العقدة بالبحث التدريجي
+        if (nodeId === 'root') return 0;
+        function findLevel(id, depth) {
+            if (depth > 10) return depth;
+            const parents = mm.connections.filter(c => c.to === id).map(c => c.from);
+            if (parents.length === 0) return depth;
+            return Math.max(...parents.map(p => findLevel(p, depth + 1)));
+        }
+        return findLevel(nodeId, 0);
+    }
+
+    function getMmNodeColor(mm, nodeId) {
+        const level = getMmNodeLevel(mm, nodeId);
+        return MM_LEVEL_COLORS[Math.min(level, MM_LEVEL_COLORS.length - 1)];
+    }
+
+    function openInlineEditForNode(el, node) {
+        mmEditingElement = el;
+        mmEditingNodeId = node.id;
+
+        document.querySelectorAll('.inline-mm-edit').forEach(i => i.remove());
+
+        const nw = node.w || 100, nh = node.h || 36;
+        const screenX = node.x * zoom + panX;
+        const screenY = node.y * zoom + panY;
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'inline-mm-edit';
+        inp.value = node.text;
+        inp.style.cssText = `
+            position: absolute;
+            left: ${screenX}px;
+            top: ${screenY}px;
+            width: ${Math.max(110, nw * zoom)}px;
+            height: ${Math.max(38, nh * zoom)}px;
+            background: ${node.color || '#2563eb'};
+            color: #ffffff;
+            border: 2.5px solid #ffffff;
+            border-radius: ${8 * zoom}px;
+            font-family: 'Cairo', sans-serif;
+            font-size: ${Math.max(12, (node.fontSize || 13) * zoom)}px;
+            font-weight: 800;
+            text-align: center;
+            direction: rtl;
+            outline: none;
+            z-index: 1000;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            padding: 2px 6px;
+            pointer-events: auto;
+        `;
+
+        const overlay = document.getElementById('mindmap-overlay');
+        overlay.appendChild(inp);
+
+        setTimeout(() => { inp.focus(); inp.select(); }, 40);
+
+        ['pointerdown','pointerup','pointermove','mousedown','mouseup','mousemove','touchstart','touchend','click','dblclick'].forEach(evt => {
+            inp.addEventListener(evt, (e) => e.stopPropagation());
+        });
+
+        function saveEdit() {
+            const newText = inp.value.trim();
+            if (newText && mmEditingElement) {
+                const n = mmEditingElement.nodes.find(x => x.id === mmEditingNodeId);
+                if (n) {
+                    n.text = newText;
+                    n.w = measureNodeWidth(newText, n.fontSize || 13);
+                }
+                redraw();
+            }
+            inp.remove();
+            mmEditingElement = null;
+            mmEditingNodeId = null;
+        }
+
+        inp.addEventListener('blur', saveEdit);
+        inp.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); saveEdit(); }
+            if (ev.key === 'Escape') { inp.value = node.text; saveEdit(); }
+        });
+    }
+
+    canvas.addEventListener('dblclick', (e) => {
+        const coords = getCoords(e);
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const el = elements[i];
+            if (el.type === 'text') {
+                const box = getBox(el);
+                if (coords.x >= box.x && coords.x <= box.x + box.w &&
+                    coords.y >= box.y && coords.y <= box.y + box.h) {
+                    setTool('select');
+                    selectedElement = el;
+                    openInlineEditForText(el);
+                    return;
+                }
+            }
+            if (el.type === 'mindmap' && el.nodes) {
+                for (const node of el.nodes) {
+                    const nw = node.w || 100, nh = node.h || 36;
+                    if (coords.x >= node.x && coords.x <= node.x + nw &&
+                        coords.y >= node.y && coords.y <= node.y + nh) {
+                        setTool('select');
+                        openInlineEditForNode(el, node);
+                        return;
+                    }
+                }
+            }
+        }
+    });
+    function extractTextRuns(rootNode, defaultColor) {
+        const runs = [];
+        function walk(n, inheritedColor) {
+            if (n.nodeType === 3) {
+                if (n.textContent) runs.push({ text: n.textContent, color: inheritedColor });
+                return;
+            }
+            if (n.nodeType !== 1) return;
+            if (n.nodeName === 'BR') {
+                runs.push({ text: '\n', color: inheritedColor });
+                return;
+            }
+            let color = inheritedColor;
+            if (n.style && n.style.color) {
+                const rgbMatch = n.style.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                if (rgbMatch) {
+                    const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0');
+                    const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0');
+                    const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0');
+                    color = '#' + r + g + b;
+                } else if (n.style.color.startsWith('#')) {
+                    color = n.style.color;
+                }
+            } else if (n.getAttribute && n.getAttribute('color')) {
+                color = n.getAttribute('color');
+            }
+            const isBlock = (n.nodeName === 'DIV' || n.nodeName === 'P');
+            if (isBlock && runs.length > 0 && runs[runs.length - 1].text !== '\n') {
+                runs.push({ text: '\n', color });
+            }
+            for (const child of n.childNodes) walk(child, color);
+        }
+        walk(rootNode, defaultColor);
+        return runs;
+    }
+
+    function openInlineEditForText(el) {
+        document.querySelectorAll('.inline-text-edit-wrap').forEach(w => w.remove());
+
+        if (!el.runs && el.text) {
+            el.runs = [{ text: el.text, color: el.color || '#000' }];
+        }
+        if (!el.runs) el.runs = [{ text: '', color: el.color || '#000' }];
+
+        const fontSize = (el.size || 4) * 5;
+        const box = getBox(el);
+        const screenX = box.x * zoom + panX;
+        const screenY = el.y * zoom + panY;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'inline-text-edit-wrap';
+        wrap.style.cssText = `position:absolute; left:${screenX}px; top:${screenY}px; z-index:1000; pointer-events:auto;`;
+
+        // شريط ألوان سريع
+        const colors = ['#000000', '#dc2626', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#ffffff'];
+        const bar = document.createElement('div');
+        bar.style.cssText = 'display:flex; gap:4px; background:white; padding:4px 6px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); margin-bottom:4px; direction:ltr;';
+        colors.forEach(c => {
+            const b = document.createElement('button');
+            b.style.cssText = `width:18px; height:18px; border-radius:50%; background:${c}; border:2px solid ${c==='#ffffff'?'#cbd5e1':'#e2e8f0'}; cursor:pointer; padding:0;`;
+            b.title = 'لوّن النص المحدد';
+            b.addEventListener('mousedown', (ev) => ev.preventDefault());
+            b.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                try { document.execCommand('foreColor', false, c); } catch(_) {}
+                content.focus();
+            });
+            bar.appendChild(b);
+        });
+        wrap.appendChild(bar);
+
+        const content = document.createElement('div');
+        content.contentEditable = 'true';
+        content.dir = 'rtl';
+        content.style.cssText = `min-width:160px; min-height:${fontSize*zoom*1.3}px; background:rgba(255,255,255,0.98); border:2px dashed #2563eb; border-radius:8px; padding:4px 8px; font-family:Cairo,sans-serif; font-weight:800; font-size:${fontSize*zoom}px; direction:rtl; text-align:right; outline:none; box-shadow:0 4px 16px rgba(0,0,0,0.18); color:#0f172a; white-space:pre-wrap; line-height:1.3;`;
+        content.innerHTML = el.runs.map(r => `<span style="color:${r.color||'#000'}">${(r.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`).join('');
+        wrap.appendChild(content);
+
+        document.getElementById('mindmap-overlay').appendChild(wrap);
+
+        setTimeout(() => {
+            content.focus();
+            const range = document.createRange();
+            range.selectNodeContents(content);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }, 40);
+
+        ['pointerdown','pointerup','pointermove','mousedown','mouseup','mousemove','touchstart','touchend','click','dblclick'].forEach(evt => {
+            wrap.addEventListener(evt, (ev) => ev.stopPropagation());
+        });
+
+        let saved = false;
+        function save() {
+            if (saved) return;
+            saved = true;
+            const runs = extractTextRuns(content, '#000');
+            const cleanRuns = runs.filter(r => r.text);
+            el.runs = cleanRuns;
+            el.text = cleanRuns.map(r => r.text).join('');
+            wrap.remove();
+            if (cleanRuns.length === 0) {
+                const idx = elements.indexOf(el);
+                if (idx !== -1) elements.splice(idx, 1);
+                if (selectedElement === el) selectedElement = null;
+            }
+            redraw();
+        }
+
+        content.addEventListener('blur', save);
+        content.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape') { ev.preventDefault(); save(); }
+            if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); save(); }
+        });
+    }
+
+    function triggerInlineEdit(el, node) {
+        setTool('select');
+        openInlineEditForNode(el, node);
+    }
+
+    // Fallback function for old modal (kept for safety)
+    function confirmMmEdit() {
+        const newText = document.getElementById('mm-edit-input').value.trim();
+        if (!newText || !mmEditingElement || !mmEditingNodeId) { closeModal('modal-mm-edit'); return; }
+        const node = mmEditingElement.nodes.find(n => n.id === mmEditingNodeId);
+        if (node) {
+            node.text = newText;
+            node.w = measureNodeWidth(newText, node.fontSize || 13);
+        }
+        closeModal('modal-mm-edit');
+        redraw();
+        mmEditingElement = null; mmEditingNodeId = null;
+    }
+
+    // ضغط الإنتر في modal التعديل لحفظ مباشرةً (لم يعد مستخدما كثيرا لكن نتركه للسلامة)
+    document.getElementById('mm-edit-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); confirmMmEdit(); }
+        if (e.key === 'Escape') closeModal('modal-mm-edit');
+    });
+
+    // إضافة عقدة فرعية من عقدة أب معينة
+    function addMindmapChildNode(elIndex, parentNodeId, direction) {
+        const el = elements[elIndex];
+        if (!el || el.type !== 'mindmap') return;
+
+        const parentNode = el.nodes.find(n => n.id === parentNodeId);
+        if (!parentNode) return;
+
+        direction = direction || 'below';
+        const newId = 'node_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const sameDirChildren = el.connections.filter(c =>
+            c.from === parentNodeId && (c.direction || 'below') === direction
+        );
+        const idx = sameDirChildren.length;
+        const level = getMmNodeLevel(el, parentNodeId) + 1;
+        const color = MM_LEVEL_COLORS[Math.min(level, MM_LEVEL_COLORS.length - 1)];
+        const newText = 'فكرة جديدة';
+        const nw = measureNodeWidth(newText, 13);
+        const nh = 36;
+        let nx, ny;
+
+        if (direction === 'right') {
+            nx = parentNode.x + parentNode.w + 60;
+            ny = parentNode.y + (idx - sameDirChildren.length / 2) * 55;
+        } else if (direction === 'left') {
+            nx = parentNode.x - nw - 60;
+            ny = parentNode.y + (idx - sameDirChildren.length / 2) * 55;
+        } else if (direction === 'above') {
+            nx = parentNode.x + (idx - sameDirChildren.length / 2) * 130;
+            ny = parentNode.y - nh - 60;
+        } else {
+            nx = parentNode.x + (idx - sameDirChildren.length / 2) * 130;
+            ny = parentNode.y + parentNode.h + 60;
+        }
+
+        const newNode = { id: newId, text: newText, x: nx, y: ny, w: nw, h: nh, color, fontSize: 13 };
+        const newConn = { from: parentNodeId, to: newId, color: '#94a3b8', direction };
+        el.nodes.push(newNode);
+        el.connections.push(newConn);
+        elements.push({ type: 'mindmap_add_node', mindmap: el, node: newNode, connection: newConn });
+        redoElements.length = 0;
+        redraw();
+
+        triggerInlineEdit(el, newNode);
+    }
+
+    function deleteMindmapNode(elIdx, nodeId) {
+        const el = elements[elIdx];
+        if (!el || el.type !== 'mindmap') return;
+        if (nodeId === 'root') {
+            showToast('warning', 'لا يمكن حذف الفكرة الرئيسية، يمكنك تعديل اسمها أو حذف الخريطة بالكامل');
+            return;
+        }
+        const toDelete = new Set([nodeId]);
+        let added = true;
+        while (added) {
+            added = false;
+            el.connections.forEach(c => {
+                if (toDelete.has(c.from) && !toDelete.has(c.to)) {
+                    toDelete.add(c.to);
+                    added = true;
+                }
+            });
+        }
+        el.nodes = el.nodes.filter(n => !toDelete.has(n.id));
+        el.connections = el.connections.filter(c => !toDelete.has(c.from) && !toDelete.has(c.to));
+        el.selectedNodeId = null;
+        showToast('info', 'تم حذف الفكرة الفرعية');
+        redraw();
+    }
+
+    function updateMindmapAddButtons() {
+        const overlay = document.getElementById('mindmap-overlay');
+        overlay.querySelectorAll('.mm-add-btn, .mm-del-btn').forEach(b => b.remove());
+
+        if (currentTool !== 'select') return;
+
+        elements.forEach((el, elIdx) => {
+            if (el.type !== 'mindmap' || !el.nodes) return;
+            if (selectedElement !== el) return;
+            if (!el.selectedNodeId) return;
+
+            el.nodes.forEach(node => {
+                if (node.id !== el.selectedNodeId) return;
+                const nw = node.w || 100, nh = node.h || 36;
+                const cx = (node.x + nw/2) * zoom + panX;
+                const cyBottom = (node.y + nh) * zoom + panY + 2;
+                const cySide = (node.y + nh/2) * zoom + panY;
+                const btnBg = node.color || '#2563eb';
+
+                const makeBtn = (symbol, title, left, top, fontSize, onClick) => {
+                    const b = document.createElement('button');
+                    b.className = 'mm-add-btn';
+                    b.style.cssText = `position:absolute; left:${left}px; top:${top}px; width:20px; height:20px; background:${btnBg}; color:#fff; border:1.5px solid #fff; border-radius:50%; font-size:${fontSize}px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,0.25); z-index:50; line-height:1; padding:0; pointer-events:auto;`;
+                    b.textContent = symbol;
+                    b.title = title;
+                    ['pointerdown','mousedown','touchstart'].forEach(evt => b.addEventListener(evt, ev => ev.stopPropagation()));
+                    b.addEventListener('click', (ev) => { ev.stopPropagation(); ev.preventDefault(); onClick(); });
+                    overlay.appendChild(b);
+                };
+
+                // زر إضافة لليمين (سهم →)
+                makeBtn('→', 'إضافة فكرة فرعية على اليمين', cx + (nw*zoom)/2 + 4, cySide - 10, 11, () => addMindmapChildNode(elIdx, node.id, 'right'));
+                // زر إضافة لليسار (سهم ←)
+                makeBtn('←', 'إضافة فكرة فرعية على اليسار', cx - (nw*zoom)/2 - 24, cySide - 10, 11, () => addMindmapChildNode(elIdx, node.id, 'left'));
+                // زر الإضافة الرئيسي بالأسفل
+                makeBtn('+', 'إضافة فكرة فرعية بالأسفل', cx - 10, cyBottom, 14, () => addMindmapChildNode(elIdx, node.id, 'below'));
+
+                // زر حذف الفكرة المحددة فقط
+                if (el.selectedNodeId === node.id && node.id !== 'root') {
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'mm-del-btn';
+                    delBtn.style.cssText = `
+                        position: absolute;
+                        left: ${(node.x + nw) * zoom + panX - 8}px;
+                        top: ${node.y * zoom + panY - 8}px;
+                        width: 18px; height: 18px;
+                        background: #ef4444; color: #fff;
+                        border: 1.5px solid #fff; border-radius: 50%;
+                        font-size: 11px; font-weight: bold;
+                        cursor: pointer; display: flex; align-items: center; justify-content: center;
+                        box-shadow: 0 1px 4px rgba(0,0,0,0.25); z-index: 60; padding: 0;
+                        pointer-events: auto;
+                    `;
+                    delBtn.textContent = '✕';
+                    delBtn.title = 'حذف هذه الفكرة فقط';
+                    ['pointerdown','mousedown','touchstart'].forEach(evt => delBtn.addEventListener(evt, ev => ev.stopPropagation()));
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteMindmapNode(elIdx, node.id);
+                    };
+                    overlay.appendChild(delBtn);
+                }
+            });
+        });
+    }
+
+    function updateTableOverlayButtons() {
+        const overlay = document.getElementById('mindmap-overlay');
+        overlay.querySelectorAll('.tbl-add-btn, .tbl-del-btn').forEach(b => b.remove());
+        if (currentTool !== 'select') return;
+
+        elements.forEach((el, elIdx) => {
+            if (el.type !== 'table') return;
+            if (selectedElement !== el) return; // ✨ يظهر فقط للعنصر المحدد
+            const totalW = getTblTotalW(el);
+            const totalH = getTblTotalH(el);
+
+            const sxRow = (el.x + totalW/2) * zoom + panX;
+            const syRow = (el.y + totalH) * zoom + panY + 4;
+            
+            // زر إضافة صف
+            const btnRow = document.createElement('button');
+            btnRow.className = 'tbl-add-btn';
+            btnRow.style.cssText = `position:absolute; left:${sxRow - 22}px; top:${syRow}px; width:20px; height:20px; background:#3b82f6; color:#fff; border-radius:50%; border:1.5px solid #fff; font-size:13px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:50; padding:0; pointer-events:auto;`;
+            btnRow.innerHTML = '+<span style="font-size:8px;position:absolute;bottom:-13px;color:#2563eb;font-weight:bold;">صف</span>';
+            ['pointerdown','mousedown','touchstart'].forEach(evt => btnRow.addEventListener(evt, e => e.stopPropagation()));
+            btnRow.onclick = (e) => { e.stopPropagation(); addTableRow(elIdx); };
+            overlay.appendChild(btnRow);
+
+            // زر حذف صف
+            const delRow = document.createElement('button');
+            delRow.className = 'tbl-del-btn';
+            delRow.style.cssText = `position:absolute; left:${sxRow + 4}px; top:${syRow}px; width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; border:1.5px solid #fff; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:50; padding:0; pointer-events:auto;`;
+            delRow.innerHTML = '–';
+            delRow.title = 'حذف صف';
+            ['pointerdown','mousedown','touchstart'].forEach(evt => delRow.addEventListener(evt, e => e.stopPropagation()));
+            delRow.onclick = (e) => { e.stopPropagation(); deleteTableRow(elIdx); };
+            overlay.appendChild(delRow);
+
+            const sxCol = el.x * zoom + panX - 26;
+            const syCol = (el.y + totalH/2) * zoom + panY - 22;
+            
+            // زر إضافة عمود
+            const btnCol = document.createElement('button');
+            btnCol.className = 'tbl-add-btn';
+            btnCol.style.cssText = `position:absolute; left:${sxCol}px; top:${syCol}px; width:20px; height:20px; background:#3b82f6; color:#fff; border-radius:50%; border:1.5px solid #fff; font-size:13px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:50; padding:0; pointer-events:auto;`;
+            btnCol.innerHTML = '+<span style="font-size:8px;position:absolute;bottom:-13px;color:#2563eb;font-weight:bold;">عمود</span>';
+            ['pointerdown','mousedown','touchstart'].forEach(evt => btnCol.addEventListener(evt, e => e.stopPropagation()));
+            btnCol.onclick = (e) => { e.stopPropagation(); addTableCol(elIdx); };
+            overlay.appendChild(btnCol);
+
+            // زر حذف عمود
+            const delCol = document.createElement('button');
+            delCol.className = 'tbl-del-btn';
+            delCol.style.cssText = `position:absolute; left:${sxCol}px; top:${syCol + 24}px; width:20px; height:20px; background:#ef4444; color:#fff; border-radius:50%; border:1.5px solid #fff; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:50; padding:0; pointer-events:auto;`;
+            delCol.innerHTML = '–';
+            delCol.title = 'حذف عمود';
+            ['pointerdown','mousedown','touchstart'].forEach(evt => delCol.addEventListener(evt, e => e.stopPropagation()));
+            delCol.onclick = (e) => { e.stopPropagation(); deleteTableCol(elIdx); };
+            overlay.appendChild(delCol);
+        });
+    }
+
+    function addTableRow(elIdx) {
+        const el = elements[elIdx];
+        el.rows++;
+        if(!el.rowHeights) el.rowHeights = Array(el.rows-1).fill(el.cellHeight||45);
+        el.rowHeights.push(el.cellHeight || 45);
+        el.data.push(Array(el.cols).fill(''));
+        redraw();
+    }
+    function deleteTableRow(elIdx) {
+        const el = elements[elIdx];
+        if (el.rows <= 1) { showToast('warning', 'الجدول يجب أن يحتوي على صف واحد على الأقل'); return; }
+        const r = (el.selectedCell ? el.selectedCell.r : el.rows - 1);
+        el.data.splice(r, 1);
+        if (el.rowHeights) el.rowHeights.splice(r, 1);
+        el.rows--;
+        if (el.selectedCell && el.selectedCell.r >= el.rows) el.selectedCell.r = el.rows - 1;
+        showToast('info', 'تم حذف الصف');
+        redraw();
+    }
+
+    function addTableCol(elIdx) {
+        const el = elements[elIdx];
+        el.cols++;
+        if(!el.colWidths) el.colWidths = Array(el.cols-1).fill(el.cellWidth||130);
+        el.colWidths.unshift(el.cellWidth || 130);
+        el.data.forEach(row => row.unshift(''));
+        redraw();
+    }
+    function deleteTableCol(elIdx) {
+        const el = elements[elIdx];
+        if (el.cols <= 1) { showToast('warning', 'الجدول يجب أن يحتوي على عمود واحد على الأقل'); return; }
+        const c = (el.selectedCell ? el.selectedCell.c : el.cols - 1);
+        el.data.forEach(row => row.splice(c, 1));
+        if (el.colWidths) el.colWidths.splice(c, 1);
+        el.cols--;
+        if (el.selectedCell && el.selectedCell.c >= el.cols) el.selectedCell.c = el.cols - 1;
+        showToast('info', 'تم حذف العمود');
+        redraw();
+    }
+
+    // تحديث عند السحب والزوم
+    canvas.addEventListener('pointermove', () => { updateMindmapAddButtons(); if (typeof updateTableOverlayButtons === 'function') updateTableOverlayButtons(); }, { passive: true });
+
+    // ════════════════════════════════════════════════════════
+    // ANIMATIONS & SOUNDS
+    // ════════════════════════════════════════════════════════
+    let stampParticles = [];
+    let isAnimatingParticles = false;
+    
+    function spawnConfetti(x, y) {
+        for(let i=0; i<40; i++) {
+            stampParticles.push({
+                x: x, y: y,
+                vx: (Math.random()-0.5)*15, vy: (Math.random()-1)*15,
+                color: ['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6'][Math.floor(Math.random()*5)],
+                life: 1.0, size: Math.random()*8+4
+            });
+        }
+        if(!isAnimatingParticles) animateParticles();
+    }
+    
+    function animateParticles() {
+        if(stampParticles.length===0) { isAnimatingParticles=false; redraw(); return; }
+        isAnimatingParticles = true;
+        redraw();
+        ctx.save();
+        ctx.translate(panX, panY); ctx.scale(zoom, zoom);
+        for(let i=stampParticles.length-1; i>=0; i--) {
+            let p = stampParticles[i];
+            p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.02;
+            if(p.life<=0) { stampParticles.splice(i, 1); continue; }
+            ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+        requestAnimationFrame(animateParticles);
+    }
+    
+    let audioCtx = null;
+    let isSoundMuted = localStorage.getItem('wbSoundMuted') === 'true';
+    
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    function playStampSound(type) {
+        if (isSoundMuted) return;
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (type === 'check') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'celebration') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1); osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+    
+    function toggleSoundMute() {
+        isSoundMuted = !isSoundMuted;
+        localStorage.setItem('wbSoundMuted', isSoundMuted ? 'true' : 'false');
+        const icon = document.querySelector('#btn-sound-mute i');
+        if (icon) {
+            icon.className = isSoundMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+        }
+        // toast disabled
+    }
+    
+    // update mute button on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const icon = document.querySelector('#btn-sound-mute i');
+        if (icon && isSoundMuted) icon.className = 'fas fa-volume-mute';
+    });
+
+    // ════════════════════════════════════════════════════════
+    // SETTINGS PERSISTENCE - حفظ واستعادة الإعدادات
+    // ════════════════════════════════════════════════════════
+    function saveSettingsUI() {
+        // حفظ حالة التثبيت
+        localStorage.setItem('wbPanLocked', isPanLocked ? 'true' : 'false');
+        closeModal('modal-settings');
+        showToast('success', 'تم حفظ الإعدادات بنجاح! ستظل محفوظة حتى تغيرها.');
+    }
+
+    
+    // ==========================================
+    // 🚀 التعديلات الجديدة: النسخ واللصق ومقابض تحكم الصور
+    // ==========================================
+    let activeImageResizeState = null;
+
+    function hitTestResizeHandle(coords, el) {
+        if (!el || (el.type !== 'image' && el.type !== 'rect' && el.type !== 'circle')) return null;
+        const box = getBox(el);
+        const hSize = 14 / zoom;
+        const handles = [
+            { id: 'tl', x: box.x - 4, y: box.y - 4 },
+            { id: 'tr', x: box.x + box.w + 4, y: box.y - 4 },
+            { id: 'bl', x: box.x - 4, y: box.y + box.h + 4 },
+            { id: 'br', x: box.x + box.w + 4, y: box.y + box.h + 4 }
+        ];
+
+        for (let h of handles) {
+            if (Math.abs(coords.x - h.x) <= hSize && Math.abs(coords.y - h.y) <= hSize) {
+                return h.id;
+            }
+        }
+        return null;
+    }
+
+    // global paste event listener (Ctrl+V)
+    window.addEventListener('paste', function(e) {
+        handleGlobalPaste(e);
+    });
+
+    async function handleGlobalPaste(e) {
+        const clipboardData = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+        if (!clipboardData) return;
+
+        const items = clipboardData.items;
+        let imageHandled = false;
+
+        if (items) {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.indexOf('image') !== -1) {
+                    imageHandled = true;
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        insertImageFromDataUrl(evt.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        }
+
+        if (!imageHandled) {
+            const pastedText = clipboardData.getData('text/plain');
+            if (pastedText && pastedText.trim() !== '') {
+                insertTextFromPaste(pastedText.trim());
+            }
+        }
+    }
+
+    function insertImageFromDataUrl(dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+            const maxW = (canvas.width * 0.5) / zoom;
+            const scale = Math.min(1, maxW / img.width);
+            const w = img.width * scale;
+            const h = img.height * scale;
+
+            const cx = (canvas.width / 2 - w / 2) / zoom - panX / zoom;
+            const cy = (canvas.height / 2 - h / 2) / zoom - panY / zoom;
+
+            const newImgObj = {
+                type: 'image',
+                imgObj: img,
+                imgSrc: dataUrl,
+                x: cx,
+                y: cy,
+                w: w,
+                h: h
+            };
+
+            elements.push(newImgObj);
+            pages[currentPageIndex].elements = elements;
+            selectedElement = newImgObj;
+            setTool('select');
+            redraw();
+            if (typeof showToast === 'function') showToast('success', 'تم لصق الصورة بنجاح 🖼️');
+        };
+        img.src = dataUrl;
+    }
+
+    function insertTextFromPaste(text) {
+        const cx = (canvas.width / 2 - 100) / zoom - panX / zoom;
+        const cy = (canvas.height / 2) / zoom - panY / zoom;
+
+        const newTextObj = {
+            type: 'text',
+            text: text,
+            x: cx,
+            y: cy,
+            color: brushColor || '#000000',
+            size: brushSize * 4 + 16
+        };
+
+        elements.push(newTextObj);
+        pages[currentPageIndex].elements = elements;
+        selectedElement = newTextObj;
+        setTool('select');
+        redraw();
+        if (typeof showToast === 'function') showToast('success', 'تم لصق النص بنجاح 📝');
+    }
+
+    async function pasteFromClipboard() {
+        try {
+            if (navigator.clipboard && navigator.clipboard.read) {
+                const items = await navigator.clipboard.read();
+                for (let item of items) {
+                    for (let type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const reader = new FileReader();
+                            reader.onload = function(evt) { insertImageFromDataUrl(evt.target.result); };
+                            reader.readAsDataURL(blob);
+                            return;
+                        }
+                    }
+                }
+            }
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                const text = await navigator.clipboard.readText();
+                if (text && text.trim() !== '') {
+                    insertTextFromPaste(text.trim());
+                    return;
+                }
+            }
+            if (typeof showToast === 'function') showToast('info', 'اضغط Ctrl + V للصق الصورة أو النص فوراً على السبورة');
+        } catch(err) {
+            if (typeof showToast === 'function') showToast('info', 'اضغط Ctrl + V للصق النص أو الصورة من الحافظة');
+        }
+    }
+
+
+    // Custom Confirm Modal Handler
+    let customConfirmCallback = null;
+    function showCustomConfirm(title, message, onConfirm) {
+        const titleEl = document.getElementById('custom-confirm-title');
+        const msgEl = document.getElementById('custom-confirm-message');
+        const modal = document.getElementById('custom-confirm-modal');
+        if (titleEl) titleEl.textContent = title || 'تأكيد العملية';
+        if (msgEl) msgEl.textContent = message || 'هل أنت متأكد من إكمال هذه العملية؟';
+        customConfirmCallback = onConfirm;
+        if (modal) modal.classList.remove('hidden');
+    }
+    function closeCustomConfirmModal(result) {
+        const modal = document.getElementById('custom-confirm-modal');
+        if (modal) modal.classList.add('hidden');
+        if (result && typeof customConfirmCallback === 'function') {
+            customConfirmCallback();
+        }
+        customConfirmCallback = null;
+    }
+    // 🔥 حفظ مربع النص عند الضغط في أي مكان خارجه (ماوس / قلم / لمس)
+    document.addEventListener('pointerdown', (e) => {
+        if (!textInput) return;
+        if (textInput.classList.contains('hidden')) return;
+        if (typeof textInput._commitFn !== 'function') return;
+        if (textInput.contains(e.target)) return; // لو ضغط جوه المربع نفسه → متحفظش
+        try { textInput._commitFn(); } catch(_) {}
+    }, true); // capture phase — بيشتغل قبل أي handler تاني في الصفحة
+
+    // 💾 حفظ تلقائي داخلي (debounce 30s بعد آخر حركة)
+    let _autoSaveTimer = null;
+    function scheduleAutoSave() {
+        if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
+        _autoSaveTimer = setTimeout(() => {
+            _autoSaveTimer = null;
+            try {
+                const hasContent = pages.some(p => p.elements.length > 0);
+                if (!hasContent) return;
+                const data = serializePagesForCloud();
+                localStorage.setItem('wb_autosave_latest', JSON.stringify({
+                    pages: data,
+                    currentPageIndex,
+                    boardId: currentBoardId,
+                    lessonName: document.getElementById('lesson-name').value,
+                    updatedAt: Date.now()
+                }));
+            } catch(_) {}
+        }, 30000);
+    }
+
+    // 🚨 تحذير عند الخروج من الصفحة
+    window.addEventListener('beforeunload', (e) => {
+        const hasContent = pages.some(p => p.elements.length > 0);
+        if (hasContent) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    // ════════════════════════════════════════════
+    // تشغيل قائمة الأقلام (Pen Menu Logic)
+    // ════════════════════════════════════════════
+    window.togglePenMenu = function() {
+        const menu = document.getElementById('pen-menu');
+        if (menu) menu.classList.toggle('hidden');
+    };
+
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('pen-menu');
+        const btn = document.getElementById('btn-pen');
+        if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    document.querySelectorAll('.pen-type-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            activePenMode = btn.getAttribute('data-pen');
+            
+            document.querySelectorAll('.pen-type-btn').forEach(b => {
+                b.classList.remove('bg-teal-600', 'text-white', 'border-teal-600');
+                b.classList.add('border-slate-200');
+            });
+            btn.classList.add('bg-teal-600', 'text-white', 'border-teal-600');
+            
+            setTool('pen');
+            document.getElementById('pen-menu').classList.add('hidden');
+        });
+    });
+
+    const pressureChk = document.getElementById('chk-pressure');
+    if (pressureChk) {
+        pressureChk.addEventListener('change', (e) => {
+            usePressure = e.target.checked;
+        });
+    }
+
+</script>
+
+    <!-- Custom Confirm Modal -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[300] hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center gap-3 text-amber-500 mb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <i class="ph ph-warning-circle text-2xl text-amber-500"></i>
+                </div>
+                <h3 id="custom-confirm-title" class="text-base font-bold text-slate-800 dark:text-white">تأكيد العملية</h3>
+            </div>
+            <p id="custom-confirm-message" class="text-xs text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">هل أنت متأكد من إكمال هذه العملية؟</p>
+            <div class="flex justify-end gap-2.5">
+                <button onclick="closeCustomConfirmModal(false)" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">إلغاء</button>
+                <button onclick="closeCustomConfirmModal(true)" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-500/20 transition-all">تأكيد الإجراء</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

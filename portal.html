@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة منصة الهليهي التعليمية</title>
+    <meta name="description" content="منصة مستر محمود الهليهي التعليمية - النظام الذكي المتكامل لإدارة العملية التعليمية">
+    <link rel="icon" href="https://g.top4top.io/p_3313pmxec1.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ═══════════════════════════════════════════
+           DESIGN SYSTEM - PREMIUM PORTAL
+           ═══════════════════════════════════════════ */
+        :root {
+            --bg-primary: #050a18;
+            --bg-secondary: #0a1128;
+            --bg-tertiary: #111d3a;
+            --text-main: #f1f5f9;
+            --text-muted: #8896b3;
+            --accent-indigo: #6366f1;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --glass-bg: rgba(255, 255, 255, 0.035);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.07);
+            --surface-light: #ffffff;
+            --surface-light-secondary: #f0f2f5;
+            --text-light: #1e293b;
+            --text-light-muted: #64748b;
+            --glass-light-bg: rgba(255, 255, 255, 0.85);
+            --glass-light-border: rgba(148, 163, 184, 0.25);
+        }
+
+        /* Light Mode Overrides */
+        [data-theme="light"] {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(148, 163, 184, 0.3);
+            --glass-hover: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+            padding: 2rem 1rem;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* ═══════ ANIMATED BACKGROUND ═══════ */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .bg-grid {
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+        }
+
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.015;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, var(--accent-indigo), var(--accent-purple));
+            top: -15%; right: -8%;
+            animation: floatOrb1 18s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--accent-cyan), var(--accent-blue));
+            bottom: -10%; left: -10%;
+            animation: floatOrb2 22s ease-in-out infinite alternate;
+        }
+        .orb-3 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, var(--accent-pink), var(--accent-purple));
+            top: 50%; left: 40%;
+            opacity: 0.15;
+            animation: floatOrb3 25s ease-in-out infinite alternate;
+        }
+        .orb-4 {
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, var(--accent-emerald), var(--accent-cyan));
+            top: 20%; left: 10%;
+            opacity: 0.12;
+            animation: floatOrb4 20s ease-in-out infinite alternate;
+        }
+
+        [data-theme="light"] .orb { opacity: 0.12; filter: blur(120px); }
+
+        @keyframes floatOrb1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-40px, 50px) scale(1.15); }
+            100% { transform: translate(50px, -30px) scale(0.9); }
+        }
+        @keyframes floatOrb2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, -40px) scale(1.1); }
+            100% { transform: translate(-30px, 30px) scale(0.95); }
+        }
+        @keyframes floatOrb3 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+            100% { transform: translate(60px, -50px) scale(1.2) rotate(45deg); }
+        }
+        @keyframes floatOrb4 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-50px, 40px) scale(1.15); }
+        }
+
+        /* ═══════ FLOATING PARTICLES ═══════ */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: var(--accent-indigo);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat linear infinite;
+        }
+        .particle:nth-child(1) { left: 10%; animation-duration: 12s; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 25%; animation-duration: 15s; animation-delay: 2s; background: var(--accent-cyan); }
+        .particle:nth-child(3) { left: 40%; animation-duration: 11s; animation-delay: 4s; background: var(--accent-purple); }
+        .particle:nth-child(4) { left: 55%; animation-duration: 14s; animation-delay: 1s; }
+        .particle:nth-child(5) { left: 70%; animation-duration: 13s; animation-delay: 3s; background: var(--accent-pink); }
+        .particle:nth-child(6) { left: 85%; animation-duration: 16s; animation-delay: 5s; background: var(--accent-emerald); }
+        .particle:nth-child(7) { left: 50%; animation-duration: 10s; animation-delay: 6s; background: var(--accent-amber); }
+        .particle:nth-child(8) { left: 15%; animation-duration: 17s; animation-delay: 7s; background: var(--accent-blue); }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* ═══════ THEME TOGGLE ═══════ */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 1000;
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            animation: fadeIn 1s ease-out 1.5s both;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-indigo);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.25);
+        }
+        .theme-toggle .icon-sun, .theme-toggle .icon-moon { transition: all 0.5s ease; position: absolute; }
+        .theme-toggle .icon-sun { opacity: 0; transform: rotate(180deg) scale(0.5); }
+        .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+        [data-theme="light"] .theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+        [data-theme="light"] .theme-toggle .icon-moon { opacity: 0; transform: rotate(-180deg) scale(0.5); }
+
+        /* ═══════ VERSION BADGE ═══════ */
+        .version-badge {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 100;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            font-weight: 600;
+            animation: fadeIn 1s ease-out 2s both;
+        }
+
+        /* ═══════ MAIN CONTAINER ═══════ */
+        .portal-container {
+            max-width: 1100px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* ═══════ HEADER ═══════ */
+        .header-section {
+            margin-bottom: 4rem;
+        }
+
+        .logo-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100px; height: 100px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(6, 182, 212, 0.1));
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+            position: relative;
+            animation: logoEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .logo-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 30px;
+            background: conic-gradient(from 0deg, var(--accent-indigo), var(--accent-cyan), var(--accent-purple), var(--accent-pink), var(--accent-indigo));
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(12px);
+            animation: rotateGlow 8s linear infinite;
+        }
+        .logo-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 29px;
+            background: conic-gradient(from 0deg, var(--accent-indigo), var(--accent-cyan), var(--accent-purple), var(--accent-pink), var(--accent-indigo));
+            z-index: -1;
+            opacity: 0.4;
+            animation: rotateGlow 8s linear infinite;
+        }
+        @keyframes rotateGlow {
+            100% { filter: blur(12px) hue-rotate(360deg); }
+        }
+        .logo-wrapper img {
+            width: 65px; height: 65px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 40%, var(--accent-indigo) 70%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            animation: titleEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+            line-height: 1.3;
+        }
+        [data-theme="light"] h1 {
+            background: linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-purple) 50%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+            color: var(--text-muted);
+            max-width: 620px;
+            margin: 0 auto;
+            line-height: 1.8;
+            animation: titleEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+        }
+
+        @keyframes logoEntrance {
+            from { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+            to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes titleEntrance {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════ CARDS GRID ═══════ */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            padding: 0 0.5rem;
+            margin-bottom: 4rem;
+        }
+
+        /* ═══════ PORTAL CARD ═══════ */
+        .portal-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem 2.5rem 2.5rem;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .portal-card:nth-child(1) { animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
+        .portal-card:nth-child(2) { animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both; }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(60px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Gradient top line */
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent-indigo)), transparent);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Shimmer/shine sweep effect */
+        .portal-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(
+                115deg,
+                transparent 40%,
+                rgba(255, 255, 255, 0.03) 45%,
+                rgba(255, 255, 255, 0.08) 50%,
+                rgba(255, 255, 255, 0.03) 55%,
+                transparent 60%
+            );
+            transform: translateX(-100%) rotate(0deg);
+            transition: none;
+            pointer-events: none;
+        }
+
+        .portal-card:hover::after {
+            animation: shimmerSweep 0.8s ease-out forwards;
+        }
+
+        @keyframes shimmerSweep {
+            100% { transform: translateX(100%) rotate(0deg); }
+        }
+
+        .portal-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            background: var(--glass-hover);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.3),
+                0 0 60px var(--card-glow, rgba(99, 102, 241, 0.12)),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .portal-card:hover::before { opacity: 1; }
+
+        [data-theme="light"] .portal-card {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        [data-theme="light"] .portal-card:hover {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 0 40px var(--card-glow, rgba(99, 102, 241, 0.08));
+        }
+
+        /* Card Icon */
+        .card-icon {
+            width: 85px; height: 85px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 1.8rem;
+            color: var(--card-accent, var(--accent-indigo));
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .card-icon::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 28px;
+            background: var(--card-accent, var(--accent-indigo));
+            opacity: 0;
+            filter: blur(20px);
+            transition: opacity 0.5s ease;
+        }
+        .portal-card:hover .card-icon {
+            transform: scale(1.12) rotate(5deg);
+            background: linear-gradient(135deg, var(--card-accent, var(--accent-indigo)), color-mix(in srgb, var(--card-accent, var(--accent-indigo)), #000 20%));
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 12px 30px var(--card-glow, rgba(99, 102, 241, 0.35));
+        }
+        .portal-card:hover .card-icon::before { opacity: 0.3; }
+
+        [data-theme="light"] .card-icon {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(6, 182, 212, 0.05));
+            border-color: rgba(148, 163, 184, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            color: var(--text-main);
+            transition: color 0.3s ease;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.85rem 2rem;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-btn i { transition: transform 0.3s ease; }
+
+        .portal-card:hover .card-btn {
+            background: linear-gradient(135deg, var(--card-accent, var(--accent-indigo)), color-mix(in srgb, var(--card-accent, var(--accent-indigo)), #000 15%));
+            border-color: transparent;
+            color: #ffffff;
+            gap: 14px;
+            box-shadow: 0 8px 24px var(--card-glow, rgba(99, 102, 241, 0.3));
+            transform: scale(1.02);
+        }
+        .portal-card:hover .card-btn i { transform: translateX(-4px); }
+
+        [data-theme="light"] .card-btn {
+            background: rgba(99, 102, 241, 0.06);
+            border-color: rgba(99, 102, 241, 0.15);
+            color: var(--text-main);
+        }
+
+        /* Card Themes */
+        .card-admin {
+            --card-accent: var(--accent-purple);
+            --card-glow: rgba(139, 92, 246, 0.25);
+        }
+        .card-student {
+            --card-accent: var(--accent-cyan);
+            --card-glow: rgba(6, 182, 212, 0.25);
+        }
+
+        /* ═══════ FEATURES STRIP ═══════ */
+        .features-strip {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-bottom: 3.5rem;
+            animation: fadeIn 1s ease-out 1s both;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .feature-item i {
+            font-size: 1.1rem;
+            color: var(--accent-indigo);
+        }
+        [data-theme="light"] .feature-item i { color: var(--accent-purple); }
+
+        /* ═══════ FOOTER ═══════ */
+        .footer-section {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0.85;
+            animation: fadeIn 1s ease-out 1.2s both;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        .status-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 12px var(--accent-emerald), 0 0 30px rgba(16, 185, 129, 0.3);
+            display: inline-block;
+            animation: statusPulse 2.5s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes statusPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 8px var(--accent-emerald); }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 16px var(--accent-emerald), 0 0 40px rgba(16, 185, 129, 0.3); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════ BOTTOM WAVE ═══════ */
+        .bottom-wave {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 0;
+            pointer-events: none;
+            height: 120px;
+            opacity: 0.4;
+        }
+        .bottom-wave svg { width: 100%; height: 100%; }
+        [data-theme="light"] .bottom-wave { opacity: 0.15; }
+
+        /* ═══════ RESPONSIVE ═══════ */
+        @media (max-width: 768px) {
+            .cards-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .portal-card { padding: 2.5rem 1.8rem 2rem; }
+            .features-strip { gap: 1.5rem; }
+            .feature-item { font-size: 0.8rem; }
+            .theme-toggle { top: 16px; left: 16px; width: 42px; height: 42px; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1.5rem 0.75rem; }
+            .portal-card { border-radius: 20px; padding: 2rem 1.5rem; }
+            .card-icon { width: 70px; height: 70px; font-size: 1.8rem; }
+            .card-title { font-size: 1.35rem; }
+            .features-strip { gap: 1rem; }
+        }
+
+        /* ═══════ ACCESSIBILITY ═══════ */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Layers -->
+    <div class="bg-grid"></div>
+    <div class="noise-overlay"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div>
+    </div>
+
+    <!-- Bottom Wave -->
+    <div class="bottom-wave">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+                    <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+                </linearGradient>
+            </defs>
+            <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,40 1440,60 L1440,120 L0,120Z" fill="url(#waveGrad)"/>
+            <path d="M0,80 C240,40 480,100 720,70 C960,40 1200,90 1440,70 L1440,120 L0,120Z" fill="url(#waveGrad)" opacity="0.5"/>
+        </svg>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="تبديل الوضع">
+        <i class="fas fa-sun icon-sun"></i>
+        <i class="fas fa-moon icon-moon"></i>
+    </button>
+
+    <!-- Version Badge -->
+    <div class="version-badge">v2.0</div>
+
+    <!-- Main Container -->
+    <div class="portal-container">
+        
+        <!-- Header -->
+        <div class="header-section">
+            <div class="logo-wrapper">
+                <img src="https://g.top4top.io/p_3313pmxec1.png" alt="شعار منصة الهليهي">
+            </div>
+            <h1>بوابة منصة الهليهي التعليمية</h1>
+            <p class="subtitle">النظام الذكي المتكامل لإدارة العملية التعليمية ومتابعة الطلاب لحظياً بكل سهولة واحترافية.</p>
+        </div>
+
+        <!-- Features Strip -->
+        <div class="features-strip">
+            <div class="feature-item">
+                <i class="fas fa-shield-halved"></i>
+                <span>تأمين كامل</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-bolt"></i>
+                <span>سرعة فائقة</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-cloud"></i>
+                <span>سحابة Cloudflare</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-mobile-screen-button"></i>
+                <span>متوافق مع كل الأجهزة</span>
+            </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+            
+            <a href="index.html" class="portal-card" style="--card-accent: var(--accent-amber); --card-glow: rgba(245, 158, 11, 0.25);">
+                <div class="card-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h2 class="card-title">الموقع التعريفي</h2>
+                <p class="card-desc">الصفحة التعريفية بالأستاذ والباقات المتاحة، مع عرض آراء الطلاب وإمكانية الحجز المباشر.</p>
+                <div class="card-btn">
+                    <span>فتح الموقع</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <a href="dashboard.html" class="portal-card" style="--card-accent: var(--accent-pink); --card-glow: rgba(236, 72, 153, 0.25);">
+                <div class="card-icon">
+                    <i class="fas fa-sliders"></i>
+                </div>
+                <h2 class="card-title">لوحة تحكم الموقع</h2>
+                <p class="card-desc">إدارة محتوى الموقع التعريفي، الباقات، الأسعار، الآراء، الأسئلة الشائعة، ومتابعة الحجوزات والطلاب.</p>
+                <div class="card-btn">
+                    <span>دخول اللوحة</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <a href="admin.html" class="portal-card card-admin" id="card-admin">
+                <div class="card-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h2 class="card-title">منصة الإدارة والمعلمين</h2>
+                <p class="card-desc">الدخول إلى لوحة التحكم الشاملة لإدارة الطلاب، المجموعات، رفع الواجبات، الحصص المسجلة، التسميع، واصدار التقارير الشهرية.</p>
+                <div class="card-btn">
+                    <span>دخول الإدارة</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <a href="student.html" class="portal-card card-student" id="card-student">
+                <div class="card-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h2 class="card-title">بوابة الطلاب (الموقع الإلكتروني)</h2>
+                <p class="card-desc">الدخول باستخدام كود الطالب لمتابعة الدرجات والتقييمات، مشاهدة الحصص المسجلة، تسليم الواجبات، ولوحة الأوائل والشرف.</p>
+                <div class="card-btn">
+                    <span>دخول الطلاب</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <a href="app.html" class="portal-card card-student" id="card-app" style="--card-accent: var(--accent-emerald); --card-glow: rgba(16, 185, 129, 0.25);">
+                <div class="card-icon">
+                    <i class="fas fa-mobile-screen-button"></i>
+                </div>
+                <h2 class="card-title">تطبيق الهاتف والـ APK (تحميل مباشر)</h2>
+                <p class="card-desc">الرابط المخصص لرفع المنصة على موقع PWABuilder وتحويلها لتطبيق APK على الموبايل، أو لتثبيت التطبيق مباشرة على شاشتك الرئيسية.</p>
+                <div class="card-btn">
+                    <span>فتح رابط التطبيق</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <a href="whiteboard.html" class="portal-card card-whiteboard" id="card-whiteboard" style="--card-accent: var(--accent-cyan); --card-glow: rgba(6, 182, 212, 0.25);">
+                <div class="card-icon">
+                    <i class="fas fa-chalkboard"></i>
+                </div>
+                <h2 class="card-title">السبورة التعليمية الذكية</h2>
+                <p class="card-desc">السبورة التفاعلية لشرح الدرجات والدروس أونلاين، كتابة السطور والرسوم، ثم حفظ الشرح تلقائياً كملف PDF في مكتبة الطلاب المحددين بنقرة واحدة.</p>
+                <div class="card-btn">
+                    <span>فتح السبورة</span>
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-section">
+            <span class="status-dot"></span>
+            <span>جميع الأنظمة تعمل بكفاءة عالية على سحابة Cloudflare السريعة</span>
+        </div>
+
+    </div>
+
+    <script>
+        // ═══════ DARK MODE TOGGLE ═══════
+        function initTheme() {
+            const saved = localStorage.getItem('portalTheme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+            // Default is dark (no data-theme attribute = dark)
+        }
+        initTheme();
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'light' ? '' : 'light';
+            if (newTheme) {
+                document.documentElement.setAttribute('data-theme', newTheme);
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('portalTheme', newTheme || 'dark');
+        }
+
+        // ═══════ 3D TILT EFFECT ON CARDS ═══════
+        document.querySelectorAll('.portal-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -6;
+                const rotateY = ((x - centerX) / centerX) * 6;
+                card.style.transform = `translateY(-12px) scale(1.02) perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
