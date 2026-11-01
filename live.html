@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الحصة المباشرة - منصة الهليهي</title>
+    <link rel="icon" href="https://g.top4top.io/p_3313pmxec1.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 border border-slate-100 text-center relative overflow-hidden">
+        <div class="w-20 h-20 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto mb-5 text-blue-600 text-3xl shadow-inner">
+            <i class="fa-solid fa-video"></i>
+        </div>
+        
+        <h2 class="text-2xl font-black text-slate-800 mb-1">الدخول للحصة المباشرة</h2>
+        <p class="text-sm text-slate-500 font-bold mb-6">أدخل كودك للتحقق والانتقال لغرفة البث</p>
+        
+        <div class="space-y-4 text-right">
+            <div>
+                <input type="text" id="studentCode" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:bg-white outline-none font-bold text-slate-800 transition-all text-center text-lg" placeholder="اكتب كود الطالب هنا" required autofocus>
+            </div>
+            
+            <div id="statusBox" class="hidden p-3 text-sm font-bold rounded-xl text-center">
+                <!-- الرسائل هتظهر هنا -->
+            </div>
+
+            <button id="joinBtn" onclick="joinLive()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-base transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-right-to-bracket"></i> دخول الحصة 
+            </button>
+        </div>
+        <p class="text-[11px] text-slate-400 font-bold mt-6">
+            <i class="fa-solid fa-shield-halved ml-1 text-emerald-500"></i> منصة الهليهي
+        </p>
+    </div>
+
+    <script>
+        // ⚠️ ضع رابط الـ Google Apps Script الخاص بك هنا ⚠️
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwhe5Ytj8rQie0i4nJGlHVpvoz9JOo6531dhbxKpRtbSOPPe94WJ7eOk6HvrrQ0r044NA/exec";
+
+        document.getElementById('studentCode').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') joinLive();
+        });
+
+        async function joinLive() {
+            const code = document.getElementById('studentCode').value.trim();
+            const btn = document.getElementById('joinBtn');
+            const statusBox = document.getElementById('statusBox');
+
+            if (!code) {
+                statusBox.className = 'p-3 text-sm font-bold rounded-xl text-center bg-red-50 border border-red-200 text-red-600';
+                statusBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> يرجى إدخال الكود أولاً!';
+                statusBox.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+            statusBox.classList.add('hidden');
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'checkLiveLessonAccess', params: [code] }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.success) {
+                    statusBox.className = 'p-3 text-sm font-bold rounded-xl text-center bg-emerald-50 border border-emerald-200 text-emerald-600';
+                    statusBox.innerHTML = '<i class="fa-solid fa-check-circle"></i> تم التحقق.. جاري تحويلك!';
+                    statusBox.classList.remove('hidden');
+                    
+                    setTimeout(() => { window.location.replace(result.data.link); }, 1500);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> دخول الحصة 🚀';
+                    
+                    statusBox.className = 'p-3 text-sm font-bold rounded-xl text-center bg-red-50 border border-red-200 text-red-600 leading-relaxed';
+                    statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${result.data ? result.data.message : (result.error || 'غير مصرح بالدخول')}`;
+                    statusBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> دخول الحصة 🚀';
+                
+                statusBox.className = 'p-3 text-sm font-bold rounded-xl text-center bg-red-50 border border-red-200 text-red-600';
+                statusBox.innerHTML = '<i class="fa-solid fa-wifi"></i> فشل الاتصال بالسيرفر، تأكد من الإنترنت.';
+                statusBox.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
