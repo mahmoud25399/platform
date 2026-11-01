@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.workers.elhelihey.mr.twa",
+        "sha256_cert_fingerprints": ["40:EC:82:24:6E:E2:45:5C:AE:89:65:97:2D:20:B3:91:A5:CD:CA:2A:07:25:BA:A9:C6:66:B0:5F:DC:00:D3:37"]
+      }
+    }]
