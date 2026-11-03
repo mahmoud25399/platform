@@ -3625,7 +3625,7 @@ function renderCommitmentsStats() {
 
         if (isActive) {
             const monthlyAmount = parseFloat(p.amount) || 0;
-            let spentVal = parseFloat(p.totalSpent) || 0;
+            const spentVal = parseFloat(p.totalSpent) || 0; 
             const capMonths = parseInt(p.accumulationCap) || 0;
             const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
             const startDate = createdAt || new Date(now.getFullYear(), now.getMonth(), 1);
@@ -3633,14 +3633,6 @@ function renderCommitmentsStats() {
             const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
             let accrued = monthlyAmount * (daysElapsed / 30);
             
-            if (spentVal === 0 && config.expenses) {
-                spentVal = config.expenses.filter(ex => {
-                    const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
-                    const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
-                    return matchCategory || matchNote;
-                }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
-            }
-
             if (capMonths > 0) {
                 const maxAccrued = monthlyAmount * capMonths;
                 if (accrued > maxAccrued) accrued = maxAccrued;
@@ -8856,17 +8848,17 @@ function renderPotentialRow(p, i) {
     const remaining = Math.max(0, amountNum - spent);
     const isPersonal = p.classification === 'شخصي';
     const capMonths = parseInt(p.accumulationCap) || 0;
-    // ✅ كشف بنود الرواتب (بتتدار من قسم الموظفين والرواتب)
     const isSalaryItem = (p.note || '').indexOf('[EMP:') !== -1;
     const displayNote = isSalaryItem ? (p.note || '').replace(/\[EMP:[^\]]+\]\s*/g, '').trim() : (p.note || '');
 
-    // حساب التراكم والسقف
+    // ✅ حساب التراكم والسقف (يوم بيوم)
     let capReached = false;
     let accruedNow = 0;
+    const now = new Date();
+    
     if (capMonths > 0) {
         const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
-        const startDate = createdAt || new Date();
-        const now = new Date();
+        const startDate = createdAt || new Date(now.getFullYear(), now.getMonth(), 1);
         
         const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
         let accrued = amountNum * (daysElapsed / 30);
@@ -8879,7 +8871,6 @@ function renderPotentialRow(p, i) {
         accruedNow = accrued;
     }
 
-    // سطر إضافي للبند المستمر لما يكون فيه صرف جزئي
     let extraLine = '';
     if (p.recurring === 'نعم' && spent > 0) {
         extraLine = `<div class="text-[10px] text-amber-700 font-black mt-0.5 bg-amber-100/60 px-2 py-0.5 rounded inline-block">
@@ -8887,13 +8878,12 @@ function renderPotentialRow(p, i) {
         </div>`;
     }
 
-    // سطر السقف
     let capLine = '';
     if (capMonths > 0) {
         const maxAccruedVal = amountNum * capMonths;
         if (capReached) {
             capLine = `<div class="text-[10px] text-rose-700 font-black mt-0.5 bg-rose-100/80 px-2 py-0.5 rounded inline-flex items-center gap-1">
-                <i class="fa-solid fa-flag-checkered"></i> 🎯 وصل للحد الأقصى (${maxAccruedVal.toFixed(2)} ج.م) — اضغط 🔄 لبدء دورة جديدة
+                <i class="fa-solid fa-flag-checkered"></i> 🎯 وصل للحد الأقصى (${maxAccruedVal.toFixed(2)} ج.م)
             </div>`;
         } else {
             capLine = `<div class="text-[10px] text-indigo-700 font-bold mt-0.5 bg-indigo-50 px-2 py-0.5 rounded inline-block">
@@ -8905,23 +8895,20 @@ function renderPotentialRow(p, i) {
     let finalBorderClass = activeOn
         ? (isPersonal ? 'border-purple-300 bg-purple-50/60' : 'border-sky-300 bg-sky-50/60')
         : 'border-slate-100 bg-slate-50';
-    // بنود الرواتب ليها شكل خاص
     if (isSalaryItem) finalBorderClass = 'border-orange-200 bg-orange-50/40';
 
-    // ✅ زرار مختلف لبنود الرواتب (مخفية لأنها بتتدار من قسم الموظفين)
     const actionButtonsHtml = isSalaryItem
         ? `<div class="flex flex-col items-end gap-0.5 flex-shrink-0">
                <span class="text-[10px] bg-orange-100 text-orange-800 border border-orange-300 px-2 py-0.5 rounded-md font-black whitespace-nowrap">
                    <i class="fa-solid fa-link"></i> مرتبط بالرواتب
                </span>
-               <span class="text-[9px] text-slate-500 font-bold whitespace-nowrap">تُدار من قسم الموظفين</span>
            </div>`
         : `<div class="flex items-center gap-1.5 flex-shrink-0">
-               ${capReached ? `<button onclick="resetPotentialExpense(${i})" title="🔄 تصفير وبدء دورة جديدة من اليوم" class="w-8 h-8 rounded-lg bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-rotate"></i></button>` : ''}
-               <button onclick="togglePotentialActive(${i})" title="${activeOn ? 'إلغاء التفعيل' : 'تفعيل (خصمه من صافي الربح)'}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeOn ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">
+               ${capReached ? `<button onclick="resetPotentialExpense(${i})" title="🔄 تصفير" class="w-8 h-8 rounded-lg bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-rotate"></i></button>` : ''}
+               <button onclick="togglePotentialActive(${i})" title="${activeOn ? 'إلغاء التفعيل' : 'تفعيل'}" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeOn ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">
                    <i class="fa-solid ${activeOn ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
                </button>
-               <button onclick="disbursePotential(${i})" title="صرف (جزئي أو كامل)" class="w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-money-bill-transfer"></i></button>
+               <button onclick="disbursePotential(${i})" title="صرف" class="w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-money-bill-transfer"></i></button>
                <button onclick="openModal('potexp', ${i})" title="تعديل" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
                <button onclick="deleteItem('potexp', ${i})" title="حذف" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
            </div>`;
@@ -8950,27 +8937,19 @@ function getActivePotentialTotal(forDate) {
         if (p.active !== 'نعم') return;
 
         const monthlyAmount = parseFloat(p.amount) || 0;
-        let totalSpent = parseFloat(p.totalSpent) || 0;
+        const totalSpent = parseFloat(p.totalSpent) || 0; // ✅ بنقرا المدفوع من الشيت
         const capMonths = parseInt(p.accumulationCap) || 0;
         const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
+
         const startDate = createdAt || new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
 
-        // ✅ سر الحسبة اليومية: بنقسم عدد الأيام على 30
+        // ✅ الحسبة اليومية (عشان توزيع الفلوس)
         const daysElapsed = Math.max(0, Math.floor((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
         let accrued = monthlyAmount * (daysElapsed / 30);
 
         if (capMonths > 0) {
             const maxAccrued = monthlyAmount * capMonths;
             if (accrued > maxAccrued) accrued = maxAccrued;
-        }
-
-        // 🚀 تصحيح المدفوع: بنحسبه من شيت المصروفات لو مش موجود في البند
-        if (totalSpent === 0 && config.expenses) {
-            totalSpent = config.expenses.filter(ex => {
-                const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
-                const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
-                return matchCategory || matchNote;
-            }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
         }
 
         const balance = Math.max(0, accrued - totalSpent);
@@ -9998,23 +9977,14 @@ function openAvailableCashModal() {
         .filter(p => p.active === 'نعم')
         .map(p => {
             const monthlyAmount = parseFloat(p.amount) || 0;
-            let totalSpent = parseFloat(p.totalSpent) || 0; // المدفوع
+            const totalSpent = parseFloat(p.totalSpent) || 0; // ✅ المدفوع الحقيقي من الشيت
             const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
             const startDate = createdAt || new Date();
             const now = new Date();
             
-            // ✅ سر الحسبة اليومية
+            // ✅ الحسبة اليومية
             const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
             const accrued = monthlyAmount * (daysElapsed / 30);
-            
-            // 🚀 تصحيح المدفوع: بنجمع الفلوس اللي اتصرفت من شيت المصروفات
-            if (totalSpent === 0 && config.expenses) {
-                totalSpent = config.expenses.filter(ex => {
-                    const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
-                    const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
-                    return matchCategory || matchNote;
-                }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
-            }
             
             const balance = Math.max(0, accrued - totalSpent);
             if (p.classification === 'شخصي') personalReserved += balance;
@@ -11075,29 +11045,28 @@ function updateFinanceExtras() {
             const now = new Date();
             obEl.innerHTML = items.map(p => {
                 const monthly = parseFloat(p.amount) || 0;
-                let spent = parseFloat(p.totalSpent) || 0;
+                const spent = parseFloat(p.totalSpent) || 0;
                 const created = p.createdAt ? parseAnyDate(p.createdAt) : null;
                 const start = created || new Date(now.getFullYear(), now.getMonth(), 1);
                 
+                // ✅ الحسبة اليومية
                 const days = Math.max(0, Math.floor((now - start) / 86400000));
                 const accrued = monthly * (days / 30);
                 
-                if (spent === 0 && config.expenses) {
-                    spent = config.expenses.filter(ex => {
-                        const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
-                        const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
-                        return matchCategory || matchNote;
-                    }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
-                }
-                
                 const balance = Math.max(0, accrued - spent);
                 const isPersonal = p.classification === 'شخصي';
-                return '<div class="flex items-center justify-between p-3 rounded-xl border ' + (isPersonal ? 'border-purple-200 bg-purple-50/50' : 'border-sky-200 bg-sky-50/50') + ' text-xs">' +
-                    '<div><div class="font-black text-slate-800">' + esc(p.category || '—') + '</div>' +
-                    '<div class="text-[10px] text-slate-500 font-bold mt-0.5">' + monthly.toFixed(2) + ' ج/شهر • ' + days + ' يوم • ' + (isPersonal ? '👤 شخصي' : '💼 شغل') + '</div></div>' +
-                    '<div class="text-right"><div class="font-black text-amber-700">' + balance.toFixed(2) + ' ج</div>' +
-                    '<div class="text-[10px] text-slate-400 font-bold">محجوز</div></div>' +
-                '</div>';
+                
+                return `
+                <div class="flex items-center justify-between p-3 rounded-xl border ${isPersonal ? 'border-purple-200 bg-purple-50/50' : 'border-sky-200 bg-sky-50/50'} text-xs">
+                    <div>
+                        <div class="font-black text-slate-800">${esc(p.category || '—')}</div>
+                        <div class="text-[10px] text-slate-500 font-bold mt-0.5">${monthly.toFixed(2)} ج/شهر • ${days} يوم • ${isPersonal ? '👤 شخصي' : '💼 شغل'}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-black text-amber-700">${balance.toFixed(2)} ج</div>
+                        <div class="text-[10px] text-slate-400 font-bold">محجوز</div>
+                    </div>
+                </div>`;
             }).join('');
         }
     }
