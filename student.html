@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" href="https://g.top4top.io/p_3313pmxec1.png">
   
   <!-- FontAwesome (Icons) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.clouشdflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- SweetAlert2 (Popups) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -3206,22 +3206,28 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             html += `</div>`;
             
             html += `<div class="task-action">`;
-             if(type === 'الواجب') {
-                 if(row.correctionLink) html += `<button class="btn btn-secondary" onclick="window.open('${row.correctionLink}')"><i class="fas fa-eye"></i> مشاهدة التصحيح</button>`;
-                 else {
-                     let downloadBtn = '';
-                     if (row.pages && (String(row.pages).startsWith('http://') || String(row.pages).startsWith('https://'))) {
-                         downloadBtn = `<button class="btn btn-secondary" onclick="window.open('${row.pages}')" style="margin-bottom: 5px; background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1;"><i class="fas fa-external-link-alt"></i> مشاهدة وتنزيل الواجب</button>`;
-                     }
-                     if(isExpired && !row.isUploaded) {
-                         html += downloadBtn + `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%;"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
-                     } else if(row.isUploaded) {
-                         html += downloadBtn + `<button class="btn btn-danger" onclick="deleteAssignment('${row.lesson}')"><i class="fas fa-trash"></i> حذف الواجب</button>`;
-                     } else {
-                         html += downloadBtn + `<button class="btn" onclick="openUploadModal('${row.lesson}')"><i class="fas fa-upload"></i> رفع الواجب</button>`;
-                     }
-                 }
-             }
+            if(type === 'الواجب') {
+                let downloadBtn = '';
+                if (row.pages && (String(row.pages).startsWith('http://') || String(row.pages).startsWith('https://'))) {
+                    downloadBtn = `<button class="btn btn-secondary" onclick="window.open('${row.pages}')" style="margin-bottom: 5px; background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1;"><i class="fas fa-external-link-alt"></i> مشاهدة وتنزيل الواجب</button>`;
+                }
+
+                if (isCompleted) {
+                    if (row.correctionLink) {
+                        html += downloadBtn + `<button class="btn btn-secondary" onclick="window.open('${row.correctionLink}', '_blank')" style="background: var(--secondary); color: white; border: none; width:100%; justify-content:center;"><i class="fas fa-eye"></i> عرض التصحيح</button>`;
+                    } else {
+                        html += downloadBtn + `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم تصحيح الواجب</button>`;
+                    }
+                } else {
+                    if (isExpired && !row.isUploaded) {
+                        html += downloadBtn + `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
+                    } else if (row.isUploaded) {
+                        html += downloadBtn + `<button class="btn btn-danger" onclick="deleteAssignment('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-trash"></i> حذف الواجب</button>`;
+                    } else {
+                        html += downloadBtn + `<button class="btn" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> رفع الواجب</button>`;
+                    }
+                }
+            }
             else if(type === 'التسميع') {
                 if(row.grade) html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم التسميع</button>`;
                 else if(row.isBooked) {
@@ -3962,7 +3968,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             
             slide.question.options.forEach((opt, idx) => {
                 const isSelected = studentExamAnswers[currentSlideIndex] === idx;
-                const isCorrect = slide.question.correctIndex === idx;
+                const isCorrect = String(slide.question.correctIndex) === String(idx);
                 
                 let bgStyle = "background: #f8fafc; border-color: #cbd5e1; color: #334155;";
                 let iconHtml = '<i class="far fa-circle" style="color: #94a3b8;"></i>';
@@ -4086,7 +4092,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
                     let score = 0;
                     flatExamQuestions.forEach((qObj, idx) => {
-                        if (studentExamAnswers[idx] === qObj.question.correctIndex) score++;
+                        if (String(studentExamAnswers[idx]) === String(qObj.question.correctIndex)) score++;
                     });
                     
                     const finalGradeString = `${score}/${flatExamQuestions.length}`;
