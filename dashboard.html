@@ -10043,8 +10043,8 @@ function openAvailableCashModal() {
                         <span class="font-black text-slate-800 text-sm">${esc(o.category)}</span>
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${badgeClass}">${badgeText}</span>
                     </div>
-                    <div class="text-slate-500 font-bold text-[10px] mt-0.5">
-                        ${o.monthly.toFixed(2)} ج/شهر • مر ${o.monthsElapsed} شهر • تراكم ${o.accrued.toFixed(2)}
+                    <div class="text-slate-600 font-bold text-[10px] mt-0.5">
+                        المطلوب: <span class="text-rose-600">${o.accrued.toFixed(2)} ج</span> (مر ${o.monthsElapsed} شهر) • المدفوع: <span class="text-emerald-600">${o.spent.toFixed(2)} ج</span>
                     </div>
                     ${o.spent > 0
                         ? `<div class="text-emerald-600 font-bold text-[10px] mt-0.5"><i class="fa-solid fa-circle-check"></i> إجمالي المدفوع: ${o.spent.toFixed(2)} ج</div>`
