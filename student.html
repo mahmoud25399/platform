@@ -3162,10 +3162,6 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             let deadlineHtml = '';
             let finalDeadlineStr = '';
             const deadlineVal = row.deadline || row['تاريخ الانتهاء'] || '';
-            // حساب حالة انتهاء مدة المهمة
-            let deadlineHtml = '';
-            let finalDeadlineStr = '';
-            const deadlineVal = row.deadline || row['تاريخ الانتهاء'] || '';
             if (deadlineVal && deadlineVal !== '') {
                 let deadlineStr = String(deadlineVal).replace(/'/g, '').trim();
                 if (deadlineStr.includes('/')) deadlineStr = deadlineStr.replace(/\//g, '-');
@@ -3177,7 +3173,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                         deadlineStr = parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
                     }
                 }
-                finalDeadlineStr = deadlineStr; // حفظ التاريخ بعد تنسيقه
+                finalDeadlineStr = deadlineStr;
 
                 if (deadlineStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const todayStr = new Date().toISOString().split('T')[0];
@@ -3307,7 +3303,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         html += `</div>`;
         contentBody.innerHTML = html;
         return html;
-     }
+    }
 
     // =========================================================================
     // 10. مشغل الفيديو المحمي
