@@ -3212,7 +3212,8 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             }
             
             if (finalDeadlineStr) {
-                html += `<div class="task-meta-item"><span><i class="fas fa-hourglass-end" style="color:var(--danger);"></i> تاريخ الانتهاء:</span> <span style="font-weight:bold; color: ${isExpired ? 'var(--danger)' : 'var(--dark)'};">${finalDeadlineStr}</span></div>`;
+                let expiryColor = isExpired ? 'var(--danger)' : 'var(--dark)';
+                html += `<div class="task-meta-item"><span><i class="fas fa-hourglass-end" style="color:var(--danger);"></i> تاريخ الانتهاء:</span> <span style="font-weight:bold; color:${expiryColor};">${finalDeadlineStr}</span></div>`;
             }
 
             const badgeClass = isCompleted ? 'task-grade-badge' : 'task-grade-badge none';
