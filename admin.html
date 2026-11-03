@@ -2224,6 +2224,28 @@
                     </div>
                 </div>
 
+                <div class="form-group" style="grid-column: span 2; background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(249,115,22,0.03)); padding: 15px; border-radius: var(--radius-lg); border: 1.5px solid rgba(239,68,68,0.2);">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:bold; margin-bottom: 10px;">
+                        <i class="fas fa-stopwatch" style="color:#ef4444;"></i>
+                        <span style="color:var(--dark); font-size:0.95rem; font-weight:800;">مدة المهمة المسموح بها (SLA) بالساعات</span>
+                    </label>
+                    <p style="margin:0 0 12px; color:#64748b; font-size:0.8rem;">بعد كده المهمة تتحسب "متأخرة" وبتأثر على مؤشر الالتزام بالوقت.</p>
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">الواجب (ساعة)</label>
+                            <input type="number" id="empPerfSlaWajib" class="form-control" min="1" max="720" value="48">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">التسميع (ساعة)</label>
+                            <input type="number" id="empPerfSlaTasmiya" class="form-control" min="1" max="720" value="48">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">الاختبار (ساعة)</label>
+                            <input type="number" id="empPerfSlaIkhtibarat" class="form-control" min="1" max="720" value="96">
+                        </div>
+                    </div>
+                </div>
+
                 <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-success" onclick="saveEmployeeProfile(this)" style="flex:2;"><i class="fas fa-save"></i> حفظ الموظف</button>
                     <button class="btn btn-danger" onclick="closeModal('employeeModal')" style="flex:1;">إلغاء</button>
@@ -2748,8 +2770,20 @@
         async function processBrowserWhatsAppQueue() {
             if (isProcessingQueue) return;
             
+            // ✅ قفل بين التابات عشان تابين مايعالجوش نفس الطابور في نفس الوقت
+            try {
+                const lockTs = localStorage.getItem('wa_queue_lock');
+                if (lockTs && (Date.now() - parseInt(lockTs, 10)) < 30000) {
+                    return;
+                }
+                localStorage.setItem('wa_queue_lock', Date.now().toString());
+            } catch(e) {}
+            
             let queueStr = localStorage.getItem('wa_msg_queue');
-            if (!queueStr || queueStr === '[]') return;
+            if (!queueStr || queueStr === '[]') {
+                try { localStorage.removeItem('wa_queue_lock'); } catch(e) {}
+                return;
+            }
             
             try {
                 isProcessingQueue = true;
@@ -2760,7 +2794,7 @@
                 for (let i = 0; i < queue.length; i++) {
                     let msg = queue[i];
                     // إرسال لو فوري، أو لو مجدول وميعاده جه
-                    let shouldSendNow = msg.immediate === true || currentHour >= msg.sendHour;
+                    let shouldSendNow = msg.immediate === true || currentHour >= (msg.sendHour !== undefined ? msg.sendHour : 0);
                     
                     if (shouldSendNow) {
                         console.log("🚀 جاري إرسال رسالة من الطابور للرقم: " + msg.to);
@@ -2770,7 +2804,23 @@
                             remainingQueue.push(msg);
                             console.log("❌ فشل الإرسال، الرسالة ستظل في الطابور للمحاولة مجدداً.");
                         } else {
-                            // لو نجح، مش هنضيفها في الطابور (وبالتالي اتمسحت)
+                            // ✅ سجل الـ ID عشان لو رجعت تاني ما تتبعتش
+                            try {
+                                if (msg.id) {
+                                    let sentIds = JSON.parse(localStorage.getItem('wa_sent_ids') || '[]');
+                                    if (sentIds.indexOf(msg.id) === -1) sentIds.push(msg.id);
+                                    if (sentIds.length > 500) sentIds = sentIds.slice(-500);
+                                    localStorage.setItem('wa_sent_ids', JSON.stringify(sentIds));
+                                }
+                                // ✅ سجل الـ dupKey مع توقيته
+                                const dupKey = (msg.to || '') + '|' + ((msg.body || '').substring(0, 80));
+                                let sentRecent = JSON.parse(localStorage.getItem('wa_sent_recent') || '[]');
+                                sentRecent.push({ k: dupKey, t: Date.now() });
+                                // نظف الأقدم من 30 دقيقة عشان الحجم ما يكبرش
+                                sentRecent = sentRecent.filter(function(x) { return x && (Date.now() - x.t) < 1800000; });
+                                localStorage.setItem('wa_sent_recent', JSON.stringify(sentRecent));
+                            } catch(se) { console.error('WA sent tracking error', se); }
+                            
                             console.log("✅ تم الإرسال بنجاح وحذف الرسالة من الطابور!");
                             await new Promise(r => setTimeout(r, 2000)); // تأخير بسيط عشان واتساب ميعملش حظر
                         }
@@ -2787,6 +2837,7 @@
                 console.error("Queue Processing Error:", e);
             } finally {
                 isProcessingQueue = false;
+                try { localStorage.removeItem('wa_queue_lock'); } catch(e) {}
             }
         }
 
@@ -8364,7 +8415,35 @@
                         try {
                             // بنحط الرسايل في طابور المتصفح عشان لو النت قطع أو حصل خطأ تتبعت تاني
                             const q = JSON.parse(localStorage.getItem('wa_msg_queue') || '[]');
-                            pending.forEach(item => q.push(item));
+                            const sentIds = JSON.parse(localStorage.getItem('wa_sent_ids') || '[]');
+                            const sentRecent = JSON.parse(localStorage.getItem('wa_sent_recent') || '[]');
+                            const nowTs = Date.now();
+                            pending.forEach(item => {
+                                // 1. لو الـ ID ده اتبعت قبل كده → تجاهل
+                                if (item.id && sentIds.indexOf(item.id) !== -1) {
+                                    console.log('⏭️ WA dedupe: ID already sent', item.id);
+                                    return;
+                                }
+                                // 2. لو نفس الرقم + نفس النص اتبعت في آخر 10 دقايق → تجاهل
+                                const dupKey = (item.to || '') + '|' + ((item.body || '').substring(0, 80));
+                                const recentDup = sentRecent.some(function(x) {
+                                    return x && x.k === dupKey && (nowTs - x.t) < 600000;
+                                });
+                                if (recentDup) {
+                                    console.log('⏭️ WA dedupe: same content sent recently', dupKey.substring(0, 40));
+                                    return;
+                                }
+                                // 3. لو نفس الرسالة موجودة في الطابور بالفعل → تجاهل
+                                const inQueue = q.some(function(x) {
+                                    const k2 = (x.to || '') + '|' + ((x.body || '').substring(0, 80));
+                                    return k2 === dupKey;
+                                });
+                                if (inQueue) {
+                                    console.log('⏭️ WA dedupe: already in queue', dupKey.substring(0, 40));
+                                    return;
+                                }
+                                q.push(item);
+                            });
                             localStorage.setItem('wa_msg_queue', JSON.stringify(q));
                         } catch (e) { console.error('WA enqueue error', e); }
                         
@@ -10620,6 +10699,12 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = false);
             document.getElementById('empPerfTargetWajib').value = '';
             document.getElementById('empPerfTargetIkhtibarat').value = '';
+            var slaW = document.getElementById('empPerfSlaWajib');
+            var slaT = document.getElementById('empPerfSlaTasmiya');
+            var slaI = document.getElementById('empPerfSlaIkhtibarat');
+            if (slaW) slaW.value = 48;
+            if (slaT) slaT.value = 48;
+            if (slaI) slaI.value = 96;
             onEmployeePerfToggle(false);
             
             renderEmployeePermissionsDropdowns(null);
@@ -10653,6 +10738,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfTargets = emp.perfTargets || {};
             document.getElementById('empPerfTargetWajib').value = perfTargets.wajib || '';
             document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
+            const perfSla = emp.perfSla || {};
+            var slaW = document.getElementById('empPerfSlaWajib');
+            var slaT = document.getElementById('empPerfSlaTasmiya');
+            var slaI = document.getElementById('empPerfSlaIkhtibarat');
+            if (slaW) slaW.value = perfSla.wajib || 48;
+            if (slaT) slaT.value = perfSla.tasmiya || 48;
+            if (slaI) slaI.value = perfSla.ikhtibarat || 96;
             onEmployeePerfToggle(perfEnabled);
 
             renderEmployeePermissionsDropdowns(emp);
@@ -10718,6 +10810,11 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 tasmiya: 0, // التسميع بيتحسب تلقائي فمش محتاجين رقم ثابت
                 ikhtibarat: Number(document.getElementById('empPerfTargetIkhtibarat')?.value) || 0
             };
+            const perfSla = {
+                wajib: Number(document.getElementById('empPerfSlaWajib')?.value) || 48,
+                tasmiya: Number(document.getElementById('empPerfSlaTasmiya')?.value) || 48,
+                ikhtibarat: Number(document.getElementById('empPerfSlaIkhtibarat')?.value) || 96
+            };
 
             const empData = {
                 originalCode: originalCode,
@@ -10734,7 +10831,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 allowedSections: finalSections,
                 perfEnabled: perfEnabled,
                 perfSections: selectedPerfSecs,
-                perfTargets: perfTargets
+                perfTargets: perfTargets,
+                perfSla: perfSla
             };
 
             if(btn) disableBtn(btn);
