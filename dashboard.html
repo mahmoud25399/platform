@@ -9984,7 +9984,12 @@ function openAvailableCashModal() {
             
             // ✅ الحسبة اليومية
             const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-            const accrued = monthlyAmount * (daysElapsed / 30);
+            let accrued = monthlyAmount * (daysElapsed / 30);
+            
+            // 🚀 السر هنا: لو إنت دفعت مبلغ الشهر كامل، النظام بيعتبر الشهر خلص ومش بيحسب كسر الأيام
+            if (p.recurring === 'نعم' && totalSpent >= monthlyAmount) {
+                accrued = monthlyAmount * Math.ceil(totalSpent / monthlyAmount);
+            }
             
             const balance = Math.max(0, accrued - totalSpent);
             if (p.classification === 'شخصي') personalReserved += balance;
