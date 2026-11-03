@@ -3625,15 +3625,22 @@ function renderCommitmentsStats() {
 
         if (isActive) {
             const monthlyAmount = parseFloat(p.amount) || 0;
-            const spentVal = parseFloat(p.totalSpent) || 0;
+            let spentVal = parseFloat(p.totalSpent) || 0;
             const capMonths = parseInt(p.accumulationCap) || 0;
             const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
             const startDate = createdAt || new Date(now.getFullYear(), now.getMonth(), 1);
-            // ✅ التعديل: حساب الشهور الكاملة
-            let monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
-            if (now.getDate() >= startDate.getDate()) { monthsElapsed += 1; }
-            if (monthsElapsed < 1) monthsElapsed = 1;
-            let accrued = monthlyAmount * monthsElapsed;
+            
+            const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+            let accrued = monthlyAmount * (daysElapsed / 30);
+            
+            if (spentVal === 0 && config.expenses) {
+                spentVal = config.expenses.filter(ex => {
+                    const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
+                    const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
+                    return matchCategory || matchNote;
+                }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
+            }
+
             if (capMonths > 0) {
                 const maxAccrued = monthlyAmount * capMonths;
                 if (accrued > maxAccrued) accrued = maxAccrued;
@@ -8860,12 +8867,10 @@ function renderPotentialRow(p, i) {
         const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
         const startDate = createdAt || new Date();
         const now = new Date();
-        // ✅ التعديل: حساب الشهور الكاملة
-        let monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
-        if (now.getDate() >= startDate.getDate()) { monthsElapsed += 1; }
-        if (monthsElapsed < 1) monthsElapsed = 1;
         
-        let accrued = amountNum * monthsElapsed;
+        const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+        let accrued = amountNum * (daysElapsed / 30);
+        
         const maxAccrued = amountNum * capMonths;
         if (accrued >= maxAccrued) {
             accrued = maxAccrued;
@@ -8945,37 +8950,34 @@ function getActivePotentialTotal(forDate) {
         if (p.active !== 'نعم') return;
 
         const monthlyAmount = parseFloat(p.amount) || 0;
-        const totalSpent = parseFloat(p.totalSpent) || 0;
+        let totalSpent = parseFloat(p.totalSpent) || 0;
         const capMonths = parseInt(p.accumulationCap) || 0;
         const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
-
-        // لو مفيش تاريخ إضافة، نعتبره من بداية الشهر
         const startDate = createdAt || new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
 
-        // ✅ التعديل: حساب الشهور الكاملة بدل الأيام
-        let accrued = 0;
-        if (p.recurring === 'نعم') {
-            let monthsElapsed = (targetDate.getFullYear() - startDate.getFullYear()) * 12 + (targetDate.getMonth() - startDate.getMonth());
-            if (targetDate.getDate() >= startDate.getDate()) { monthsElapsed += 1; }
-            if (monthsElapsed < 1) monthsElapsed = 1;
-            accrued = monthlyAmount * monthsElapsed;
-        } else {
-            accrued = monthlyAmount;
-        }
+        // ✅ سر الحسبة اليومية: بنقسم عدد الأيام على 30
+        const daysElapsed = Math.max(0, Math.floor((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+        let accrued = monthlyAmount * (daysElapsed / 30);
 
-        // لو فيه سقف، نمنع التراكم من تجاوزه
         if (capMonths > 0) {
             const maxAccrued = monthlyAmount * capMonths;
             if (accrued > maxAccrued) accrued = maxAccrued;
         }
 
-        // الرصيد الحالي = المستحق - اللي اتصرف
+        // 🚀 تصحيح المدفوع: بنحسبه من شيت المصروفات لو مش موجود في البند
+        if (totalSpent === 0 && config.expenses) {
+            totalSpent = config.expenses.filter(ex => {
+                const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
+                const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
+                return matchCategory || matchNote;
+            }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
+        }
+
         const balance = Math.max(0, accrued - totalSpent);
         total += balance;
     });
     return total;
 }
-
 // بترسم القسمين (مصروفات الشغل والالتزامات الشخصية) وترجع إجمالي المفعّل الكامل
 function renderPotentialBoard() {
     const list = config.potentialExpenses || [];
@@ -9989,34 +9991,35 @@ function openAvailableCashModal() {
     if (saveBtn) saveBtn.classList.add('hidden');
     title.innerHTML = '<span class="flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i> تفاصيل الفلوس المتاحة للسحب</span>';
 
-    // تفصيل الالتزامات بند بند + حسب التصنيف
     let bizReserved = 0;
     let personalReserved = 0;
+    
     const obligationsBreakdown = (config.potentialExpenses || [])
         .filter(p => p.active === 'نعم')
         .map(p => {
             const monthlyAmount = parseFloat(p.amount) || 0;
-            const totalSpent = parseFloat(p.totalSpent) || 0;
+            let totalSpent = parseFloat(p.totalSpent) || 0; // المدفوع
             const createdAt = p.createdAt ? parseAnyDate(p.createdAt) : null;
             const startDate = createdAt || new Date();
             const now = new Date();
             
-            // ✅ التعديل: حساب الشهور الكاملة بدل الأيام
-            let accrued = 0;
-            let monthsElapsed = 0;
-            if (p.recurring === 'نعم') {
-                monthsElapsed = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
-                if (now.getDate() >= startDate.getDate()) { monthsElapsed += 1; }
-                if (monthsElapsed < 1) monthsElapsed = 1;
-                accrued = monthlyAmount * monthsElapsed;
-            } else {
-                accrued = monthlyAmount;
-                monthsElapsed = 1;
+            // ✅ سر الحسبة اليومية
+            const daysElapsed = Math.max(0, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+            const accrued = monthlyAmount * (daysElapsed / 30);
+            
+            // 🚀 تصحيح المدفوع: بنجمع الفلوس اللي اتصرفت من شيت المصروفات
+            if (totalSpent === 0 && config.expenses) {
+                totalSpent = config.expenses.filter(ex => {
+                    const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
+                    const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
+                    return matchCategory || matchNote;
+                }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
             }
             
             const balance = Math.max(0, accrued - totalSpent);
             if (p.classification === 'شخصي') personalReserved += balance;
             else bizReserved += balance;
+            
             return {
                 category: p.category,
                 type: p.type,
@@ -10025,7 +10028,7 @@ function openAvailableCashModal() {
                 accrued: accrued,
                 spent: totalSpent,
                 balance: balance,
-                monthsElapsed: monthsElapsed
+                daysElapsed: daysElapsed
             };
         });
 
@@ -10043,13 +10046,15 @@ function openAvailableCashModal() {
                         <span class="font-black text-slate-800 text-sm">${esc(o.category)}</span>
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${badgeClass}">${badgeText}</span>
                     </div>
-                    <div class="text-slate-600 font-bold text-[10px] mt-0.5">
-                        المطلوب: <span class="text-rose-600">${o.accrued.toFixed(2)} ج</span> (مر ${o.monthsElapsed} شهر) • المدفوع: <span class="text-emerald-600">${o.spent.toFixed(2)} ج</span>
+                    <div class="text-slate-500 font-bold text-[10px] mt-0.5">
+                        ${o.monthly.toFixed(2)} ج/شهر • مر ${o.daysElapsed} يوم • تراكم ${o.accrued.toFixed(2)}
                     </div>
-                    ${o.spent > 0
-                        ? `<div class="text-emerald-600 font-bold text-[10px] mt-0.5"><i class="fa-solid fa-circle-check"></i> إجمالي المدفوع: ${o.spent.toFixed(2)} ج</div>`
-                        : `<div class="text-rose-500 font-bold text-[10px] mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> لم يتم تسجيل أي دفعات لهذا البند</div>`
-                    }
+                    <div class="font-bold text-[10px] mt-1">
+                        ${o.spent > 0 
+                            ? `<span class="text-emerald-600"><i class="fa-solid fa-circle-check"></i> تم سداد: ${o.spent.toFixed(2)} ج</span>`
+                            : `<span class="text-slate-400"><i class="fa-solid fa-info-circle"></i> المدفوع: 0.00 ج</span>`
+                        }
+                    </div>
                 </div>
                 <div class="text-left flex-shrink-0">
                     <div class="font-black text-amber-700">${o.balance.toFixed(2)} ج</div>
@@ -10077,49 +10082,6 @@ function openAvailableCashModal() {
                 <span class="text-emerald-800 font-black">${data.available.toFixed(2)}</span>
             </div>
 
-            <div>
-                <h4 class="text-sm font-black text-slate-700 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-vault text-indigo-500"></i>
-                    تقسيمة الرصيد الفعلي في فودافون كاش
-                </h4>
-                <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-emerald-50 border-2 border-indigo-200 space-y-3">
-                    <div class="flex justify-between items-center text-sm border-b border-indigo-200/60 pb-2">
-                        <span class="font-bold text-indigo-900">📱 إجمالي الرصيد المتوقع في المحفظة</span>
-                        <span class="font-black text-indigo-900 text-lg" dir="ltr">${data.physicalCash.toFixed(2)} ج</span>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between items-center p-2 bg-white/70 rounded-lg">
-                            <span class="font-bold text-slate-700">🤝 أمانة الطلاب (لسه مأخدوش حقها)</span>
-                            <span class="font-black text-blue-700" dir="ltr">${data.studentDeposit.toFixed(2)} ج</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 bg-white/70 rounded-lg">
-                            <span class="font-bold text-slate-700">🔒 محجوز للالتزامات</span>
-                            <span class="font-black text-amber-700" dir="ltr">${data.reserved.toFixed(2)} ج</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 bg-emerald-100 rounded-lg border border-emerald-300">
-                            <span class="font-black text-emerald-900">💰 متاح لك فعلياً</span>
-                            <span class="font-black text-emerald-800" dir="ltr">${data.available.toFixed(2)} ج</span>
-                        </div>
-                    </div>
-                    <div class="text-[10px] text-indigo-700 font-bold text-center pt-1">
-                        ✓ المجموع = أمانة + محجوز + متاح = الرصيد المتوقع
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                    <div class="text-[10px] text-blue-700 font-bold">💵 إجمالي المحصلة</div>
-                    <div class="text-lg font-black text-blue-800">${data.collected.toFixed(2)} ج</div>
-                    <div class="text-[9px] text-blue-500 font-bold mt-0.5">كل فلوس الطلاب اللي دفعت</div>
-                </div>
-                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                    <div class="text-[10px] text-emerald-700 font-bold">✓ الإيرادات المؤكدة</div>
-                    <div class="text-lg font-black text-emerald-800">${data.confirmed.toFixed(2)} ج</div>
-                    <div class="text-[9px] text-emerald-500 font-bold mt-0.5">اللي اتحسبت فعلاً بحضور</div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-2 gap-2">
                 <div class="p-3 rounded-xl bg-sky-50 border border-sky-200 text-center">
                     <div class="text-[10px] text-sky-700 font-bold"><i class="fa-solid fa-briefcase ml-1"></i> محجوز مصروفات شغل</div>
@@ -10143,7 +10105,7 @@ function openAvailableCashModal() {
 
             <div class="text-[10px] text-slate-400 font-bold leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-200">
                 <i class="fa-solid fa-circle-info text-indigo-500"></i>
-                <strong>ملاحظة:</strong> أساس الحساب هي <strong>الإيرادات المؤكدة</strong> (الحصص اللي اتعلمت فعلاً)، مش المحصلة. ده يضمن إنك مش بتسحب من أمانة الطلاب. الالتزامات بتتراكم شهر بشهر من تاريخ إضافة كل بند.
+                <strong>ملاحظة:</strong> الالتزامات بتتراكم <strong>يوم بيوم</strong> من تاريخ إضافة كل بند، عشان توزيع الفلوس يبقى عادل وميعملكش عجز في السحب.
             </div>
         </div>
     `;
@@ -11113,21 +11075,26 @@ function updateFinanceExtras() {
             const now = new Date();
             obEl.innerHTML = items.map(p => {
                 const monthly = parseFloat(p.amount) || 0;
-                const spent = parseFloat(p.totalSpent) || 0;
+                let spent = parseFloat(p.totalSpent) || 0;
                 const created = p.createdAt ? parseAnyDate(p.createdAt) : null;
                 const start = created || new Date(now.getFullYear(), now.getMonth(), 1);
                 
-                // ✅ التعديل: حساب الشهور الكاملة
-                let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-                if (now.getDate() >= start.getDate()) { monthsElapsed += 1; }
-                if (monthsElapsed < 1) monthsElapsed = 1;
+                const days = Math.max(0, Math.floor((now - start) / 86400000));
+                const accrued = monthly * (days / 30);
                 
-                const accrued = monthly * monthsElapsed;
+                if (spent === 0 && config.expenses) {
+                    spent = config.expenses.filter(ex => {
+                        const matchCategory = (ex.category || '').trim() === (p.category || '').trim();
+                        const matchNote = (ex.note || '').includes(p.category) || (ex.note || '').includes('[EMP:');
+                        return matchCategory || matchNote;
+                    }).reduce((sum, ex) => sum + (parseFloat(ex.amount) || 0), 0);
+                }
+                
                 const balance = Math.max(0, accrued - spent);
                 const isPersonal = p.classification === 'شخصي';
                 return '<div class="flex items-center justify-between p-3 rounded-xl border ' + (isPersonal ? 'border-purple-200 bg-purple-50/50' : 'border-sky-200 bg-sky-50/50') + ' text-xs">' +
                     '<div><div class="font-black text-slate-800">' + esc(p.category || '—') + '</div>' +
-                    '<div class="text-[10px] text-slate-500 font-bold mt-0.5">' + monthly.toFixed(2) + ' ج/شهر • ' + monthsElapsed + ' شهر • ' + (isPersonal ? '👤 شخصي' : '💼 شغل') + '</div></div>' +
+                    '<div class="text-[10px] text-slate-500 font-bold mt-0.5">' + monthly.toFixed(2) + ' ج/شهر • ' + days + ' يوم • ' + (isPersonal ? '👤 شخصي' : '💼 شغل') + '</div></div>' +
                     '<div class="text-right"><div class="font-black text-amber-700">' + balance.toFixed(2) + ' ج</div>' +
                     '<div class="text-[10px] text-slate-400 font-bold">محجوز</div></div>' +
                 '</div>';
