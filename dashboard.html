@@ -571,6 +571,11 @@
             <i class="fa-solid fa-magnifying-glass-chart w-5 text-center text-purple-400"></i><span>التقارير الشاملة</span>
         </button>
 
+        <!-- 💼 الوظائف والتوظيف -->
+        <button onclick="showSection('jobs')" data-section="jobs" class="nav-item w-full text-right px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-3 mt-2">
+            <i class="fa-solid fa-briefcase w-5 text-center text-orange-400"></i><span>الوظائف والتوظيف</span>
+        </button>
+
         <hr class="border-slate-700/50 my-2">
 
         <!-- 🌐 إدارة الموقع -->
@@ -2149,6 +2154,131 @@
         </div>
     </div>
 
+    <!-- ═══ SECTION: JOBS (الوظائف والتوظيف) ═══ -->
+    <div id="section-jobs" class="section-panel space-y-6">
+        <div class="section-header">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600"><i class="fa-solid fa-briefcase"></i></span>
+                        الوظائف والتوظيف
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">إدارة الوظائف المتاحة واستقبال طلبات التوظيف</p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <a href="careers.html" target="_blank" class="btn-secondary text-xs"><i class="fa-solid fa-external-link-alt"></i> فتح صفحة الوظائف</a>
+                    <button onclick="openJobModal(-1)" class="btn-primary text-xs bg-orange-600 hover:bg-orange-700"><i class="fa-solid fa-plus"></i> إضافة وظيفة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
+            <div class="flex gap-1 overflow-x-auto p-2 reports-tabs-scroll">
+                <button type="button" onclick="switchJobsTab('list')" data-jobs-tab="list" class="rep-tab-btn active">
+                    <i class="fa-solid fa-list"></i> الوظائف
+                </button>
+                <button type="button" onclick="switchJobsTab('apps')" data-jobs-tab="apps" class="rep-tab-btn">
+                    <i class="fa-solid fa-file-lines"></i> طلبات التوظيف
+                </button>
+                <button type="button" onclick="switchJobsTab('settings')" data-jobs-tab="settings" class="rep-tab-btn">
+                    <i class="fa-solid fa-gear"></i> الإعدادات
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 1: Jobs List -->
+        <div id="jobs-tab-list" class="jobs-tab-content space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl border-2 border-orange-200 flex items-center gap-3 shadow-sm">
+                    <div class="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg"><i class="fa-solid fa-briefcase"></i></div>
+                    <div><div class="text-2xl font-black text-orange-700" id="jobs-stat-total">0</div><div class="text-[10px] text-slate-500 font-bold">إجمالي الوظائف</div></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-emerald-200 flex items-center gap-3 shadow-sm">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-check-circle"></i></div>
+                    <div><div class="text-2xl font-black text-emerald-700" id="jobs-stat-active">0</div><div class="text-[10px] text-slate-500 font-bold">نشطة</div></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-3 shadow-sm">
+                    <div class="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-inbox"></i></div>
+                    <div><div class="text-2xl font-black text-indigo-700" id="jobs-stat-apps">0</div><div class="text-[10px] text-slate-500 font-bold">إجمالي الطلبات</div></div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 flex items-center gap-3 shadow-sm">
+                    <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div><div class="text-2xl font-black text-amber-700" id="jobs-stat-pending">0</div><div class="text-[10px] text-slate-500 font-bold">معلقة</div></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between flex-wrap gap-2">
+                    <h3 class="font-black text-slate-700 text-sm">قائمة الوظائف</h3>
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="jobs-search-input" oninput="renderJobsAdminList()" placeholder="بحث بالاسم..." class="w-full pl-8 pr-3 py-1.5 border-2 border-slate-200 rounded-lg text-xs font-bold focus:border-orange-500 outline-none">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    </div>
+                </div>
+                <div id="jobs-admin-list" class="p-4 space-y-3">
+                    <div class="text-center py-8 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Applications -->
+        <div id="jobs-tab-apps" class="jobs-tab-content hidden space-y-4">
+            <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap flex-1">
+                    <label class="text-xs font-bold text-slate-600">فلترة:</label>
+                    <select id="apps-filter-job" onchange="renderApplicationsAdminList()" class="field-input text-xs w-auto">
+                        <option value="all">كل الوظائف</option>
+                    </select>
+                    <select id="apps-filter-status" onchange="renderApplicationsAdminList()" class="field-input text-xs w-auto">
+                        <option value="all">كل الحالات</option>
+                        <option value="معلق">معلق</option>
+                        <option value="مراجعة">مراجعة</option>
+                        <option value="مقبول">مقبول</option>
+                        <option value="مرفوض">مرفوض</option>
+                    </select>
+                    <div class="relative">
+                        <input type="text" id="apps-search-input" oninput="renderApplicationsAdminList()" placeholder="بحث بالاسم/الرقم..." class="field-input text-xs w-56 pl-8 pr-3 py-2">
+                        <i class="fa-solid fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    </div>
+                </div>
+                <button onclick="loadApplicationsFromServer().then(renderApplicationsAdminList)" class="btn-secondary text-xs"><i class="fa-solid fa-rotate"></i> تحديث</button>
+            </div>
+
+            <div id="applications-admin-list" class="space-y-3">
+                <div class="text-center py-8 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Settings -->
+        <div id="jobs-tab-settings" class="jobs-tab-content hidden space-y-4">
+            <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-6 space-y-4">
+                <h3 class="font-black text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-cog text-indigo-500"></i> إعدادات عامة للتوظيف</h3>
+                <div class="field-group">
+                    <label class="text-xs font-bold text-slate-600">رابط صفحة الوظائف</label>
+                    <input type="text" id="jobs-public-url" class="field-input text-sm font-mono" dir="ltr" value="careers.html">
+                </div>
+                <div class="field-group">
+                    <label class="text-xs font-bold text-slate-600">رقم واتساب استقبال إشعارات الطلبات</label>
+                    <input type="text" id="jobs-notify-phone" class="field-input text-sm font-mono" dir="ltr" placeholder="201012345678">
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl border-2 border-slate-200">
+                    <input type="checkbox" id="jobs-notify-wa" class="w-4 h-4 rounded text-indigo-600">
+                    <span class="text-xs font-bold text-slate-700"><i class="fa-brands fa-whatsapp text-green-500 ml-1"></i> إرسال إشعار واتساب عند وصول طلب جديد</span>
+                </label>
+                <div class="field-group mt-2">
+                    <label class="text-xs font-bold text-slate-600">عنوان رسالة النجاح</label>
+                    <input type="text" id="jobs-success-title" class="field-input text-sm" placeholder="تم إرسال طلبك بنجاح! 🎉">
+                </div>
+                <div class="field-group">
+                    <label class="text-xs font-bold text-slate-600">نص رسالة النجاح</label>
+                    <textarea id="jobs-success-msg" class="field-input text-sm resize-none" rows="2" placeholder="شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً عبر الواتساب أو الإيميل."></textarea>
+                </div>
+                <button onclick="saveJobsSettings()" class="btn-primary w-full justify-center py-3"><i class="fa-solid fa-save"></i> حفظ الإعدادات</button>
+            </div>
+        </div>
+    </div>
+
     </div><!-- end p-8 -->
 </main>
 
@@ -2667,6 +2797,7 @@ const SECTION_NAMES = {
     finance: 'المالية والمصروفات',
     'wa-messages': 'رسائل الواتساب التلقائية',
     reports: 'التقارير الشاملة',
+    jobs: 'الوظائف والتوظيف',
     header: 'الهيدر والهيرو',
     stats: 'أرقام وإنجازات المعلم',
     features: 'آلية العمل',
@@ -2800,6 +2931,7 @@ function showSection(id) {
         if (id === 'reports') { 
             switchReportTab(window._activeReportTab || 'overview');
         }
+        if (id === 'jobs') { renderJobsSection(); }
         if (id === 'custom-builder') { renderCBAdmin(); }
         if (id === 'pricing') { renderGlobalGradesBadges(); renderCurriculaTabs(); }
         if (id === 'discounts') { renderDiscountsList(); }
@@ -6032,8 +6164,14 @@ function closeModal() {
     if (saveBtn) {
         saveBtn.classList.remove('hidden');
         saveBtn.style.display = 'flex';
-        saveBtn.disabled = false; // 🚀 التعديل: فك التعليق عند إغلاق النافذة
+        saveBtn.disabled = false;
     }
+    // إزالة أزرار المعاينة المؤقتة
+    const prevBtn = document.getElementById('preview-job-btn');
+    if (prevBtn) prevBtn.remove();
+    const backBtn = document.getElementById('back-to-edit-btn');
+    if (backBtn) backBtn.remove();
+
     modalType=''; modalEditIndex=-1;
 }
 
@@ -14956,6 +15094,903 @@ function showWaPreviewModal(options) {
     overlay.querySelector('#__wa_prev_send').addEventListener('click', function() { close(); if (options.onSend) options.onSend(); });
     overlay.querySelector('#__wa_prev_cancel').addEventListener('click', close);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  💼 JOBS & RECRUITMENT MODULE — إدارة الوظائف وطلبات التوظيف
+// ═══════════════════════════════════════════════════════════════════
+window._jobsCache = [];
+window._applicationsCache = [];
+
+function switchJobsTab(tabName) {
+    document.querySelectorAll('[data-jobs-tab]').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.jobsTab === tabName);
+    });
+    document.querySelectorAll('.jobs-tab-content').forEach(function(c) {
+        c.classList.add('hidden');
+    });
+    const target = document.getElementById('jobs-tab-' + tabName);
+    if (target) target.classList.remove('hidden');
+    if (tabName === 'list') renderJobsAdminList();
+    if (tabName === 'apps') renderApplicationsAdminList();
+    if (tabName === 'settings') populateJobsSettings();
+}
+
+async function renderJobsSection() {
+    await loadJobsFromServer();
+    await loadApplicationsFromServer();
+    renderJobsAdminList();
+    renderApplicationsAdminList();
+}
+
+async function loadJobsFromServer() {
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (!url) return [];
+    try {
+        const d = await sendActionViaJSONP(url, { action: 'getJobsAdmin', adminKey: getAuthKey() });
+        if (d && d.result === 'success') {
+            window._jobsCache = d.jobs || [];
+            return window._jobsCache;
+        }
+    } catch(e) { console.error('loadJobs error:', e); }
+    return [];
+}
+
+async function loadApplicationsFromServer() {
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (!url) return [];
+    try {
+        const d = await sendActionViaJSONP(url, { action: 'getApplications', adminKey: getAuthKey() });
+        if (d && d.result === 'success') {
+            window._applicationsCache = d.applications || [];
+            return window._applicationsCache;
+        }
+    } catch(e) { console.error('loadApplications error:', e); }
+    return [];
+}
+
+function renderJobsAdminList() {
+    const container = document.getElementById('jobs-admin-list');
+    if (!container) return;
+    const jobs = window._jobsCache || [];
+    const apps = window._applicationsCache || [];
+    const q = (document.getElementById('jobs-search-input')?.value || '').toLowerCase().trim();
+
+    const stTotal = document.getElementById('jobs-stat-total');
+    const stActive = document.getElementById('jobs-stat-active');
+    const stApps = document.getElementById('jobs-stat-apps');
+    const stPend = document.getElementById('jobs-stat-pending');
+    if (stTotal) stTotal.textContent = jobs.length;
+    if (stActive) stActive.textContent = jobs.filter(j => j.active !== false && j.active !== 'لا').length;
+    if (stApps) stApps.textContent = apps.length;
+    if (stPend) stPend.textContent = apps.filter(a => (a.status || 'معلق') === 'معلق').length;
+
+    const jobFilter = document.getElementById('apps-filter-job');
+    if (jobFilter) {
+        const currentVal = jobFilter.value;
+        jobFilter.innerHTML = '<option value="all">كل الوظائف</option>' +
+            jobs.map(j => `<option value="${esc(j.id)}">${esc(j.title || j.name)}</option>`).join('');
+        if (currentVal) jobFilter.value = currentVal;
+    }
+
+    let filtered = jobs;
+    if (q) filtered = jobs.filter(j => (j.title || j.name || '').toLowerCase().includes(q));
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 text-slate-400 font-bold">
+            <i class="fa-solid fa-briefcase text-5xl mb-3 opacity-30"></i>
+            <p>لا توجد وظائف بعد — اضغط "إضافة وظيفة"</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(job => {
+        const idx = jobs.indexOf(job);
+        const isActive = job.active !== false && job.active !== 'لا';
+        const appCount = apps.filter(a => a.jobId === job.id).length;
+        const pendingCount = apps.filter(a => a.jobId === job.id && (a.status || 'معلق') === 'معلق').length;
+        return `<div class="card-item ${isActive ? '' : 'opacity-60'}">
+            <img src="${esc(job.image || 'https://i.ibb.co/yBF2bYsj/image.png')}"
+                 class="w-16 h-16 rounded-xl object-cover flex-shrink-0 bg-slate-200"
+                 onerror="this.src='https://i.ibb.co/yBF2bYsj/image.png'">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="font-black text-slate-800">${esc(job.title || job.name)}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
+                        ${isActive ? '✓ نشطة' : '⛔ موقوفة'}
+                    </span>
+                    ${appCount > 0 ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">${appCount} طلب</span>` : ''}
+                    ${pendingCount > 0 ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">${pendingCount} معلق</span>` : ''}
+                </div>
+                <p class="text-xs text-slate-500 line-clamp-1">${esc((job.description || '').substring(0, 100))}</p>
+                <p class="text-[10px] text-slate-400 font-mono mt-0.5">ID: ${esc(job.id)}</p>
+            </div>
+            <div class="flex gap-1.5 flex-shrink-0 flex-wrap">
+                <button onclick="copyJobLink('${esc(job.id)}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center" title="نسخ رابط الوظيفة">
+                    <i class="fa-solid fa-link"></i>
+                </button>
+                <button onclick="toggleJobActive(${idx})" class="w-8 h-8 rounded-lg ${isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'} hover:opacity-80 flex items-center justify-center" title="${isActive ? 'إيقاف' : 'تفعيل'}">
+                    <i class="fa-solid ${isActive ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                </button>
+                <button onclick="openJobModal(${idx})" class="btn-edit text-xs"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteJob(${idx})" class="btn-danger text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderApplicationsAdminList() {
+    const container = document.getElementById('applications-admin-list');
+    if (!container) return;
+    let apps = window._applicationsCache || [];
+    const jobFilter = document.getElementById('apps-filter-job')?.value || 'all';
+    const statusFilter = document.getElementById('apps-filter-status')?.value || 'all';
+    const q = (document.getElementById('apps-search-input')?.value || '').toLowerCase().trim();
+
+    if (jobFilter !== 'all') apps = apps.filter(a => a.jobId === jobFilter);
+    if (statusFilter !== 'all') apps = apps.filter(a => (a.status || 'معلق') === statusFilter);
+    if (q) apps = apps.filter(a =>
+        (a.name || '').toLowerCase().includes(q) ||
+        (a.phone || '').includes(q) ||
+        (a.email || '').toLowerCase().includes(q)
+    );
+
+    if (apps.length === 0) {
+        container.innerHTML = `<div class="bg-white rounded-2xl border-2 border-slate-100 text-center py-12 text-slate-400 font-bold">
+            <i class="fa-solid fa-inbox text-5xl mb-3 opacity-30"></i>
+            <p>لا توجد طلبات مطابقة</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = apps.map(app => {
+        const idx = window._applicationsCache.indexOf(app);
+        const status = app.status || 'معلق';
+        const statusColors = {
+            'معلق': 'bg-amber-50 text-amber-700',
+            'مراجعة': 'bg-blue-50 text-blue-700',
+            'مقبول': 'bg-emerald-50 text-emerald-700',
+            'مرفوض': 'bg-rose-50 text-rose-700'
+        };
+        const statusClass = statusColors[status] || statusColors['معلق'];
+        const dateStr = app.timestamp ? new Date(app.timestamp).toLocaleString('ar-EG') : '—';
+        const cvLink = app.cvUrl || '';
+
+        return `<div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between gap-3 flex-wrap">
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <div class="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black flex-shrink-0">
+                        ${esc((app.name || '؟').charAt(0))}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap mb-1">
+                            <span class="font-black text-slate-800">${esc(app.name)}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusClass}">${status}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 font-bold flex items-center gap-2 flex-wrap">
+                            <span><i class="fa-solid fa-briefcase text-indigo-400"></i> ${esc(app.jobName)}</span>
+                            <span>•</span>
+                            <span dir="ltr"><i class="fa-solid fa-phone text-emerald-400"></i> ${esc(app.phone)}</span>
+                            ${app.email ? `<span>•</span><span dir="ltr"><i class="fa-solid fa-envelope text-blue-400"></i> ${esc(app.email)}</span>` : ''}
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-bold mt-1">${dateStr}</div>
+                    </div>
+                </div>
+                <div class="flex gap-1.5 flex-shrink-0">
+                    <button onclick="openJobApplicationDetail(${idx})" class="btn-primary text-xs bg-indigo-600 hover:bg-indigo-700" title="عرض"><i class="fa-solid fa-eye"></i> عرض</button>
+                    ${cvLink ? `<a href="${cvLink}" target="_blank" class="btn-secondary text-xs" title="فتح السيرة الذاتية"><i class="fa-solid fa-file-pdf"></i></a>` : ''}
+                    <button onclick="sendCustomWhatsAppToApplicant(${idx})" class="btn-primary text-xs bg-green-600 hover:bg-green-700" title="إرسال رسالة واتساب"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// متغير لحفظ الأسئلة مؤقتاً أثناء التعديل
+window._tempJobQuestions = [];
+
+function openJobModal(idx) {
+    const job = idx >= 0 ? window._jobsCache[idx] : null;
+    modalType = 'job';
+    modalEditIndex = idx;
+
+    // لو وظيفة جديدة، بنحط الأسئلة الافتراضية، لو تعديل بناخد أسئلتها
+    window._tempJobQuestions = (job && job.questions && job.questions.length > 0) 
+        ? JSON.parse(JSON.stringify(job.questions)) 
+        : [
+            { id: 'full_name', type: 'text', label: 'الاسم الكامل', required: true, options: [] },
+            { id: 'whatsapp_number', type: 'tel', label: 'رقم الواتساب للتواصل', required: true, options: [] },
+            { id: 'email', type: 'text', label: 'البريد الإلكتروني', required: false, options: [] },
+            { id: 'resume_upload', type: 'file', label: 'رفع السيرة الذاتية (CV)', helpText: 'PDF, Word, JPG, PNG — أقصى حجم 10MB', required: true, options: [] }
+        ];
+
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    const saveBtn = document.getElementById('modal-save-btn');
+    const modalFooter = document.getElementById('modal-footer');
+
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-briefcase text-orange-500"></i> ${idx >= 0 ? 'تعديل وظيفة' : 'إضافة وظيفة جديدة'}</span>`;
+    
+    saveBtn.classList.remove('hidden');
+    saveBtn.style.display = 'flex';
+    saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> حفظ الوظيفة';
+    saveBtn.onclick = saveJob;
+
+    if (!document.getElementById('preview-job-btn')) {
+        const prevBtn = document.createElement('button');
+        prevBtn.id = 'preview-job-btn';
+        prevBtn.className = 'px-6 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl font-bold transition-colors flex items-center justify-center gap-2';
+        prevBtn.innerHTML = '<i class="fa-solid fa-eye"></i> معاينة';
+        prevBtn.onclick = previewJob;
+        modalFooter.insertBefore(prevBtn, saveBtn);
+    }
+
+    body.innerHTML = `
+    <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">اسم الوظيفة *</label>
+                <input id="m-job-title" class="field-input font-bold" value="${esc(job?.title || '')}" placeholder="مثال: مساعد تعليمي">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">شارة (Badge)</label>
+                <input id="m-job-badge" class="field-input" value="${esc(job?.badge || 'متاح الآن')}" placeholder="متاح الآن / عاجل">
+            </div>
+        </div>
+        <div class="field-group">
+            <label class="font-bold text-slate-700 text-xs">رابط صورة الوظيفة</label>
+            <input id="m-job-image" class="field-input" dir="ltr" value="${esc(job?.image || '')}" placeholder="https://...">
+        </div>
+        <div class="field-group">
+            <label class="font-bold text-slate-700 text-xs">الوصف المختصر *</label>
+            <textarea id="m-job-desc" rows="3" class="field-input resize-none">${esc(job?.description || '')}</textarea>
+        </div>
+        <div class="field-group">
+            <label class="font-bold text-slate-700 text-xs">التفاصيل والمتطلبات</label>
+            <textarea id="m-job-details" rows="4" class="field-input resize-none" placeholder="اذكر المؤهلات، الخبرات، ساعات العمل...">${esc(job?.details || '')}</textarea>
+        </div>
+        <div class="field-group">
+            <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <input type="checkbox" id="m-job-active" ${(!job || job.active !== false) ? 'checked' : ''} class="w-4 h-4 rounded text-orange-600">
+                <span class="text-xs font-bold text-slate-700">الوظيفة نشطة (تظهر في صفحة الوظائف)</span>
+            </label>
+        </div>
+
+        <!-- صانع الأسئلة -->
+        <div class="border-t border-slate-200 pt-4 mt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-clipboard-question text-indigo-500"></i> أسئلة الاستمارة</h3>
+                <button type="button" onclick="addBuilderQuestion()" class="btn-secondary text-xs py-1.5 px-3"><i class="fa-solid fa-plus"></i> إضافة سؤال</button>
+            </div>
+            <div id="m-job-questions-builder" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                <!-- سيتم رسم الأسئلة هنا -->
+            </div>
+        </div>
+    </div>`;
+
+    renderBuilderQuestions();
+    overlay.classList.add('active');
+}
+
+function renderBuilderQuestions() {
+    const container = document.getElementById('m-job-questions-builder');
+    if (!container) return;
+    
+    if (window._tempJobQuestions.length === 0) {
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs font-bold border-2 border-dashed border-slate-200 rounded-xl">لا توجد أسئلة بعد — اضغط "إضافة سؤال"</div>';
+        return;
+    }
+
+    container.innerHTML = window._tempJobQuestions.map((q, i) => {
+        const isOptionType = q.type === 'radio' || q.type === 'select';
+        return `
+        <div class="bg-white border-2 border-slate-200 rounded-xl p-3 space-y-2 relative group">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <span class="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">سؤال ${i+1}</span>
+                <div class="flex gap-1">
+                    <button type="button" onclick="moveBuilderQuestion(${i}, -1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===0?'disabled':''}><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
+                    <button type="button" onclick="moveBuilderQuestion(${i}, 1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===window._tempJobQuestions.length-1?'disabled':''}><i class="fa-solid fa-arrow-down text-[10px]"></i></button>
+                    <button type="button" onclick="deleteBuilderQuestion(${i})" class="w-6 h-6 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نص السؤال / العنوان</label>
+                    <input type="text" oninput="updateBuilderQ(${i}, 'label', this.value)" class="field-input text-xs py-1.5" value="${esc(q.label || '')}">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نوع السؤال</label>
+                    <select onchange="updateBuilderQ(${i}, 'type', this.value); renderBuilderQuestions();" class="field-input text-xs py-1.5 cursor-pointer">
+                        <option value="text" ${q.type==='text'?'selected':''}>نص قصير</option>
+                        <option value="textarea" ${q.type==='textarea'?'selected':''}>نص طويل</option>
+                        <option value="number" ${q.type==='number'?'selected':''}>رقم</option>
+                        <option value="tel" ${q.type==='tel'?'selected':''}>هاتف</option>
+                        <option value="radio" ${q.type==='radio'?'selected':''}>اختيار من متعدد (Radio)</option>
+                        <option value="select" ${q.type==='select'?'selected':''}>قائمة منسدلة (Select)</option>
+                        <option value="file" ${q.type==='file'?'selected':''}>رفع ملف</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1">نص مساعد (اختياري)</label>
+                <input type="text" oninput="updateBuilderQ(${i}, 'helpText', this.value)" class="field-input text-xs py-1.5" value="${esc(q.helpText || '')}">
+            </div>
+
+            ${isOptionType ? `
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1">الخيارات (كل خيار في سطر جديد)</label>
+                <textarea oninput="updateBuilderQOptions(${i}, this.value)" rows="3" class="field-input text-xs py-1.5 resize-none" placeholder="خيار 1&#10;خيار 2">${(q.options || []).join('\n')}</textarea>
+            </div>` : ''}
+
+            <label class="flex items-center gap-2 cursor-pointer mt-2">
+                <input type="checkbox" onchange="updateBuilderQ(${i}, 'required', this.checked)" ${q.required?'checked':''} class="w-3.5 h-3.5 rounded text-indigo-600">
+                <span class="text-[11px] font-bold text-slate-700">هذا السؤال إلزامي</span>
+            </label>
+        </div>
+        `;
+    }).join('');
+}
+
+function addBuilderQuestion() {
+    window._tempJobQuestions.push({
+        id: 'q_' + Date.now(),
+        type: 'text',
+        label: '',
+        required: true,
+        options: []
+    });
+    renderBuilderQuestions();
+}
+
+function updateBuilderQ(idx, key, val) {
+    if (window._tempJobQuestions[idx]) {
+        window._tempJobQuestions[idx][key] = val;
+    }
+}
+
+function updateBuilderQOptions(idx, val) {
+    if (window._tempJobQuestions[idx]) {
+        window._tempJobQuestions[idx].options = val.split('\n').filter(o => o.trim() !== '');
+    }
+}
+
+function deleteBuilderQuestion(idx) {
+    window._tempJobQuestions.splice(idx, 1);
+    renderBuilderQuestions();
+}
+
+function moveBuilderQuestion(idx, dir) {
+    if (idx + dir < 0 || idx + dir >= window._tempJobQuestions.length) return;
+    const temp = window._tempJobQuestions[idx];
+    window._tempJobQuestions[idx] = window._tempJobQuestions[idx + dir];
+    window._tempJobQuestions[idx + dir] = temp;
+    renderBuilderQuestions();
+}
+// ═══════════════════════════════════════════
+//  Question Builder Functions
+// ═══════════════════════════════════════════
+function renderBuilderQuestions() {
+    const container = document.getElementById('m-job-questions-builder');
+    if (!container) return;
+    
+    if (window._tempJobQuestions.length === 0) {
+        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs font-bold border-2 border-dashed border-slate-200 rounded-xl">لا توجد أسئلة بعد — اضغط "إضافة سؤال"</div>';
+        return;
+    }
+
+    container.innerHTML = window._tempJobQuestions.map((q, i) => {
+        const isOptionType = q.type === 'radio' || q.type === 'select';
+        return `
+        <div class="bg-white border-2 border-slate-200 rounded-xl p-3 space-y-2 relative group">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <span class="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">سؤال ${i+1}</span>
+                <div class="flex gap-1">
+                    <button type="button" onclick="moveBuilderQuestion(${i}, -1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===0?'disabled':''}><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
+                    <button type="button" onclick="moveBuilderQuestion(${i}, 1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===window._tempJobQuestions.length-1?'disabled':''}><i class="fa-solid fa-arrow-down text-[10px]"></i></button>
+                    <button type="button" onclick="deleteBuilderQuestion(${i})" class="w-6 h-6 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نص السؤال / العنوان</label>
+                    <input type="text" oninput="updateBuilderQ(${i}, 'label', this.value)" class="field-input text-xs py-1.5" value="${esc(q.label || '')}">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نوع السؤال</label>
+                    <select onchange="updateBuilderQ(${i}, 'type', this.value); renderBuilderQuestions();" class="field-input text-xs py-1.5 cursor-pointer">
+                        <option value="text" ${q.type==='text'?'selected':''}>نص قصير</option>
+                        <option value="textarea" ${q.type==='textarea'?'selected':''}>نص طويل</option>
+                        <option value="number" ${q.type==='number'?'selected':''}>رقم</option>
+                        <option value="tel" ${q.type==='tel'?'selected':''}>هاتف</option>
+                        <option value="radio" ${q.type==='radio'?'selected':''}>اختيار من متعدد (Radio)</option>
+                        <option value="select" ${q.type==='select'?'selected':''}>قائمة منسدلة (Select)</option>
+                        <option value="file" ${q.type==='file'?'selected':''}>رفع ملف</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1">نص مساعد (اختياري)</label>
+                <input type="text" oninput="updateBuilderQ(${i}, 'helpText', this.value)" class="field-input text-xs py-1.5" value="${esc(q.helpText || '')}">
+            </div>
+
+            ${isOptionType ? `
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-1">الخيارات (كل خيار في سطر جديد)</label>
+                <textarea oninput="updateBuilderQOptions(${i}, this.value)" rows="3" class="field-input text-xs py-1.5 resize-none" placeholder="خيار 1&#10;خيار 2">${(q.options || []).join('\n')}</textarea>
+            </div>` : ''}
+
+            <label class="flex items-center gap-2 cursor-pointer mt-2">
+                <input type="checkbox" onchange="updateBuilderQ(${i}, 'required', this.checked)" ${q.required?'checked':''} class="w-3.5 h-3.5 rounded text-indigo-600">
+                <span class="text-[11px] font-bold text-slate-700">هذا السؤال إلزامي</span>
+            </label>
+        </div>
+        `;
+    }).join('');
+}
+
+function addBuilderQuestion() {
+    window._tempJobQuestions.push({
+        id: 'q_' + Date.now(),
+        type: 'text',
+        label: '',
+        required: true,
+        options: []
+    });
+    renderBuilderQuestions();
+}
+
+function updateBuilderQ(idx, key, val) {
+    if (window._tempJobQuestions[idx]) {
+        window._tempJobQuestions[idx][key] = val;
+    }
+}
+
+function updateBuilderQOptions(idx, val) {
+    if (window._tempJobQuestions[idx]) {
+        window._tempJobQuestions[idx].options = val.split('\n').filter(o => o.trim() !== '');
+    }
+}
+
+function deleteBuilderQuestion(idx) {
+    window._tempJobQuestions.splice(idx, 1);
+    renderBuilderQuestions();
+}
+
+function moveBuilderQuestion(idx, dir) {
+    if (idx + dir < 0 || idx + dir >= window._tempJobQuestions.length) return;
+    const temp = window._tempJobQuestions[idx];
+    window._tempJobQuestions[idx] = window._tempJobQuestions[idx + dir];
+    window._tempJobQuestions[idx + dir] = temp;
+    renderBuilderQuestions();
+}
+
+function addSampleQuestion(type) {
+    const ta = document.getElementById('m-job-questions');
+    if (!ta) return;
+    let existing = [];
+    try { existing = JSON.parse(ta.value || '[]'); } catch(e) { existing = []; }
+    const sample = type === 'textarea' ?
+        { text: 'اكتب نبذة عن خبراتك السابقة', type: 'textarea', required: false } :
+        type === 'number' ?
+        { text: 'عدد سنوات الخبرة', type: 'number', required: true } :
+        { text: 'سؤال جديد', type: 'text', required: true };
+    existing.push(sample);
+    ta.value = JSON.stringify(existing, null, 2);
+}
+
+async function saveJob() {
+    const title = document.getElementById('m-job-title').value.trim();
+    if (!title) { showToast('اسم الوظيفة مطلوب', 'error'); return; }
+
+    const jobData = {
+        title: title,
+        name: title,
+        badge: document.getElementById('m-job-badge').value.trim() || 'متاح الآن',
+        image: document.getElementById('m-job-image').value.trim(),
+        description: document.getElementById('m-job-desc').value.trim(),
+        details: document.getElementById('m-job-details').value.trim(),
+        active: document.getElementById('m-job-active').checked,
+        questions: window._tempJobQuestions
+    };
+
+    const idx = modalEditIndex;
+    const isNew = idx === -1;
+    const url = (config.booking && config.booking.scriptURL) || '';
+    const fd = new FormData();
+    fd.append('action', 'saveJob');
+    fd.append('adminKey', getAuthKey());
+    fd.append('jobData', JSON.stringify(jobData));
+    fd.append('rowIndex', isNew ? -1 : (window._jobsCache[idx].__rowIndex || -1));
+
+    // تعليق الزرار لمنع الضغط المتكرر
+    const saveBtn = document.getElementById('modal-save-btn');
+    const originalText = saveBtn.innerHTML;
+    if (saveBtn.disabled) return;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+    try {
+        const r = await fetch(url, { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d && d.result === 'success') {
+            showToast(isNew ? 'تمت إضافة الوظيفة ✓' : 'تم تحديث الوظيفة ✓');
+            closeModal();
+            await loadJobsFromServer();
+            renderJobsAdminList();
+        } else {
+            showToast('خطأ: ' + (d.error || 'غير معروف'), 'error');
+        }
+    } catch(e) {
+        showToast('تعذر الاتصال بالسيرفر', 'error');
+    } finally {
+        // إرجاع الزرار لحالته الطبيعية
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
+}
+
+function previewJob() {
+    const title = document.getElementById('m-job-title').value.trim() || 'اسم الوظيفة';
+    const badge = document.getElementById('m-job-badge').value.trim() || 'متاح الآن';
+    const image = document.getElementById('m-job-image').value.trim() || 'https://i.ibb.co/yBF2bYsj/image.png';
+    const desc = document.getElementById('m-job-desc').value.trim() || 'وصف الوظيفة...';
+    const details = document.getElementById('m-job-details').value.trim() || 'التفاصيل...';
+    const questions = window._tempJobQuestions;
+
+    const overlay = document.getElementById('modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    
+    // إخفاء أزرار الحفظ وتغييرهم لزر إغلاق
+    const saveBtn = document.getElementById('modal-save-btn');
+    saveBtn.classList.add('hidden');
+    
+    titleEl.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-eye text-indigo-500"></i> معاينة الوظيفة والاستمارة</span>`;
+
+    // تصميم المعاينة (شبيه بـ careers.html)
+    body.innerHTML = `
+    <div class="space-y-4 bg-slate-100 p-4 rounded-2xl">
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+            <div class="relative h-32 overflow-hidden bg-slate-200">
+                <img src="${esc(image)}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div class="absolute top-2 right-2">
+                    <span class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">${esc(badge)}</span>
+                </div>
+            </div>
+            <div class="p-4">
+                <h3 class="text-lg font-black text-slate-800 mb-2">${esc(title)}</h3>
+                <p class="text-sm text-slate-600 line-clamp-3">${esc(desc)}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-black text-slate-500 uppercase tracking-wider border-b pb-2">الاستمارة (كما ستظهر للمتقدم)</h4>
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-[10px] font-bold text-slate-500 mb-1">الاسم الكامل *</label><input type="text" class="field-input bg-slate-50" disabled placeholder="اسمك الثلاثي"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 mb-1">رقم الواتساب *</label><input type="text" class="field-input bg-slate-50" disabled placeholder="01xxxxxxxxx"></div>
+            </div>
+            <div><label class="block text-[10px] font-bold text-slate-500 mb-1">البريد الإلكتروني *</label><input type="email" class="field-input bg-slate-50" disabled placeholder="you@example.com"></div>
+            
+            <div class="mt-4 pt-3 border-t border-slate-100">
+                <p class="text-[10px] font-black text-indigo-600 mb-2">أسئلة الوظيفة:</p>
+                <div class="space-y-3">
+                    ${questions.length === 0 ? '<p class="text-xs text-slate-400">لا توجد أسئلة مخصصة</p>' : questions.map((q, i) => {
+                        const req = q.required ? '<span class="text-red-500">*</span>' : '';
+                        let input = '';
+                        if (q.type === 'textarea') input = '<textarea class="field-input bg-slate-50 text-xs" rows="2" disabled></textarea>';
+                        else if (q.type === 'radio') input = `<div class="space-y-1 mt-1">${(q.options||[]).map(o => `<label class="flex items-center gap-2 text-xs text-slate-600"><input type="radio" disabled class="w-3 h-3"> ${esc(o)}</label>`).join('')}</div>`;
+                        else input = `<input type="text" class="field-input bg-slate-50 text-xs" disabled>`;
+                        return `<div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">${i+1}. ${esc(q.label)} ${req}</label>
+                            ${q.helpText ? `<p class="text-[9px] text-slate-500 mb-1">${esc(q.helpText)}</p>` : ''}
+                            ${input}
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    // إضافة زر رجوع للتعديل
+    const footer = document.getElementById('modal-footer');
+    if (!document.getElementById('back-to-edit-btn')) {
+        const backBtn = document.createElement('button');
+        backBtn.id = 'back-to-edit-btn';
+        backBtn.className = 'flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-sm transition-all shadow-md flex items-center justify-center gap-2';
+        backBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> العودة للتعديل';
+        backBtn.onclick = () => { openJobModal(modalEditIndex); };
+        footer.insertBefore(backBtn, footer.firstChild);
+    }
+}
+function copyJobLink(jobId) {
+    const baseUrl = window.location.origin + window.location.pathname.replace('dashboard.html', 'careers.html');
+    const link = baseUrl + '?job=' + jobId;
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('تم نسخ رابط الوظيفة ✓');
+    }).catch(() => {
+        showToast('تعذر نسخ الرابط: ' + link, 'warn');
+    });
+}
+
+function sendCustomWhatsAppToApplicant(idx) {
+    const app = window._applicationsCache[idx];
+    if (!app) return;
+    
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    const saveBtn = document.getElementById('modal-save-btn');
+
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-green-500"></i> مراسلة المتقدم: ${esc(app.name)}</span>`;
+    
+    saveBtn.classList.remove('hidden');
+    saveBtn.style.display = 'flex';
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال';
+
+    const defaultMsg = `مرحباً ${app.name}،\n\nنود إبلاغك بخصوص طلب التقديم على وظيفة "${app.jobName}".\n\n`;
+
+    body.innerHTML = `
+        <div class="space-y-4">
+            <div class="p-3 bg-green-50 border border-green-200 rounded-xl text-xs font-bold text-green-800 flex justify-between items-center">
+                <span>سيتم الإرسال إلى الرقم:</span>
+                <span dir="ltr" class="font-mono bg-white px-2 py-1 rounded shadow-sm">${esc(app.phone)}</span>
+            </div>
+            <div class="field-group">
+                <label>نص الرسالة</label>
+                <textarea id="m-app-msg" class="field-input text-sm" rows="6">${defaultMsg}</textarea>
+            </div>
+            <p class="text-[10px] text-slate-400"><i class="fa-solid fa-circle-info"></i> سيتم الإرسال باستخدام إعدادات الواتساب المربوطة في قسم "رسائل الواتساب التلقائية".</p>
+        </div>
+    `;
+
+    saveBtn.onclick = async function() {
+        let msg = document.getElementById('m-app-msg').value;
+        if (!msg) return;
+        
+        if (!config.waEndpoint) {
+            showToast('يرجى إعداد رابط الـ API من قسم رسائل الواتساب أولاً', 'error');
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
+
+        try {
+            const ok = await sendWhatsAppDirectFromBrowser(app.phone, msg, '');
+            if (ok) {
+                showToast('تم إرسال الرسالة بنجاح ✓');
+                closeModal();
+            } else {
+                showToast('فشل الإرسال — تحقق من الإعدادات', 'error');
+            }
+        } catch(e) {
+            showToast('خطأ: ' + e.message, 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال';
+        }
+    };
+
+    overlay.classList.add('active');
+}
+
+async function toggleJobActive(idx) {
+    const job = window._jobsCache[idx];
+    if (!job) return;
+    const newState = (job.active === false || job.active === 'لا') ? 'نعم' : 'لا';
+    const url = (config.booking && config.booking.scriptURL) || '';
+    try {
+        const fd = new FormData();
+        fd.append('action', 'toggleJobActive');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', job.__rowIndex);
+        fd.append('active', newState);
+        const r = await fetch(url, { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d && d.result === 'success') {
+            job.active = newState === 'نعم';
+            renderJobsAdminList();
+            showToast(newState === 'نعم' ? 'تم تفعيل الوظيفة ✓' : 'تم إيقاف الوظيفة ✓');
+        }
+    } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+}
+
+function deleteJob(idx) {
+    const job = window._jobsCache[idx];
+    if (!job) return;
+    showConfirm('حذف الوظيفة', `هل أنت متأكد من حذف "${job.title || job.name}"؟ سيتم حذف الوظيفة نهائياً (الطلبات المرتبطة ستبقى في السجل).`, async () => {
+        const url = (config.booking && config.booking.scriptURL) || '';
+        try {
+            const fd = new FormData();
+            fd.append('action', 'deleteJob');
+            fd.append('adminKey', getAuthKey());
+            fd.append('rowIndex', job.__rowIndex);
+            const r = await fetch(url, { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d && d.result === 'success') {
+                showToast('تم حذف الوظيفة ✓');
+                await loadJobsFromServer();
+                renderJobsAdminList();
+            }
+        } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+    }, true);
+}
+
+function openJobApplicationDetail(idx) {
+    const app = window._applicationsCache[idx];
+    if (!app) return;
+
+    let answers = [];
+    try { answers = JSON.parse(app.answers || '[]'); } catch(e) {}
+
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    const saveBtn = document.getElementById('modal-save-btn');
+
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-user-check text-indigo-500"></i> تفاصيل الطلب: ${esc(app.name)}</span>`;
+    saveBtn.classList.add('hidden');
+
+    const status = app.status || 'معلق';
+    const statusColors = {
+        'معلق': 'bg-amber-50 text-amber-700 border-amber-200',
+        'مراجعة': 'bg-blue-50 text-blue-700 border-blue-200',
+        'مقبول': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'مرفوض': 'bg-rose-50 text-rose-700 border-rose-200'
+    };
+
+    let cleanWa = (app.phone || '').toString().replace(/\D/g, '');
+    if (cleanWa.length === 10 && /^(10|11|12|15)/.test(cleanWa)) cleanWa = '20' + cleanWa;
+    else if (cleanWa.length === 11 && /^0(10|11|12|15)/.test(cleanWa)) cleanWa = '2' + cleanWa;
+
+    body.innerHTML = `
+    <div class="space-y-4">
+        <div class="flex items-center justify-between gap-3 flex-wrap p-4 rounded-2xl ${statusColors[status]} border-2">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-white text-slate-700 flex items-center justify-center font-black text-lg">${esc((app.name || '؟').charAt(0))}</div>
+                <div>
+                    <div class="font-black text-slate-800 text-lg">${esc(app.name)}</div>
+                    <div class="text-xs font-bold">${esc(app.jobName)}</div>
+                </div>
+            </div>
+            <div class="text-xs font-bold text-center">
+                <div>الحالة الحالية</div>
+                <div class="text-lg">${status}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="text-[10px] text-slate-500 font-bold mb-1">رقم الواتساب</div>
+                <div class="font-bold text-slate-800" dir="ltr">${esc(app.phone)}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="text-[10px] text-slate-500 font-bold mb-1">البريد الإلكتروني</div>
+                <div class="font-bold text-slate-800 text-xs" dir="ltr">${esc(app.email || '—')}</div>
+            </div>
+        </div>
+
+        ${app.coverLetter ? `
+        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+            <div class="text-[11px] text-indigo-700 font-bold mb-1"><i class="fa-solid fa-envelope-open-text"></i> نبذة المتقدم</div>
+            <div class="text-sm text-slate-700 font-medium whitespace-pre-line">${esc(app.coverLetter)}</div>
+        </div>` : ''}
+
+        ${answers.length > 0 ? `
+        <div class="space-y-2">
+            <div class="text-xs font-black text-slate-500 uppercase">إجابات الأسئلة</div>
+            ${answers.map((a, i) => `
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="text-[11px] text-slate-500 font-bold mb-1">${i+1}. ${esc(a.question)}</div>
+                    <div class="text-sm text-slate-700 font-medium">${esc(a.answer || '—')}</div>
+                </div>
+            `).join('')}
+        </div>` : ''}
+
+        ${app.cvUrl ? `
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div class="text-[11px] text-emerald-700 font-bold mb-2"><i class="fa-solid fa-file-pdf"></i> السيرة الذاتية</div>
+            <a href="${esc(app.cvUrl)}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition-colors">
+                <i class="fa-solid fa-download"></i> فتح / تحميل CV
+            </a>
+        </div>` : ''}
+
+        <div class="border-t border-slate-200 pt-3 space-y-2">
+            <div class="text-xs font-black text-slate-500 uppercase mb-2">تغيير حالة الطلب</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button onclick="updateApplicationStatus(${idx}, 'معلق')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'معلق' ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}">معلق</button>
+                <button onclick="updateApplicationStatus(${idx}, 'مراجعة')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مراجعة' ? 'bg-blue-500 text-white border-blue-500' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'}">مراجعة</button>
+                <button onclick="updateApplicationStatus(${idx}, 'مقبول')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مقبول' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'}">مقبول</button>
+                <button onclick="updateApplicationStatus(${idx}, 'مرفوض')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مرفوض' ? 'bg-rose-500 text-white border-rose-500' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'}">مرفوض</button>
+            </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+            ${cleanWa ? `<a href="https://wa.me/${cleanWa}" target="_blank" class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm text-center flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp"></i> مراسلة المتقدم</a>` : ''}
+            <button onclick="deleteApplication(${idx})" class="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-bold text-sm border border-rose-200"><i class="fa-solid fa-trash"></i></button>
+        </div>
+    </div>`;
+
+    overlay.classList.add('active');
+}
+
+async function updateApplicationStatus(idx, newStatus) {
+    const app = window._applicationsCache[idx];
+    if (!app) return;
+    const url = (config.booking && config.booking.scriptURL) || '';
+    try {
+        const fd = new FormData();
+        fd.append('action', 'updateApplicationStatus');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', app.__rowIndex);
+        fd.append('status', newStatus);
+        const r = await fetch(url, { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d && d.result === 'success') {
+            app.status = newStatus;
+            showToast('تم تحديث الحالة إلى: ' + newStatus);
+            openJobApplicationDetail(idx);
+            renderApplicationsAdminList();
+        }
+    } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+}
+
+function deleteApplication(idx) {
+    const app = window._applicationsCache[idx];
+    if (!app) return;
+    showConfirm('حذف الطلب', `هل أنت متأكد من حذف طلب "${app.name}"؟ لا يمكن التراجع.`, async () => {
+        const url = (config.booking && config.booking.scriptURL) || '';
+        try {
+            const fd = new FormData();
+            fd.append('action', 'deleteApplication');
+            fd.append('adminKey', getAuthKey());
+            fd.append('rowIndex', app.__rowIndex);
+            const r = await fetch(url, { method: 'POST', body: fd });
+            const d = await r.json();
+            if (d && d.result === 'success') {
+                showToast('تم حذف الطلب ✓');
+                closeModal();
+                await loadApplicationsFromServer();
+                renderApplicationsAdminList();
+            }
+        } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+    }, true);
+}
+
+function populateJobsSettings() {
+    const jobsCfg = config.jobsConfig || {};
+    const urlEl = document.getElementById('jobs-public-url');
+    const phoneEl = document.getElementById('jobs-notify-phone');
+    const waEl = document.getElementById('jobs-notify-wa');
+    const successTitleEl = document.getElementById('jobs-success-title');
+    const successMsgEl = document.getElementById('jobs-success-msg');
+
+    if (urlEl) urlEl.value = jobsCfg.publicUrl || 'careers.html';
+    if (phoneEl) phoneEl.value = jobsCfg.notifyPhone || '';
+    if (waEl) waEl.checked = !!jobsCfg.notifyWhatsApp;
+    if (successTitleEl) successTitleEl.value = jobsCfg.successTitle || 'تم إرسال طلبك بنجاح! 🎉';
+    if (successMsgEl) successMsgEl.value = jobsCfg.successMsg || 'شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً عبر الواتساب أو الإيميل.';
+}
+
+function saveJobsSettings() {
+    if (!config.jobsConfig) config.jobsConfig = {};
+    config.jobsConfig.publicUrl = document.getElementById('jobs-public-url').value.trim();
+    config.jobsConfig.notifyPhone = document.getElementById('jobs-notify-phone').value.trim();
+    config.jobsConfig.notifyWhatsApp = document.getElementById('jobs-notify-wa').checked;
+    config.jobsConfig.successTitle = document.getElementById('jobs-success-title').value.trim();
+    config.jobsConfig.successMsg = document.getElementById('jobs-success-msg').value.trim();
+    
+    try { localStorage.setItem('lp_admin_config', JSON.stringify(config)); } catch(e) {}
+    syncConfigToServerSilent();
+    showToast('تم حفظ الإعدادات ✓');
 }
 </script>
 <!-- 🔍 Global Search Modal -->
