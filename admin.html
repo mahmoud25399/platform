@@ -2769,11 +2769,9 @@
         let isProcessingQueue = false;
         async function processBrowserWhatsAppQueue() {
             if (isProcessingQueue) return;
-            
-            // ✅ قفل بين التابات عشان تابين مايعالجوش نفس الطابور في نفس الوقت
             try {
                 const lockTs = localStorage.getItem('wa_queue_lock');
-                if (lockTs && (Date.now() - parseInt(lockTs, 10)) < 30000) {
+                if (lockTs && (Date.now() - parseInt(lockTs, 10)) < 300000) {
                     return;
                 }
                 localStorage.setItem('wa_queue_lock', Date.now().toString());
@@ -2797,33 +2795,40 @@
                     let shouldSendNow = msg.immediate === true || currentHour >= (msg.sendHour !== undefined ? msg.sendHour : 0);
                     
                     if (shouldSendNow) {
+                        // ✅ تحقق إن الرسالة ما اتبعتتش من تاب تاني (race condition)
+                        try {
+                            const _sentIdsCheck = JSON.parse(localStorage.getItem('wa_sent_ids') || '[]');
+                            if (msg.id && _sentIdsCheck.indexOf(msg.id) !== -1) {
+                                console.log('⏭️ WA: already sent by another tab', msg.id);
+                                continue;
+                            }
+                        } catch(_e) {}
+
                         console.log("🚀 جاري إرسال رسالة من الطابور للرقم: " + msg.to);
+
+                        // ✅ نسجل الـ ID قبل الإرسال (optimistic locking) عشان نمنع أي تاب تاني
+                        try {
+                            if (msg.id) {
+                                let sentIds = JSON.parse(localStorage.getItem('wa_sent_ids') || '[]');
+                                if (sentIds.indexOf(msg.id) === -1) sentIds.push(msg.id);
+                                if (sentIds.length > 500) sentIds = sentIds.slice(-500);
+                                localStorage.setItem('wa_sent_ids', JSON.stringify(sentIds));
+                            }
+                            const dupKey = (msg.to || '') + '|' + ((msg.body || '').substring(0, 80));
+                            let sentRecent = JSON.parse(localStorage.getItem('wa_sent_recent') || '[]');
+                            sentRecent.push({ k: dupKey, t: Date.now() });
+                            sentRecent = sentRecent.filter(function(x) { return x && (Date.now() - x.t) < 7200000; });
+                            localStorage.setItem('wa_sent_recent', JSON.stringify(sentRecent));
+                        } catch(se) { console.error('WA sent tracking error', se); }
+
+                        // نحاول الإرسال - لو فشل، منعيدش المحاولة (بقرار الإدارة لمنع التكرار)
                         let success = await sendWhatsAppDirectFromBrowser(msg.to, msg.body, msg.media);
                         if (!success) {
-                            // لو فشل (Termux مقفول مثلاً)، تفضل في الطابور
-                            remainingQueue.push(msg);
-                            console.log("❌ فشل الإرسال، الرسالة ستظل في الطابور للمحاولة مجدداً.");
+                            console.log("❌ فشل الإرسال، الرسالة اتحذفت نهائياً (مفيش إعادة محاولة).");
                         } else {
-                            // ✅ سجل الـ ID عشان لو رجعت تاني ما تتبعتش
-                            try {
-                                if (msg.id) {
-                                    let sentIds = JSON.parse(localStorage.getItem('wa_sent_ids') || '[]');
-                                    if (sentIds.indexOf(msg.id) === -1) sentIds.push(msg.id);
-                                    if (sentIds.length > 500) sentIds = sentIds.slice(-500);
-                                    localStorage.setItem('wa_sent_ids', JSON.stringify(sentIds));
-                                }
-                                // ✅ سجل الـ dupKey مع توقيته
-                                const dupKey = (msg.to || '') + '|' + ((msg.body || '').substring(0, 80));
-                                let sentRecent = JSON.parse(localStorage.getItem('wa_sent_recent') || '[]');
-                                sentRecent.push({ k: dupKey, t: Date.now() });
-                                // نظف الأقدم من 30 دقيقة عشان الحجم ما يكبرش
-                                sentRecent = sentRecent.filter(function(x) { return x && (Date.now() - x.t) < 1800000; });
-                                localStorage.setItem('wa_sent_recent', JSON.stringify(sentRecent));
-                            } catch(se) { console.error('WA sent tracking error', se); }
-                            
                             console.log("✅ تم الإرسال بنجاح وحذف الرسالة من الطابور!");
-                            await new Promise(r => setTimeout(r, 2000)); // تأخير بسيط عشان واتساب ميعملش حظر
                         }
+                        await new Promise(r => setTimeout(r, 2000));
                     } else {
                         // لسة ميعادها مجاش، تفضل في الطابور
                         remainingQueue.push(msg);
@@ -8424,10 +8429,10 @@
                                     console.log('⏭️ WA dedupe: ID already sent', item.id);
                                     return;
                                 }
-                                // 2. لو نفس الرقم + نفس النص اتبعت في آخر 10 دقايق → تجاهل
+                                // 2. لو نفس الرقم + نفس النص اتبعت في آخر 60 دقيقة → تجاهل
                                 const dupKey = (item.to || '') + '|' + ((item.body || '').substring(0, 80));
                                 const recentDup = sentRecent.some(function(x) {
-                                    return x && x.k === dupKey && (nowTs - x.t) < 600000;
+                                    return x && x.k === dupKey && (nowTs - x.t) < 3600000;
                                 });
                                 if (recentDup) {
                                     console.log('⏭️ WA dedupe: same content sent recently', dupKey.substring(0, 40));
