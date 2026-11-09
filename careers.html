@@ -12,6 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // إخفاء الصفحة الرئيسية فوراً لو كان الرابط يحتوي على ?job= لمنع الوميض
+        if (new URLSearchParams(window.location.search).has('job')) {
+            document.write('<style>body > header, body > section, #jobs, #faq { display: none !important; } #job-page-view { display: block !important; }</style>');
+        }
+    </script>
 
     <!-- Config loader (نفس index.html) -->
     <script>
@@ -163,7 +169,7 @@
     <!-- Nav -->
     <nav class="fixed top-0 right-0 left-0 z-[999] bg-slate-950/80 backdrop-blur-md border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-            <a href="index.html" class="flex items-center gap-2 group">
+            <a href="careers.html" class="flex items-center gap-2 group">
                 <div class="w-9 h-9 rounded-xl bg-yellow-400 text-indigo-950 flex items-center justify-center font-black text-sm shadow-lg"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="leading-tight">
                     <div class="text-white font-black text-sm">محمود الهليهي</div>
@@ -171,7 +177,7 @@
                 </div>
             </a>
             <div class="hidden lg:flex items-center gap-1">
-                <a href="index.html" class="nav-link"><i class="fa-solid fa-house text-xs"></i> الرئيسية</a>
+                <a href="careers.html" class="nav-link"><i class="fa-solid fa-house text-xs"></i> الرئيسية</a>
                 <a href="#jobs" onclick="scrollToId('jobs'); return false;" class="nav-link">الوظائف المتاحة</a>
                 <a href="#faq" onclick="scrollToId('faq'); return false;" class="nav-link">الأسئلة الشائعة</a>
             </div>
@@ -250,7 +256,53 @@
             </div>
         </div>
     </section>
+    <!-- ============= Job Page View (يظهر فقط عند فتح رابط وظيفة) ============= -->
+    <div id="job-page-view" class="hidden relative z-10 pt-24 pb-16 min-h-screen">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mb-8">
+                <div class="relative h-64 sm:h-80 w-full bg-slate-200">
+                    <img id="jp-image" src="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-6 right-6 left-6 text-white">
+                        <span id="jp-badge" class="inline-block bg-yellow-400 text-indigo-950 text-xs font-black px-3 py-1 rounded-full mb-3 shadow-lg"></span>
+                        <h1 id="jp-title" class="text-3xl sm:text-4xl font-black drop-shadow-md leading-tight"></h1>
+                    </div>
+                </div>
+                <div class="p-6 sm:p-8 space-y-6">
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-circle-info text-indigo-500"></i> وصف الوظيفة</h3>
+                        <p id="jp-description" class="text-slate-600 font-medium leading-relaxed whitespace-pre-line text-sm sm:text-base"></p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-black text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-500"></i> تفاصيل الوظيفة</h3>
+                        <!-- تم إزالة الخلفية الرمادية والإطار من هنا -->
+                        <div id="jp-details" class="text-slate-600 font-medium leading-relaxed text-sm sm:text-base"></div>
+                    </div>
+                </div>
+            </div>
 
+            <div id="jp-form-section" class="bg-white rounded-3xl shadow-lg border border-indigo-100 overflow-hidden hidden mt-8">
+                <div class="bg-gradient-to-l from-indigo-600 to-indigo-700 p-6 text-white text-center">
+                    <h2 class="text-2xl font-black mb-1">التقديم على الوظيفة</h2>
+                    <p class="text-indigo-100 text-sm font-medium">يرجى ملء البيانات التالية بدقة لنتمكن من مراجعة طلبك.</p>
+                </div>
+                <div class="p-6 sm:p-8" id="jp-form-wrapper">
+                    <form id="jp-form" class="space-y-5" onsubmit="submitApplication(event)">
+                        <div id="jp-dynamic-fields" class="space-y-4"></div>
+                        <button type="submit" id="jp-submit-btn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-base shadow-lg hover:shadow-indigo-500/40 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6">
+                            <i class="fa-solid fa-paper-plane"></i> إرسال الطلب
+                        </button>
+                    </form>
+                </div>
+                <div id="jp-success" class="hidden p-10 text-center">
+                    <div class="w-24 h-24 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-5 text-5xl"><i class="fa-solid fa-circle-check"></i></div>
+                    <h3 id="jp-success-title" class="text-2xl font-black text-slate-800 mb-2">تم إرسال طلبك بنجاح! 🎉</h3>
+                    <p id="jp-success-msg" class="text-slate-600 font-medium mb-6">شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً.</p>
+                    <a href="careers.html" class="inline-block px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors">العودة للوظائف</a>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- FAQ -->
     <section id="faq" class="py-16 relative bg-transparent">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 reveal-on-scroll">
@@ -295,7 +347,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <p class="text-white font-bold text-lg mb-2">الأستاذ / محمود الهليهي</p>
             <p class="text-slate-400 text-sm">
-                <a href="index.html" class="text-yellow-400 hover:underline">العودة للصفحة الرئيسية</a>
+                <a href="careers.html" class="text-yellow-400 hover:underline">العودة للصفحة الرئيسية</a>
                 <span class="mx-2">•</span>
                 جميع الحقوق محفوظة &copy; <span id="currentYear"></span>
             </p>
@@ -432,7 +484,6 @@
     //  Init
     // ═══════════════════════════════════════════
     document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(hidePreloader, 400);
         setupReveal();
         setupFaq();
         setupScrollButton();
@@ -503,16 +554,14 @@
     //  Load Jobs
     // ═══════════════════════════════════════════
     async function loadJobs() {
-        // 1. عرض الوظائف المحفوظة مسبقاً
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('job');
+
         try {
             const cached = localStorage.getItem('careers_jobs_cache');
-            if (cached) {
-                window._jobs = JSON.parse(cached);
-                renderJobs();
-            }
+            if (cached) window._jobs = JSON.parse(cached);
         } catch(e) {}
 
-        // 2. جلب التحديثات من السيرفر
         const url = (window.__LP_CONFIG && window.__LP_CONFIG.booking && window.__LP_CONFIG.booking.scriptURL)
             || 'https://script.google.com/macros/s/AKfycbyScdvPl8iMbxZltPiZA6nVm-2quNCzGF5-QT9Sp4RfOnq53eQrRM-qA-yoLmCD8m__zQ/exec';
 
@@ -521,15 +570,25 @@
             if (data && data.result === 'success') {
                 window._jobs = (data.jobs || []).filter(j => j.active !== false && j.active !== 'لا');
                 localStorage.setItem('careers_jobs_cache', JSON.stringify(window._jobs));
-                renderJobs();
-                checkUrlJob();
             }
-        } catch(e) {
-            console.error('loadJobs error:', e);
-            checkUrlJob();
+        } catch(e) { console.error(e); }
+
+        if (jobId) {
+            const job = window._jobs.find(j => j.id === jobId);
+            if (job) {
+                showJobPage(job);
+            } else {
+                const view = document.getElementById('job-page-view');
+                if (view) {
+                    view.classList.remove('hidden');
+                    view.innerHTML = '<div class="max-w-4xl mx-auto px-4 sm:px-6 text-center py-20"><i class="fa-solid fa-triangle-exclamation text-4xl text-rose-500 mb-3"></i><p class="font-bold text-slate-700">هذه الوظيفة غير موجودة أو تم إغلاقها.</p><a href="careers.html" class="text-indigo-600 font-bold underline mt-2 block">العودة للوظائف</a></div>';
+                }
+                setTimeout(hidePreloader, 100);
+            }
+        } else {
+            renderJobs();
         }
     }
-
     // ✅ دالة جديدة لفحص رابط الوظيفة
     function checkUrlJob() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -556,7 +615,117 @@
             document.body.appendChild(script);
         });
     }
+    function showJobPage(job) {
+        window._activeJob = job;
+        
+        const header = document.querySelector('header');
+        if(header) header.classList.add('hidden');
+        const stats = document.querySelector('section.py-12');
+        if(stats) stats.classList.add('hidden');
+        const jobs = document.getElementById('jobs');
+        if(jobs) jobs.classList.add('hidden');
+        const faq = document.getElementById('faq');
+        if(faq) faq.classList.add('hidden');
+        
+        const view = document.getElementById('job-page-view');
+        if(view) view.classList.remove('hidden');
 
+        document.title = (job.title || job.name) + ' - الأستاذ محمود الهليهي';
+        
+        const imgEl = document.getElementById('jp-image');
+        if(imgEl) imgEl.src = job.image || 'https://i.ibb.co/yBF2bYsj/image.png';
+        
+        const titleEl = document.getElementById('jp-title');
+        if(titleEl) titleEl.textContent = job.title || job.name;
+        
+        const badgeEl = document.getElementById('jp-badge');
+        if(badgeEl) badgeEl.textContent = job.badge || 'متاح الآن';
+        
+        const descEl = document.getElementById('jp-description');
+        if(descEl) descEl.textContent = job.description;
+
+        let detailsHTML = '';
+        try {
+            const parsed = JSON.parse(job.details);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                
+                // دالة مساعدة لإنشاء عنصر معلومة واحدة
+                const createInfoItem = (icon, label, value, colorClass) => {
+                    if (!value) return '';
+                    return `
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid ${icon} ${colorClass} text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-slate-500 font-bold mb-0.5">${label}</div>
+                                <div class="font-black text-slate-800 text-sm sm:text-base">${esc(value)}</div>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                // تجميع المعلومات في شبكة منظمة (بدون خلفية رمادية)
+                let infoGrid = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 mb-8">
+                        ${createInfoItem('fa-money-bill-wave', 'الراتب', parsed.salary, 'text-emerald-600')}
+                        ${createInfoItem('fa-clock', 'ساعات العمل', parsed.hours, 'text-blue-600')}
+                        ${createInfoItem('fa-umbrella-beach', 'الإجازات', parsed.vacations, 'text-amber-500')}
+                        ${createInfoItem('fa-gift', 'المكافآت', parsed.bonuses, 'text-pink-500')}
+                        ${createInfoItem('fa-video', 'المقابلة', parsed.interview, 'text-purple-600')}
+                        ${createInfoItem('fa-info-circle', 'ملاحظات إضافية', parsed.notes, 'text-slate-600')}
+                    </div>
+                `;
+
+                // لو مفيش أي معلومات مكتوبة، نخفي المربع
+                if (!parsed.salary && !parsed.hours && !parsed.vacations && !parsed.bonuses && !parsed.interview && !parsed.notes) {
+                    infoGrid = '';
+                }
+
+                // المتطلبات (بنفس حجم وتنسيق باقي العناوين)
+                let reqsHtml = '';
+                if (parsed.requirements && parsed.requirements.length > 0) {
+                    const reqs = parsed.requirements.map(r => `
+                        <li class="flex items-start gap-2.5 mb-2.5">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1.5 text-sm"></i>
+                            <span class="text-slate-600 font-medium leading-relaxed text-sm sm:text-base">${esc(r)}</span>
+                        </li>
+                    `).join('');
+                    
+                    reqsHtml = `
+                        <div class="mt-2">
+                            <h3 class="text-lg sm:text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-emerald-500"></i> شروط الوظيفة
+                            </h3>
+                            <ul class="space-y-1">${reqs}</ul>
+                        </div>
+                    `;
+                }
+
+                detailsHTML = infoGrid + reqsHtml;
+
+            } else {
+                detailsHTML = `<p class="whitespace-pre-line text-slate-600 font-medium leading-relaxed text-sm sm:text-base">${esc(job.details)}</p>`;
+            }
+        } catch(e) {
+            detailsHTML = `<p class="whitespace-pre-line text-slate-600 font-medium leading-relaxed text-sm sm:text-base">${esc(job.details)}</p>`;
+        }
+
+        const applyBtnHtml = `
+            <div class="text-center pt-6 mt-6 border-t border-slate-200">
+                <button id="jp-details-apply-btn" onclick="revealApplyForm()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-base shadow-lg transition-all transform hover:-translate-y-1 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> التقديم على هذه الوظيفة
+                </button>
+            </div>
+        `;
+        const detailsEl = document.getElementById('jp-details');
+        if(detailsEl) detailsEl.innerHTML = detailsHTML + applyBtnHtml;
+
+        renderDynamicFormFields();
+        
+        // إخفاء شاشة التحميل بعد ما كل حاجة رُسمت
+        setTimeout(hidePreloader, 100);
+    }
     function renderJobs() {
         const container = document.getElementById('jobs-container');
         const empty = document.getElementById('jobs-empty');
@@ -586,12 +755,12 @@
                     <h3 class="text-xl font-black text-slate-800 mb-2 line-clamp-2">${esc(job.title || job.name || '')}</h3>
                     <p class="text-sm text-slate-600 font-medium mb-4 line-clamp-3 leading-relaxed">${esc((job.description || '').substring(0, 150))}${(job.description || '').length > 150 ? '...' : ''}</p>
                     <div class="flex gap-2">
-                        <button onclick="showJobDetail(${idx})" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5">
+                        <a href="careers.html?job=${job.id}" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-circle-info"></i> التفاصيل
-                        </button>
-                        <button onclick="showJobDetail(${idx}, true)" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-colors shadow-md shadow-indigo-200 flex items-center justify-center gap-1.5">
+                        </a>
+                        <a href="careers.html?job=${job.id}" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-colors shadow-md shadow-indigo-200 flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-paper-plane"></i> قدّم الآن
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -648,18 +817,18 @@
     }
 
     function renderDynamicFormFields() {
-        const container = document.getElementById('dynamic-form-fields');
-        const questions = window._activeJob.questions || [];
+        const container = document.getElementById('jp-dynamic-fields'); // ✅ تم تعديل الـ ID
+        if (!container) return;
         
+        const questions = window._activeJob.questions || [];
         if (!questions.length) {
             container.innerHTML = '<p class="text-center text-slate-400 font-bold py-4">لا توجد أسئلة مطلوبة لهذه الوظيفة.</p>';
             return;
         }
 
         let html = '';
-        let shortFieldsBuffer = []; // لتجميع الحقول القصيرة (الاسم والرقم) جنب بعض
+        let shortFieldsBuffer = [];
 
-        // دالة مساعدة لتفريغ الحقول القصيرة في صف واحد
         const flushShortFields = () => {
             if (shortFieldsBuffer.length === 0) return;
             html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">';
@@ -676,7 +845,6 @@
             let fieldHtml = '';
             let isShort = false;
 
-            // تصنيف الحقول القصيرة عشان تظهر اتنين جنب بعض
             if (['text', 'tel', 'number', 'email'].includes(q.type)) {
                 isShort = true;
                 const type = q.type === 'tel' ? 'tel' : (q.type === 'number' ? 'number' : (q.type === 'email' ? 'email' : 'text'));
@@ -684,12 +852,10 @@
                 const placeholder = q.type === 'tel' ? '01xxxxxxxxx' : (q.type === 'number' ? 'أدخل رقم...' : (q.type === 'email' ? 'you@example.com' : 'إجابتك...'));
                 fieldHtml = `<input type="${type}" name="Q_${i}" ${req} class="field-input" ${dir} placeholder="${placeholder}">`;
             } 
-            // الحقول الطويلة
             else if (q.type === 'textarea') {
                 flushShortFields();
                 fieldHtml = `<textarea name="Q_${i}" ${req} rows="3" class="field-input resize-none" placeholder="إجابتك..."></textarea>`;
             } 
-            // الراديو (أزرار الاختيار)
             else if (q.type === 'radio') {
                 flushShortFields();
                 fieldHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
@@ -701,7 +867,6 @@
                     `).join('')}
                 </div>`;
             } 
-            // القائمة المنسدلة
             else if (q.type === 'select') {
                 flushShortFields();
                 fieldHtml = `<div class="relative flex items-center mt-1">
@@ -712,7 +877,6 @@
                     <i class="fa-solid fa-chevron-down absolute left-4 text-slate-400 pointer-events-none"></i>
                 </div>`;
             } 
-            // رفع الملفات (السيرة الذاتية)
             else if (q.type === 'file') {
                 flushShortFields();
                 const fileId = `file_input_${i}`;
@@ -747,18 +911,14 @@
                     </button>
                 </div>`;
             } 
-            // أي نوع تاني كاحتياط
             else {
                 isShort = true;
                 fieldHtml = `<input type="text" name="Q_${i}" ${req} class="field-input" placeholder="إجابتك...">`;
             }
 
-            // بناء شكل السؤال (بدون خلفية رمادية عشان يبقى احترافي)
             const block = `
                 <div class="w-full">
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">
-                        ${esc(label)} ${reqStar}
-                    </label>
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">${esc(label)} ${reqStar}</label>
                     ${helpText}
                     ${fieldHtml}
                 </div>
@@ -766,15 +926,13 @@
 
             if (isShort) {
                 shortFieldsBuffer.push(block);
-                if (shortFieldsBuffer.length === 2) {
-                    flushShortFields(); // لو معانا 2 حقول قصيرة، نطبعهم جنب بعض
-                }
+                if (shortFieldsBuffer.length === 2) flushShortFields();
             } else {
                 html += '<div class="mb-4">' + block + '</div>';
             }
         });
 
-        flushShortFields(); // طبع أي حقول قصيرة متبقية
+        flushShortFields();
         container.innerHTML = html;
     }
     function handleDynamicDrop(e, idx) {
@@ -1025,103 +1183,65 @@
     // ═══════════════════════════════════════════
     async function submitApplication(e) {
         e.preventDefault();
-        if (!window._activeJob) return;
-
-        const form = e.target;
-        const fd = new FormData(form);
-        const answers = [];
-        const questions = window._activeJob.questions || [];
-        
-        let extractedName = '';
-        let extractedPhone = '';
-        let extractedEmail = '';
-        let cvData = null;
+        const form = e.target; const fd = new FormData(form);
+        const answers = []; const questions = window._activeJob.questions || [];
+        let extractedName = '', extractedPhone = '', extractedEmail = '', cvData = null;
 
         for (let i = 0; i < questions.length; i++) {
-            const q = questions[i];
-            let val = fd.get(`Q_${i}`) || '';
-            
+            const q = questions[i]; let val = fd.get(`Q_${i}`) || '';
             if (q.type === 'file') {
                 if (window._tempFiles[i]) {
                     cvData = window._tempFiles[i];
                     answers.push({ question: q.label || q.text, answer: 'تم رفع ملف: ' + cvData.name });
                 } else {
-                    if (q.required) {
-                        showToast('يرجى رفع الملف المطلوب في: ' + (q.label || q.text), 'error');
-                        return;
-                    }
+                    if (q.required) return showToast('يرجى رفع الملف المطلوب', 'error');
                     answers.push({ question: q.label || q.text, answer: 'لم يتم الرفع' });
                 }
             } else {
-                if (q.required && !val) {
-                    showToast('يرجى الإجابة على: ' + (q.label || q.text), 'error');
-                    return;
-                }
+                if (q.required && !val) return showToast('يرجى الإجابة على: ' + (q.label || q.text), 'error');
                 answers.push({ question: q.label || q.text, answer: val });
-                
                 const labelLower = (q.label || '').toLowerCase();
-                if (labelLower.includes('اسم') || q.id === 'full_name') extractedName = extractedName || val;
-                if (labelLower.includes('واتس') || labelLower.includes('هاتف') || q.type === 'tel' || q.id === 'whatsapp_number') extractedPhone = extractedPhone || val;
-                if (labelLower.includes('بريد') || labelLower.includes('ايميل') || q.type === 'email') extractedEmail = extractedEmail || val;
+                if (labelLower.includes('اسم')) extractedName = extractedName || val;
+                if (labelLower.includes('واتس') || q.type === 'tel') extractedPhone = extractedPhone || val;
+                if (labelLower.includes('بريد') || q.type === 'email') extractedEmail = extractedEmail || val;
             }
         }
-
         if (!extractedName) extractedName = answers[0]?.answer || 'متقدم';
         if (!extractedPhone) extractedPhone = answers.find(a => a.answer && a.answer.match(/^\+?[0-9\s-]+$/))?.answer || '—';
 
         const payload = {
-            action: 'submitJobApplication',
-            jobId: window._activeJob.id || '',
-            jobName: window._activeJob.title || window._activeJob.name || '',
-            name: extractedName,
-            phone: extractedPhone,
-            email: extractedEmail,
-            coverLetter: '', 
-            cvBase64: cvData ? cvData.base64 : '',
-            cvName: cvData ? cvData.name : '',
-            cvMime: cvData ? cvData.mimeType : '',
+            action: 'submitJobApplication', jobId: window._activeJob.id, jobName: window._activeJob.title || window._activeJob.name,
+            name: extractedName, phone: extractedPhone, email: extractedEmail, coverLetter: '',
+            cvBase64: cvData ? cvData.base64 : '', cvName: cvData ? cvData.name : '', cvMime: cvData ? cvData.mimeType : '',
             answers: JSON.stringify(answers)
         };
 
-        const btn = document.getElementById('submit-btn');
-        if (btn.disabled) return; // منع الضغط المتكرر
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إرسال الطلب...';
+        const btn = document.getElementById('jp-submit-btn');
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إرسال الطلب...';
 
         const url = (window.__LP_CONFIG && window.__LP_CONFIG.booking && window.__LP_CONFIG.booking.scriptURL)
             || 'https://script.google.com/macros/s/AKfycbyScdvPl8iMbxZltPiZA6nVm-2quNCzGF5-QT9Sp4RfOnq53eQrRM-qA-yoLmCD8m__zQ/exec';
 
         try {
-            const body = new FormData();
-            Object.keys(payload).forEach(k => body.append(k, payload[k]));
-
+            const body = new FormData(); Object.keys(payload).forEach(k => body.append(k, payload[k]));
             const res = await fetch(url, { method: 'POST', body });
             const data = await res.json();
 
             if (data.result === 'success') {
-                document.getElementById('apply-form-wrapper').classList.add('hidden');
-                
+                document.getElementById('jp-form-wrapper').classList.add('hidden');
                 const cfg = window.__LP_CONFIG?.jobsConfig || {};
-                const successTitle = cfg.successTitle || 'تم إرسال طلبك بنجاح! 🎉';
-                const successMsg = cfg.successMsg || 'شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً عبر الواتساب أو الإيميل.';
-                
-                const successDiv = document.getElementById('apply-success');
-                successDiv.querySelector('h3').textContent = successTitle;
-                successDiv.querySelector('p').textContent = successMsg;
-                successDiv.classList.remove('hidden');
+                document.getElementById('jp-success-title').textContent = cfg.successTitle || 'تم إرسال طلبك بنجاح! 🎉';
+                document.getElementById('jp-success-msg').textContent = cfg.successMsg || 'شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً.';
+                document.getElementById('jp-success').classList.remove('hidden');
             } else {
                 showToast(data.error || 'حدث خطأ أثناء الإرسال', 'error');
             }
         } catch(err) {
-            console.error('Submit error:', err);
-            showToast('تعذر الاتصال بالخادم — حاول مرة أخرى', 'error');
+            showToast('تعذر الاتصال بالخادم', 'error');
         } finally {
-            // ✅ إرجاع الزر لحالته الطبيعية في كل الحالات
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال الطلب';
+            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال الطلب';
         }
     }
-
     // ═══════════════════════════════════════════
     //  Toast
     // ═══════════════════════════════════════════
@@ -1140,6 +1260,24 @@
 
     function esc(s) {
         return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function revealApplyForm() {
+        const formSection = document.getElementById('jp-form-section');
+        if(formSection) formSection.classList.remove('hidden');
+        
+        const btn = document.getElementById('jp-details-apply-btn');
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> الاستمارة مفتوحة بالأسفل';
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        setTimeout(() => {
+            if(formSection) {
+                const y = formSection.getBoundingClientRect().top + window.scrollY - 80;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }, 100);
     }
     </script>
 </body>
