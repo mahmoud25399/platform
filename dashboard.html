@@ -15294,7 +15294,21 @@ function openJobModal(idx) {
     modalType = 'job';
     modalEditIndex = idx;
 
-    // لو وظيفة جديدة، بنحط الأسئلة الافتراضية، لو تعديل بناخد أسئلتها
+    // تحليل التفاصيل لو كانت محفوظة كـ JSON (أو نص عادي للوظائف القديمة)
+    let parsedDetails = {};
+    if (job && job.details) {
+        try {
+            const parsed = JSON.parse(job.details);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                parsedDetails = parsed;
+            } else {
+                parsedDetails.notes = job.details;
+            }
+        } catch(e) {
+            parsedDetails.notes = job.details;
+        }
+    }
+
     window._tempJobQuestions = (job && job.questions && job.questions.length > 0) 
         ? JSON.parse(JSON.stringify(job.questions)) 
         : [
@@ -15343,13 +15357,43 @@ function openJobModal(idx) {
             <input id="m-job-image" class="field-input" dir="ltr" value="${esc(job?.image || '')}" placeholder="https://...">
         </div>
         <div class="field-group">
-            <label class="font-bold text-slate-700 text-xs">الوصف المختصر *</label>
-            <textarea id="m-job-desc" rows="3" class="field-input resize-none">${esc(job?.description || '')}</textarea>
+            <label class="font-bold text-slate-700 text-xs">الوصف المختصر (يظهر في الكارت) *</label>
+            <textarea id="m-job-desc" rows="2" class="field-input resize-none">${esc(job?.description || '')}</textarea>
         </div>
-        <div class="field-group">
-            <label class="font-bold text-slate-700 text-xs">التفاصيل والمتطلبات</label>
-            <textarea id="m-job-details" rows="4" class="field-input resize-none" placeholder="اذكر المؤهلات، الخبرات، ساعات العمل...">${esc(job?.details || '')}</textarea>
+        
+        <!-- تفاصيل الوظيفة المنسقة -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mt-2">
+            <div class="sm:col-span-2"><h4 class="text-xs font-black text-indigo-700 border-b border-indigo-100 pb-1 mb-2">تفاصيل ومتطلبات الوظيفة (تظهر بشكل منسق)</h4></div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">الراتب</label>
+                <input id="m-job-salary" class="field-input text-xs" value="${esc(parsedDetails?.salary || '')}" placeholder="مثال: 3000 - 5000 جنيه">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">ساعات العمل</label>
+                <input id="m-job-hours" class="field-input text-xs" value="${esc(parsedDetails?.hours || '')}" placeholder="مثال: 4 ساعات يومياً">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">الإجازات</label>
+                <input id="m-job-vacations" class="field-input text-xs" value="${esc(parsedDetails?.vacations || '')}" placeholder="مثال: يومان أسبوعياً">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">الحوافز والمكافآت</label>
+                <input id="m-job-bonuses" class="field-input text-xs" value="${esc(parsedDetails?.bonuses || '')}" placeholder="مثال: مكافأة شهرية حسب الأداء">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">تفاصيل المقابلة</label>
+                <input id="m-job-interview" class="field-input text-xs" value="${esc(parsedDetails?.interview || '')}" placeholder="مثال: أونلاين عبر Zoom">
+            </div>
+            <div class="field-group">
+                <label class="font-bold text-slate-700 text-xs">ملاحظات إضافية</label>
+                <input id="m-job-notes" class="field-input text-xs" value="${esc(parsedDetails?.notes || '')}" placeholder="مثال: يُفضل من لديه لابتوب">
+            </div>
+            <div class="field-group sm:col-span-2">
+                <label class="font-bold text-slate-700 text-xs">المتطلبات والمؤهلات (كل نقطة في سطر)</label>
+                <textarea id="m-job-requirements" rows="4" class="field-input resize-none text-xs" placeholder="مؤهل عالي&#10;خبرة سنتين&#10;إجادة استخدام الحاسب">${esc((parsedDetails?.requirements || []).join('\n'))}</textarea>
+            </div>
         </div>
+
         <div class="field-group">
             <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <input type="checkbox" id="m-job-active" ${(!job || job.active !== false) ? 'checked' : ''} class="w-4 h-4 rounded text-orange-600">
@@ -15587,13 +15631,23 @@ async function saveJob() {
     const title = document.getElementById('m-job-title').value.trim();
     if (!title) { showToast('اسم الوظيفة مطلوب', 'error'); return; }
 
+    const structuredDetails = {
+        salary: document.getElementById('m-job-salary').value.trim(),
+        hours: document.getElementById('m-job-hours').value.trim(),
+        vacations: document.getElementById('m-job-vacations').value.trim(),
+        bonuses: document.getElementById('m-job-bonuses').value.trim(),
+        interview: document.getElementById('m-job-interview').value.trim(),
+        notes: document.getElementById('m-job-notes').value.trim(),
+        requirements: document.getElementById('m-job-requirements').value.split('\n').map(s=>s.trim()).filter(Boolean)
+    };
+
     const jobData = {
         title: title,
         name: title,
         badge: document.getElementById('m-job-badge').value.trim() || 'متاح الآن',
         image: document.getElementById('m-job-image').value.trim(),
         description: document.getElementById('m-job-desc').value.trim(),
-        details: document.getElementById('m-job-details').value.trim(),
+        details: JSON.stringify(structuredDetails), // تحويل التفاصيل لـ JSON
         active: document.getElementById('m-job-active').checked,
         questions: window._tempJobQuestions
     };
@@ -15607,7 +15661,6 @@ async function saveJob() {
     fd.append('jobData', JSON.stringify(jobData));
     fd.append('rowIndex', isNew ? -1 : (window._jobsCache[idx].__rowIndex || -1));
 
-    // تعليق الزرار لمنع الضغط المتكرر
     const saveBtn = document.getElementById('modal-save-btn');
     const originalText = saveBtn.innerHTML;
     if (saveBtn.disabled) return;
@@ -15628,7 +15681,6 @@ async function saveJob() {
     } catch(e) {
         showToast('تعذر الاتصال بالسيرفر', 'error');
     } finally {
-        // إرجاع الزرار لحالته الطبيعية
         saveBtn.disabled = false;
         saveBtn.innerHTML = originalText;
     }
@@ -15639,66 +15691,74 @@ function previewJob() {
     const badge = document.getElementById('m-job-badge').value.trim() || 'متاح الآن';
     const image = document.getElementById('m-job-image').value.trim() || 'https://i.ibb.co/yBF2bYsj/image.png';
     const desc = document.getElementById('m-job-desc').value.trim() || 'وصف الوظيفة...';
-    const details = document.getElementById('m-job-details').value.trim() || 'التفاصيل...';
+    
+    const salary = document.getElementById('m-job-salary')?.value.trim() || '';
+    const hours = document.getElementById('m-job-hours')?.value.trim() || '';
+    const vacations = document.getElementById('m-job-vacations')?.value.trim() || '';
+    const bonuses = document.getElementById('m-job-bonuses')?.value.trim() || '';
+    const interview = document.getElementById('m-job-interview')?.value.trim() || '';
+    const notes = document.getElementById('m-job-notes')?.value.trim() || '';
+    const reqs = document.getElementById('m-job-requirements')?.value.split('\n').map(s=>s.trim()).filter(Boolean) || [];
+    
+    let detailsHTML = '';
+    if(salary || hours || vacations || bonuses || interview || notes || reqs.length > 0) {
+        detailsHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                ${salary ? `<div class="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 flex items-center gap-2"><i class="fa-solid fa-money-bill-wave text-indigo-600"></i><div><div class="text-[10px] text-indigo-500 font-bold">الراتب</div><div class="font-black text-indigo-900 text-xs">${esc(salary)}</div></div></div>` : ''}
+                ${hours ? `<div class="bg-blue-50 p-2.5 rounded-xl border border-blue-100 flex items-center gap-2"><i class="fa-solid fa-clock text-blue-600"></i><div><div class="text-[10px] text-blue-500 font-bold">ساعات العمل</div><div class="font-black text-blue-900 text-xs">${esc(hours)}</div></div></div>` : ''}
+                ${vacations ? `<div class="bg-amber-50 p-2.5 rounded-xl border border-amber-100 flex items-center gap-2"><i class="fa-solid fa-umbrella-beach text-amber-600"></i><div><div class="text-[10px] text-amber-500 font-bold">الإجازات</div><div class="font-black text-amber-900 text-xs">${esc(vacations)}</div></div></div>` : ''}
+                ${bonuses ? `<div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex items-center gap-2"><i class="fa-solid fa-gift text-emerald-600"></i><div><div class="text-[10px] text-emerald-500 font-bold">المكافآت</div><div class="font-black text-emerald-900 text-xs">${esc(bonuses)}</div></div></div>` : ''}
+                ${interview ? `<div class="bg-purple-50 p-2.5 rounded-xl border border-purple-100 flex items-center gap-2"><i class="fa-solid fa-video text-purple-600"></i><div><div class="text-[10px] text-purple-500 font-bold">المقابلة</div><div class="font-black text-purple-900 text-xs">${esc(interview)}</div></div></div>` : ''}
+                ${notes ? `<div class="bg-slate-100 p-2.5 rounded-xl border border-slate-200 flex items-center gap-2 sm:col-span-2"><i class="fa-solid fa-info-circle text-slate-500"></i><div><div class="text-[10px] text-slate-500 font-bold">ملاحظات</div><div class="font-bold text-slate-700 text-xs">${esc(notes)}</div></div></div>` : ''}
+            </div>
+            ${reqs.length > 0 ? `<div class="mt-2"><h5 class="font-black text-slate-800 text-sm mb-2">الشروط والمتطلبات:</h5><ul class="space-y-1 text-xs text-slate-600 font-medium">${reqs.map(r => `<li class="flex items-start gap-1.5"><i class="fa-solid fa-check-circle text-emerald-500 mt-0.5"></i> <span>${esc(r)}</span></li>`).join('')}</ul></div>` : ''}
+        `;
+    } else {
+        detailsHTML = 'التفاصيل...';
+    }
+
     const questions = window._tempJobQuestions;
 
     const overlay = document.getElementById('modal-overlay');
     const titleEl = document.getElementById('modal-title');
     const body = document.getElementById('modal-body');
-    
-    // إخفاء أزرار الحفظ وتغييرهم لزر إغلاق
     const saveBtn = document.getElementById('modal-save-btn');
-    saveBtn.classList.add('hidden');
     
+    saveBtn.classList.add('hidden');
     titleEl.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-eye text-indigo-500"></i> معاينة الوظيفة والاستمارة</span>`;
 
-    // تصميم المعاينة (شبيه بـ careers.html)
     body.innerHTML = `
     <div class="space-y-4 bg-slate-100 p-4 rounded-2xl">
         <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
             <div class="relative h-32 overflow-hidden bg-slate-200">
                 <img src="${esc(image)}" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div class="absolute top-2 right-2">
-                    <span class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">${esc(badge)}</span>
-                </div>
+                <div class="absolute top-2 right-2"><span class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">${esc(badge)}</span></div>
             </div>
             <div class="p-4">
                 <h3 class="text-lg font-black text-slate-800 mb-2">${esc(title)}</h3>
-                <p class="text-sm text-slate-600 line-clamp-3">${esc(desc)}</p>
+                <p class="text-sm text-slate-600 mb-3">${esc(desc)}</p>
+                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">${detailsHTML}</div>
             </div>
         </div>
 
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
             <h4 class="text-xs font-black text-slate-500 uppercase tracking-wider border-b pb-2">الاستمارة (كما ستظهر للمتقدم)</h4>
-            <div class="grid grid-cols-2 gap-3">
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-1">الاسم الكامل *</label><input type="text" class="field-input bg-slate-50" disabled placeholder="اسمك الثلاثي"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-1">رقم الواتساب *</label><input type="text" class="field-input bg-slate-50" disabled placeholder="01xxxxxxxxx"></div>
-            </div>
-            <div><label class="block text-[10px] font-bold text-slate-500 mb-1">البريد الإلكتروني *</label><input type="email" class="field-input bg-slate-50" disabled placeholder="you@example.com"></div>
-            
-            <div class="mt-4 pt-3 border-t border-slate-100">
-                <p class="text-[10px] font-black text-indigo-600 mb-2">أسئلة الوظيفة:</p>
-                <div class="space-y-3">
-                    ${questions.length === 0 ? '<p class="text-xs text-slate-400">لا توجد أسئلة مخصصة</p>' : questions.map((q, i) => {
-                        const req = q.required ? '<span class="text-red-500">*</span>' : '';
-                        let input = '';
-                        if (q.type === 'textarea') input = '<textarea class="field-input bg-slate-50 text-xs" rows="2" disabled></textarea>';
-                        else if (q.type === 'radio') input = `<div class="space-y-1 mt-1">${(q.options||[]).map(o => `<label class="flex items-center gap-2 text-xs text-slate-600"><input type="radio" disabled class="w-3 h-3"> ${esc(o)}</label>`).join('')}</div>`;
-                        else input = `<input type="text" class="field-input bg-slate-50 text-xs" disabled>`;
-                        return `<div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
-                            <label class="block text-[11px] font-bold text-slate-700 mb-1">${i+1}. ${esc(q.label)} ${req}</label>
-                            ${q.helpText ? `<p class="text-[9px] text-slate-500 mb-1">${esc(q.helpText)}</p>` : ''}
-                            ${input}
-                        </div>`;
-                    }).join('')}
-                </div>
+            <div class="space-y-3">
+                ${questions.length === 0 ? '<p class="text-xs text-slate-400">لا توجد أسئلة مخصصة</p>' : questions.map((q, i) => {
+                    let input = '';
+                    if (q.type === 'textarea') input = '<textarea class="field-input bg-slate-50 text-xs" rows="2" disabled></textarea>';
+                    else if (q.type === 'radio') input = `<div class="space-y-1 mt-1">${(q.options||[]).map(o => `<label class="flex items-center gap-2 text-xs text-slate-600"><input type="radio" disabled class="w-3 h-3"> ${esc(o)}</label>`).join('')}</div>`;
+                    else input = `<input type="text" class="field-input bg-slate-50 text-xs" disabled>`;
+                    return `<div class="bg-slate-50 rounded-lg p-2 border border-slate-100">
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">${i+1}. ${esc(q.label)} ${q.required ? '<span class="text-red-500">*</span>' : ''}</label>
+                        ${input}
+                    </div>`;
+                }).join('')}
             </div>
         </div>
-    </div>
-    `;
+    </div>`;
 
-    // إضافة زر رجوع للتعديل
     const footer = document.getElementById('modal-footer');
     if (!document.getElementById('back-to-edit-btn')) {
         const backBtn = document.createElement('button');
@@ -15710,7 +15770,13 @@ function previewJob() {
     }
 }
 function copyJobLink(jobId) {
-    const baseUrl = window.location.origin + window.location.pathname.replace('dashboard.html', 'careers.html');
+    let baseUrl = window.location.href.split('?')[0].split('#')[0];
+    if (baseUrl.includes('dashboard.html')) {
+        baseUrl = baseUrl.replace('dashboard.html', 'careers.html');
+    } else {
+        const lastSlash = baseUrl.lastIndexOf('/');
+        if (lastSlash !== -1) baseUrl = baseUrl.substring(0, lastSlash + 1) + 'careers.html';
+    }
     const link = baseUrl + '?job=' + jobId;
     navigator.clipboard.writeText(link).then(() => {
         showToast('تم نسخ رابط الوظيفة ✓');
