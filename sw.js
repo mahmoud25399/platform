@@ -1,4 +1,4 @@
-const CACHE_NAME = 'elheliehy-platform-v2';
+const CACHE_NAME = 'elheliehy-platform-v3';
 const ASSETS = [
   'index.html',
   'student.html',
