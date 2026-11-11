@@ -1020,7 +1020,41 @@
         const s = Math.floor(secs % 60);
         return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     }
-
+    // ✅ ترجع اليوم والوقت الحالي بتوقيت مصر (Africa/Cairo) بغض النظر عن توقيت جهاز الطالب
+    // ضروري عشان طالب بره مصر يشوف زر الانضمام للحصة في نفس لحظة الطالب المصري
+    function getEgyptDayAndMinutes() {
+        try {
+            var now = new Date();
+            var fmt = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Africa/Cairo',
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            var parts = fmt.formatToParts(now);
+            var weekdayStr = '', hourStr = '', minuteStr = '';
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].type === 'weekday') weekdayStr = parts[i].value;
+                else if (parts[i].type === 'hour') hourStr = parts[i].value;
+                else if (parts[i].type === 'minute') minuteStr = parts[i].value;
+            }
+            var enToAr = { 'Sun': 'الأحد', 'Mon': 'الإثنين', 'Tue': 'الثلاثاء', 'Wed': 'الأربعاء', 'Thu': 'الخميس', 'Fri': 'الجمعة', 'Sat': 'السبت' };
+            var day = enToAr[weekdayStr];
+            var hours = parseInt(hourStr, 10);
+            if (isNaN(hours) || hours === 24) hours = 0;
+            var minutes = parseInt(minuteStr, 10) || 0;
+            if (!day) {
+                var arDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+                day = arDays[now.getDay()];
+            }
+            return { day: day, minutes: hours * 60 + minutes };
+        } catch(e) {
+            var now2 = new Date();
+            var arDays2 = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            return { day: arDays2[now2.getDay()], minutes: now2.getHours() * 60 + now2.getMinutes() };
+        }
+    }
     function guardInnerHtml(i, l) {
       const studentLabel = session ? `${session.name} (${session.password})` : 'محمي بحقوق الملكية';
       let mediaHtml = '';
@@ -1425,12 +1459,9 @@
             const daysOfWeek = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
             let html = '';
             
-            const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-            const now = new Date();
-            const currentDayName = arabicDays[now.getDay()];
-            const currentHours = now.getHours();
-            const currentMinutes = now.getMinutes();
-            const currentMinutesTotal = currentHours * 60 + currentMinutes;
+            const egyptNow = getEgyptDayAndMinutes();
+            const currentDayName = egyptNow.day;
+            const currentMinutesTotal = egyptNow.minutes;
             
             daysOfWeek.forEach(day => {
                 const daySlots = schedule.filter(s => s.day === day);
@@ -1501,11 +1532,9 @@
             if (!session) return;
             
             const checkLogic = (schedule) => {
-                const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-                const now = new Date();
-                const currentDayName = arabicDays[now.getDay()];
-                const currentHours = now.getHours();
-                const currentMinutes = now.getMinutes();
+                const egyptNow = getEgyptDayAndMinutes();
+                const currentDayName = egyptNow.day;
+                const currentMinutesTotal = egyptNow.minutes;
                 const currentMinutesTotal = currentHours * 60 + currentMinutes;
                 
                 let activeLesson = null;
