@@ -4764,12 +4764,46 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
     initApp();
 
+    // ✅ ترجع اليوم والوقت الحالي بتوقيت مصر (Africa/Cairo) بغض النظر عن توقيت جهاز الطالب
+    // ضروري عشان طالب بره مصر يشوف زر الانضمام للحصة في نفس لحظة الطالب المصري
+    function getEgyptDayAndMinutes() {
+        try {
+            var now = new Date();
+            var fmt = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Africa/Cairo',
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            var parts = fmt.formatToParts(now);
+            var weekdayStr = '', hourStr = '', minuteStr = '';
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].type === 'weekday') weekdayStr = parts[i].value;
+                else if (parts[i].type === 'hour') hourStr = parts[i].value;
+                else if (parts[i].type === 'minute') minuteStr = parts[i].value;
+            }
+            var enToAr = { 'Sun': 'الأحد', 'Mon': 'الإثنين', 'Tue': 'الثلاثاء', 'Wed': 'الأربعاء', 'Thu': 'الخميس', 'Fri': 'الجمعة', 'Sat': 'السبت' };
+            var day = enToAr[weekdayStr];
+            var hours = parseInt(hourStr, 10);
+            if (isNaN(hours) || hours === 24) hours = 0;
+            var minutes = parseInt(minuteStr, 10) || 0;
+            if (!day) {
+                var arDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+                day = arDays[now.getDay()];
+            }
+            return { day: day, minutes: hours * 60 + minutes };
+        } catch(e) {
+            var now2 = new Date();
+            var arDays2 = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            return { day: arDays2[now2.getDay()], minutes: now2.getHours() * 60 + now2.getMinutes() };
+        }
+    }
+
     function isClassActiveNow(day, timeStr, duration) {
         try {
-            const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-            const now = new Date();
-            const currentDayStr = arabicDays[now.getDay()];
-            if (currentDayStr !== day) return false;
+            const egyptNow = getEgyptDayAndMinutes();
+            if (egyptNow.day !== day) return false;
 
             const cleanTime = timeStr.trim().replace(/([0-9])([مص])/g, '$1 $2').replace(/\s+/g, ' ');
             const parts = cleanTime.split(' ');
@@ -4785,7 +4819,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
             const startMinutes = hour * 60 + minute;
             const durationMinutes = parseInt(duration) || 60;
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const currentMinutes = egyptNow.minutes;
 
             return currentMinutes >= (startMinutes - 15) && currentMinutes <= (startMinutes + durationMinutes + 15);
         } catch (e) {
@@ -4900,12 +4934,9 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         const daysOfWeek = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
         let html = '';
         
-        const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-        const now = new Date();
-        const currentDayName = arabicDays[now.getDay()];
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentMinutesTotal = currentHours * 60 + currentMinutes;
+        const egyptNow = getEgyptDayAndMinutes();
+        const currentDayName = egyptNow.day;
+        const currentMinutesTotal = egyptNow.minutes;
         
         daysOfWeek.forEach(day => {
             const daySlots = schedule.filter(s => s.day === day);
@@ -4976,12 +5007,9 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         if (!currentUser) return;
         
         const checkLogic = (schedule) => {
-            const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-            const now = new Date();
-            const currentDayName = arabicDays[now.getDay()];
-            const currentHours = now.getHours();
-            const currentMinutes = now.getMinutes();
-            const currentMinutesTotal = currentHours * 60 + currentMinutes;
+            const egyptNow = getEgyptDayAndMinutes();
+            const currentDayName = egyptNow.day;
+            const currentMinutesTotal = egyptNow.minutes;
             
             let activeLesson = null;
             
