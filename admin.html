@@ -6367,9 +6367,10 @@
             const dayMap = {
                 "الأحد": 0, "الإثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الخميس": 4, "الجمعة": 5, "السبت": 6
             };
-            const now = new Date();
-            const currentDayNum = now.getDay();
-            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const egyptNow = getEgyptDayAndMinutes();
+            const dayKeys = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            const currentDayNum = dayKeys.indexOf(egyptNow.day);
+            const currentMins = egyptNow.minutes;
 
             const slotDayNum = dayMap[slot.day] !== undefined ? dayMap[slot.day] : 0;
             const slotStartMins = parseTimeToMinutes(slot.time);
