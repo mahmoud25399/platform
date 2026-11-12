@@ -448,7 +448,7 @@
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="theme-toggle-btn" onclick="toggleTheme(this)" title="تبديل الوضع"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
+                <button class="btn btn-primary btn-sm" onclick="openGlobalSearch()" title="البحث الشامل" style="font-weight:bold; border-radius:20px;"><i class="fas fa-search"></i> البحث الشامل</button>
                 <button id="installPwaBtn" class="btn btn-success btn-sm" style="display:none; font-weight:bold;">
                     <i class="fas fa-download"></i> تثبيت التطبيق
                 </button>
@@ -980,7 +980,6 @@
                 <div id="tasmiyaSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-microphone"></i> التسميع</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openSearchModal('tasmiya')"><i class="fas fa-search"></i> بحث</button>
                     </div>
                     <div class="sub-tabs">
                         <button class="sub-tab active" onclick="switchTab('tasmiya', 'add')"><i class="fas fa-plus-circle"></i> تسجيل جديد</button>
@@ -1038,7 +1037,6 @@
                 <div id="wajibSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-tasks"></i> الواجب</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openSearchModal('wajib')"><i class="fas fa-search"></i> بحث</button>
                     </div>
                     <div class="sub-tabs">
                         <button class="sub-tab active" onclick="switchTab('wajib', 'add')"><i class="fas fa-plus-circle"></i> تسجيل جديد</button>
@@ -1105,7 +1103,6 @@
                 <div id="ikhtibaratSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                          <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-file-contract"></i> الاختبارات والامتحانات</h2>
-                         <button class="btn btn-primary btn-sm" onclick="openSearchModal('ikhtibarat')"><i class="fas fa-search"></i> بحث في السجلات</button>
                     </div>
                     
                     <!-- التبويبات الجديدة -->
@@ -1582,7 +1579,6 @@
                     <div id="hossasSection" class="hidden">
                      <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-video"></i> الحصص</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openSearchModal('hossas')"><i class="fas fa-search"></i> بحث</button>
                     </div>
                     <div class="form-container">
                         <div class="form-group">
@@ -1617,7 +1613,6 @@
                 <div id="librarySection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-book"></i> المكتبة</h2>
-                        <button class="btn btn-primary btn-sm" onclick="openSearchModal('library')"><i class="fas fa-search"></i> بحث</button>
                     </div>
                     <div class="form-container">
                         <div class="form-group">
@@ -4579,7 +4574,7 @@
             });
 
             // ربط حدث: لما يختار المعلم طالب → يتعبى الصف والمجموعة تلقائياً
-            ['wajibStudent','tasmiyaStudent','ikhtibaratStudent','hossasStudent','libraryStudent'].forEach(function(selId) {
+            ['wajibStudent','tasmiyaStudent','ikhtibaratStudent','hossasStudent','libraryStudent','globalSearchStudent'].forEach(function(selId) {
                 var sel = document.getElementById(selId);
                 if (!sel || sel._autoFillDone) return;
                 sel._autoFillDone = true;
@@ -4822,6 +4817,7 @@
                 { gradeId: 'searchGrade', groupId: 'searchGroup' },
                 { gradeId: 'reportGrade', groupId: 'reportGroup' },
                 { gradeId: 'stGrade', groupId: 'stGroup' },
+                { gradeId: 'globalSearchGrade', groupId: 'globalSearchGroup' },
                 { gradeId: 'scheduleGrade', groupId: 'scheduleGroup', onSchedChange: true }
             ];
 
@@ -11206,9 +11202,357 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.querySelectorAll('[id^="vmLesson-"]').forEach(el => { el.style.borderColor = '#e2e8f0'; el.style.background = '#f8fafc'; });
             document.querySelectorAll('[id^="vmVideo-"]').forEach(el => { el.style.borderColor = '#e2e8f0'; el.style.background = '#f8fafc'; });
         }
+        // ══════════════════════════════════════════════════════════════
+        // 🔍 GLOBAL SEARCH & MASS CONTENT MANAGER (V2)
+        // ══════════════════════════════════════════════════════════════
+        let currentGcmData = null;
+        let currentGcmContext = null;
 
+        function toggleGlobalSearchMode(mode) {
+            if (mode === 'single') {
+                document.getElementById('globalSearchStudentDiv').classList.remove('hidden');
+                document.getElementById('globalSearchGroupDiv').classList.add('hidden');
+            } else {
+                document.getElementById('globalSearchStudentDiv').classList.add('hidden');
+                document.getElementById('globalSearchGroupDiv').classList.remove('hidden');
+            }
+        }
+
+        function openGlobalSearch() {
+            closeModal('globalSearchResultsModal'); // إغلاق نافذة النتايج لو مفتوحة
+            openModal('globalSearchModal');
+            document.getElementById('globalSearchMode').value = 'single';
+            toggleGlobalSearchMode('single');
+            document.getElementById('globalSearchType').value = 'all';
+            document.getElementById('globalSearchResults').innerHTML = '<div style="text-align: center; color: var(--gray); padding: 30px;"><i class="fas fa-search fa-3x" style="opacity: 0.3; margin-bottom: 10px;"></i><p>اختر نوع البحث والمحتوى ثم اضغط بدء البحث.</p></div>';
+            
+            // Populate dropdowns
+            populateStudentSelects();
+            populateAllGradeAndGroupSelects();
+            
+            // Select first option by default if available & trigger autofill
+            setTimeout(() => {
+                const stSel = document.getElementById('globalSearchStudent');
+                if (stSel.options.length > 1) {
+                    stSel.selectedIndex = 1;
+                    stSel.dispatchEvent(new Event('change')); // تفعيل التعبئة التلقائية للصف والمجموعة
+                }
+            }, 150);
+        }
+
+        function performGlobalSearch(btn) {
+            const mode = document.getElementById('globalSearchMode').value;
+            const studentName = document.getElementById('globalSearchStudent').value;
+            const grade = document.getElementById('globalSearchGrade').value;
+            const group = document.getElementById('globalSearchGroup').value;
+            const contentType = document.getElementById('globalSearchType').value;
+
+            if (mode === 'single' && !studentName) return showNotify('warning', 'يرجى اختيار الطالب');
+            if (mode === 'group' && !grade) return showNotify('warning', 'يرجى اختيار الصف');
+
+            if (btn) toggleLoading(btn, true);
+            
+            // ✅ التغيير الأهم: نقفل نافذة البحث ونفتح نافذة النتايج الكبيرة
+            closeModal('globalSearchModal');
+            openModal('globalSearchResultsModal');
+            
+            const resultsDiv = document.getElementById('globalSearchResults');
+            resultsDiv.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i><p style="margin-top:15px; font-weight:bold; font-size:1.1rem;">جاري البحث...</p></div>';
+
+            runGS('globalSearchGS', mode, studentName, grade, group, contentType, window.currentEmployee ? window.currentEmployee.code : '').then(res => {
+                if (btn) toggleLoading(btn, false);
+                if (!res || !res.success) {
+                    resultsDiv.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:red; padding:50px; font-weight:bold;">${res ? res.message : 'حدث خطأ'}</div>`;
+                    return;
+                }
+                renderGlobalSearchResults(res.data, mode);
+            }).catch(err => {
+                if (btn) toggleLoading(btn, false);
+                resultsDiv.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:red; padding:50px; font-weight:bold;">خطأ: ${err.message}</div>`;
+            });
+        }
+
+        function renderGlobalSearchResults(data, mode) {
+            const container = document.getElementById('globalSearchResults');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--gray); padding: 50px;"><i class="fas fa-search-minus fa-4x" style="opacity: 0.3; margin-bottom: 15px;"></i><p style="font-size:1.1rem; font-weight:bold;">لا توجد نتائج مطابقة.</p></div>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(item => {
+                if (item.resultType === 'student') {
+                    html += `
+                        <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="width: 50px; height: 50px; border-radius: 12px; background: #eff6ff; color: #3b82f6; display: flex; justify-content: center; align-items: center; font-size: 1.5rem;"><i class="fas fa-user-graduate"></i></div>
+                                <div>
+                                    <div style="font-weight: 800; color: var(--dark); font-size: 1.1rem;">${item.name}</div>
+                                    <div style="font-size: 0.85rem; color: var(--gray); margin-top: 5px;">
+                                        <span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; margin-left:5px;">${item.grade || 'بدون صف'}</span>
+                                        <span style="background:#f1f5f9; padding:3px 8px; border-radius:6px;">${item.group || 'بدون مجموعة'}</span>
+                                        <br><span style="color:var(--primary); font-family:monospace; margin-top:5px; display:inline-block;">كود: ${item.code}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="openStudentContentManager('${item.code}', '${item.name.replace(/'/g, "\\'")}')" style="width:100%; font-weight:bold;"><i class="fas fa-folder-open"></i> إدارة المحتوى</button>
+                        </div>
+                    `;
+                } else {
+                    const icons = { wajib: 'fa-tasks', tasmiya: 'fa-microphone', ikhtibarat: 'fa-file-contract', hossas: 'fa-video', library: 'fa-book' };
+                    const colors = { wajib: '#f59e0b', tasmiya: '#6366f1', ikhtibarat: '#ef4444', hossas: '#8b5cf6', library: '#06b6d4' };
+                    const labels = { wajib: 'واجب', tasmiya: 'تسميع', ikhtibarat: 'اختبار', hossas: 'حصة', library: 'مكتبة' };
+
+                    let actionBtn = '';
+                    if (mode === 'single') {
+                        actionBtn = `<button class="btn btn-primary" onclick="openStudentContentManager('${item.targetStudentCode}', '${item.targetStudentName.replace(/'/g, "\\'")}')" style="width:100%; font-weight:bold;"><i class="fas fa-folder-open"></i> إدارة المحتوى</button>`;
+                    } else {
+                        actionBtn = `<button class="btn btn-outline-primary" onclick="openMassContentManager('${item.contentType}', '${item.title.replace(/'/g, "\\'")}', '${item.grade}', '${item.group}')" style="width:100%; font-weight:bold;"><i class="fas fa-users-cog"></i> إدارة المجموعة</button>`;
+                    }
+
+                    html += `
+                        <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 45px; height: 45px; border-radius: 10px; background: ${colors[item.contentType]}15; color: ${colors[item.contentType]}; display: flex; justify-content: center; align-items: center; font-size: 1.3rem;"><i class="fas ${icons[item.contentType]}"></i></div>
+                                    <div style="font-weight: 800; color: var(--dark); font-size: 1.05rem; line-height:1.4;">${item.title}</div>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--gray); margin-bottom: 15px; display:flex; flex-wrap:wrap; gap:8px;">
+                                    <span style="background:${colors[item.contentType]}15; color:${colors[item.contentType]}; padding:4px 10px; border-radius:6px; font-weight:bold;">${labels[item.contentType]}</span>
+                                    ${mode === 'group' ? `<span style="background:#f1f5f9; padding:4px 10px; border-radius:6px;">${item.grade} - ${item.group}</span>` : ''}
+                                    <span style="background:#ecfdf5; color:#059669; padding:4px 10px; border-radius:6px; font-weight:bold;">متاح لـ ${item.studentCount} طالب</span>
+                                </div>
+                            </div>
+                            ${actionBtn}
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function openMassContentManager(type, title, grade, group) {
+            closeModal('globalSearchModal'); // ✅ إغلاق نافذة البحث أولاً
+            openModal('globalContentManagerModal');
+            
+            document.getElementById('gcmTitle').innerText = `إدارة: ${title}`;
+            document.getElementById('gcmSubTitle').innerText = `النوع: ${type} | الصف: ${grade} | المجموعة: ${group}`;
+            document.getElementById('gcmSearchInput').value = '';
+            const listDiv = document.getElementById('gcmStudentsList');
+            listDiv.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--primary);"></i><p style="margin-top:10px; font-weight:bold;">جاري تحميل طلاب المجموعة...</p></div>';
+
+            currentGcmContext = { type, title, grade, group };
+
+            runGS('getGroupContentStatusGS', type, title, grade, group, window.currentEmployee ? window.currentEmployee.code : '').then(res => {
+                if (!res || !res.success) {
+                    listDiv.innerHTML = `<div style="text-align:center; color:red; padding:20px;">${res ? res.message : 'حدث خطأ'}</div>`;
+                    return;
+                }
+                currentGcmData = res.students;
+                
+                if(currentGcmData.length === 0) {
+                    listDiv.innerHTML = `<div style="text-align:center; color:var(--gray); padding:20px;">لا يوجد طلاب في هذه المجموعة.</div>`;
+                    return;
+                }
+
+                renderGcmStudents(currentGcmData);
+            }).catch(err => {
+                listDiv.innerHTML = `<div style="text-align:center; color:red; padding:20px;">خطأ: ${err.message}</div>`;
+            });
+        }
+
+        function renderGcmStudents(students) {
+            const listDiv = document.getElementById('gcmStudentsList');
+            if (students.length === 0) {
+                listDiv.innerHTML = '<div style="text-align:center; color:var(--gray); padding:20px;">لا يوجد طلاب مطابقين.</div>';
+                return;
+            }
+            
+            let html = '';
+            students.forEach(st => {
+                html += `
+                    <label class="gcm-student-row" data-name="${st.name.toLowerCase()}" style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" class="gcm-cb" value="${st.code}" ${st.hasAccess ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                            <span style="font-weight: 600; color: var(--dark); font-size: 0.95rem;">${st.name}</span>
+                        </div>
+                        <span class="gcm-badge" style="font-size: 0.75rem; font-weight: bold; padding: 3px 8px; border-radius: 12px; background: ${st.hasAccess ? '#dcfce7' : '#f1f5f9'}; color: ${st.hasAccess ? '#166534' : '#64748b'};">
+                            ${st.hasAccess ? 'متاح' : 'مغلق'}
+                        </span>
+                    </label>
+                `;
+            });
+            listDiv.innerHTML = html;
+
+            document.querySelectorAll('.gcm-cb').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const badge = this.closest('label').querySelector('.gcm-badge');
+                    if (this.checked) {
+                        badge.innerText = 'متاح';
+                        badge.style.background = '#dcfce7';
+                        badge.style.color = '#166534';
+                    } else {
+                        badge.innerText = 'مغلق';
+                        badge.style.background = '#f1f5f9';
+                        badge.style.color = '#64748b';
+                    }
+                });
+            });
+        }
+
+        function filterGcmStudents() {
+            const query = document.getElementById('gcmSearchInput').value.trim().toLowerCase();
+            document.querySelectorAll('.gcm-student-row').forEach(row => {
+                const name = row.getAttribute('data-name');
+                row.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleAllGcm(checked) {
+            document.querySelectorAll('.gcm-cb').forEach(cb => {
+                cb.checked = checked;
+                cb.dispatchEvent(new Event('change'));
+            });
+        }
+
+        function saveGlobalContentStatus(btn) {
+            if (!currentGcmContext) return;
+            const selectedCodes = Array.from(document.querySelectorAll('.gcm-cb:checked')).map(cb => cb.value);
+            
+            toggleLoading(btn, true);
+            runGS('updateGroupContentStatusGS', currentGcmContext.type, currentGcmContext.title, currentGcmContext.grade, currentGcmContext.group, JSON.stringify(selectedCodes), window.currentEmployee ? window.currentEmployee.code : '').then(res => {
+                toggleLoading(btn, false);
+                if (res && res.success) {
+                    Swal.fire({ icon: 'success', title: 'تم الحفظ', text: 'تم تحديث صلاحيات الوصول للمحتوى بنجاح للمجموعة.', confirmButtonText: 'ممتاز' });
+                    closeModal('globalContentManagerModal');
+                } else {
+                    Swal.fire('خطأ', res ? res.message : 'فشل الحفظ', 'error');
+                }
+            }).catch(err => {
+                toggleLoading(btn, false);
+                Swal.fire('خطأ', err.message, 'error');
+            });
+        }
+
+        function deleteGlobalContent(btn) {
+            if (!currentGcmContext) return;
+            Swal.fire({
+                title: 'تأكيد الحذف الشامل',
+                text: `هل أنت متأكد من حذف (${currentGcmContext.title}) نهائياً من سجلات هذه المجموعة بالكامل؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'نعم، احذف للجميع',
+                cancelButtonText: 'إلغاء'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    toggleLoading(btn, true);
+                    runGS('deleteGroupContentGS', currentGcmContext.type, currentGcmContext.title, currentGcmContext.grade, currentGcmContext.group, window.currentEmployee ? window.currentEmployee.code : '').then(res => {
+                        toggleLoading(btn, false);
+                        if (res && res.success) {
+                            Swal.fire('تم الحذف!', 'تم حذف المحتوى من سجلات جميع طلاب المجموعة.', 'success');
+                            closeModal('globalContentManagerModal');
+                        } else {
+                            Swal.fire('خطأ', res ? res.message : 'فشل الحذف', 'error');
+                        }
+                    }).catch(err => {
+                        toggleLoading(btn, false);
+                        Swal.fire('خطأ', err.message, 'error');
+                    });
+                }
+            });
+        }
     </script>
+    <!-- Global Search Modal (Form Only) -->
+    <div id="globalSearchModal" class="modal" style="display:none; z-index: 5000;">
+        <div class="modal-content" style="max-width: 800px; padding: 0; overflow: hidden; border-radius: 16px;">
+            <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-search"></i> البحث الشامل وإدارة المحتوى</h3>
+                <button onclick="closeModal('globalSearchModal')" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="padding: 20px; background: var(--surface);">
+                <div class="form-container" style="margin-bottom: 0;">
+                    <div class="form-group">
+                        <label>1. نوع البحث</label>
+                        <select id="globalSearchMode" class="form-control" onchange="toggleGlobalSearchMode(this.value)" style="font-weight:bold;">
+                            <option value="single">طالب مفرد</option>
+                            <option value="group">مجموعة / صف كامل</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="globalSearchStudentDiv">
+                        <label>الطالب</label>
+                        <select class="form-control student-select" id="globalSearchStudent"></select>
+                    </div>
+                    <div class="form-group hidden" id="globalSearchGroupDiv" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                         <div><label>الصف الدراسي</label><select class="form-control grade-select" id="globalSearchGrade"></select></div>
+                         <div><label>المجموعة</label><select class="form-control group-select" id="globalSearchGroup"></select></div>
+                     </div>
+                    <div class="form-group">
+                        <label>2. نوع المحتوى المطلوب</label>
+                        <select id="globalSearchType" class="form-control" style="font-weight:bold;">
+                            <option value="all">كل شيء (شامل)</option>
+                            <option value="wajib">الواجبات</option>
+                            <option value="tasmiya">التسميع</option>
+                            <option value="ikhtibarat">الاختبارات</option>
+                            <option value="hossas">الحصص</option>
+                            <option value="library">المكتبة</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <button class="btn btn-primary" onclick="performGlobalSearch(this)" style="width:100%; font-weight:bold; font-size:1.05rem; padding:10px;"><i class="fas fa-search"></i> بدء البحث</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Global Search Results Modal (Huge & Grid Layout) -->
+    <div id="globalSearchResultsModal" class="modal" style="display:none; z-index: 5050;">
+        <div class="modal-content" style="max-width: 95%; width: 1200px; padding: 0; overflow: hidden; border-radius: 16px; display: flex; flex-direction: column; height: 90vh;">
+            
+            <div style="background: #f8fafc; padding: 15px 25px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                <h3 style="margin: 0; color: var(--dark); display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.25rem;">
+                    <i class="fas fa-list-ul text-primary"></i> نتائج البحث
+                </h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-sm btn-outline-primary" onclick="openGlobalSearch()" style="font-weight:bold;"><i class="fas fa-search"></i> بحث جديد</button>
+                    <button onclick="closeModal('globalSearchResultsModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray);"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            
+            <div id="globalSearchResults" style="flex: 1; min-height: 0; overflow-y: auto; background: var(--bg-body); padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start;">
+                <!-- Results will be injected here as cards -->
+            </div>
+        </div>
+    </div>
+    <!-- Mass Content Manager Modal -->
+    <div id="globalContentManagerModal" class="modal" style="display:none; z-index: 5100;">
+        <div class="modal-content" style="max-width: 700px; padding: 0; overflow: hidden; border-radius: 16px; display:flex; flex-direction:column; max-height:90vh;">
+            <div style="background: #f8fafc; padding: 20px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 id="gcmTitle" style="margin: 0; color: var(--dark); font-size: 1.2rem; font-weight: 800;">إدارة المحتوى</h3>
+                    <p id="gcmSubTitle" style="margin: 5px 0 0; color: var(--gray); font-size: 0.85rem;"></p>
+                </div>
+                <button onclick="closeModal('globalContentManagerModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray);"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="padding: 15px 20px; display: flex; gap: 10px; justify-content: space-between; align-items: center; background: white; border-bottom: 1px solid var(--border);">
+                <input type="text" id="gcmSearchInput" class="form-control" placeholder="🔍 بحث سريع باسم الطالب..." oninput="filterGcmStudents()" style="font-size: 0.85rem;">
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleAllGcm(true)"><i class="fas fa-check-double"></i> تحديد الكل</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="toggleAllGcm(false)"><i class="fas fa-times"></i> إلغاء الكل</button>
+                </div>
+            </div>
+
+            <div id="gcmStudentsList" style="flex:1; overflow-y:auto; padding: 15px 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 8px;"></div>
+
+            <div style="padding: 15px 20px; background: white; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn btn-danger" onclick="deleteGlobalContent(this)"><i class="fas fa-trash"></i> حذف المحتوى نهائياً</button>
+                <button class="btn btn-success" onclick="saveGlobalContentStatus(this)"><i class="fas fa-save"></i> حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
     <!-- Modal: Add / Edit Dynamic WhatsApp Event Rule -->
     <div id="modalAddWaEvent" class="modal hidden" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:15px;">
         <div style="background:#fff; border-radius:16px; max-width:650px; width:100%; max-height:90vh; overflow-y:auto; padding:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); border:1px solid var(--border);">
