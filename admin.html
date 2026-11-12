@@ -6362,6 +6362,18 @@
             }
             return hours * 60 + minutes;
         }
+        function getEgyptDayAndMinutes() {
+            const now = new Date();
+            // تحويل التوقيت المحلي للمستخدم إلى توقيت مصر (أفريقيا/القاهرة)
+            const cairoString = now.toLocaleString("en-US", { timeZone: "Africa/Cairo" });
+            const cairoDate = new Date(cairoString);
+            
+            const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            const day = days[cairoDate.getDay()];
+            const minutes = cairoDate.getHours() * 60 + cairoDate.getMinutes();
+            
+            return { day: day, minutes: minutes };
+        }
 
         function calculateSlotStatus(slot) {
             const dayMap = {
