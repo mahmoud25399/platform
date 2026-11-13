@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -560,6 +558,7 @@
             </button>
             <div class="nav-group-content">
                 <button onclick="showSection('employees')" data-section="employees" class="nav-item w-full text-right flex items-center gap-3 rounded-xl"><i class="fa-solid fa-users-gear w-5 text-center"></i><span>إدارة الموظفين والرواتب</span></button>
+                <button onclick="showSection('jobs')" data-section="jobs" class="nav-item w-full text-right flex items-center gap-3 rounded-xl"><i class="fa-solid fa-briefcase w-5 text-center"></i><span>الوظائف والتوظيف</span></button>
             </div>
         </div>
         <!-- 📱 الواتساب -->
@@ -569,11 +568,6 @@
         <!-- 📊 التقارير -->
         <button onclick="showSection('reports')" data-section="reports" class="nav-item w-full text-right px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-3 mt-2">
             <i class="fa-solid fa-magnifying-glass-chart w-5 text-center text-purple-400"></i><span>التقارير الشاملة</span>
-        </button>
-
-        <!-- 💼 الوظائف والتوظيف -->
-        <button onclick="showSection('jobs')" data-section="jobs" class="nav-item w-full text-right px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-3 mt-2">
-            <i class="fa-solid fa-briefcase w-5 text-center text-orange-400"></i><span>الوظائف والتوظيف</span>
         </button>
 
         <hr class="border-slate-700/50 my-2">
@@ -967,7 +961,7 @@
                     <select id="att-group-select" class="field-input font-bold" onchange="loadGroupForAttendance()"><option value="" disabled selected>يرجى اختيار المجموعة...</option></select>
                 </div>
                 <div class="field-group flex items-end gap-2">
-                    <button type="button" onclick="refreshAttendanceGroups()" class="btn-secondary flex-1 justify-center px-1"><i class="fa-solid fa-rotate"></i> تحديث</button>
+                    <button type="button" onclick="loadAllSystemData(true)" class="btn-secondary flex-1 justify-center px-1"><i class="fa-solid fa-rotate"></i> تحديث</button>
                     <button type="button" onclick="openModal('quick_attendance', -1)" class="btn-primary flex-1 justify-center bg-indigo-600 hover:bg-indigo-700 px-1 shadow-sm"><i class="fa-solid fa-bolt"></i> حضور سريع</button>
                 </div>
             </div>
@@ -1065,9 +1059,14 @@
                     </h2>
                     <p class="text-slate-500 text-sm mt-1">متابعة الإيرادات، تسجيل المصروفات، وحساب صافي الربح</p>
                 </div>
-                <button onclick="openModal('expense', -1)" class="btn-primary flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-md shadow-rose-200 text-sm">
-                    <i class="fa-solid fa-plus"></i> إضافة مصروف
-                </button>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="closeMonthSnapshot()" class="btn-secondary flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs" title="حفظ لقطة للشهر الحالي وتصفير المصروفات الشهرية المستمرة">
+                        <i class="fa-solid fa-calendar-check text-indigo-600"></i> إقفال الشهر وحفظ لقطة
+                    </button>
+                    <button onclick="openModal('expense', -1)" class="btn-primary flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-md shadow-rose-200 text-sm">
+                        <i class="fa-solid fa-plus"></i> إضافة مصروف
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -2181,6 +2180,9 @@
                 <button type="button" onclick="switchJobsTab('apps')" data-jobs-tab="apps" class="rep-tab-btn">
                     <i class="fa-solid fa-file-lines"></i> طلبات التوظيف
                 </button>
+                <button type="button" onclick="switchJobsTab('analytics')" data-jobs-tab="analytics" class="rep-tab-btn">
+                    <i class="fa-solid fa-filter-circle-dollar"></i> التحليل والفرز الذكي
+                </button>
                 <button type="button" onclick="switchJobsTab('settings')" data-jobs-tab="settings" class="rep-tab-btn">
                     <i class="fa-solid fa-gear"></i> الإعدادات
                 </button>
@@ -2234,6 +2236,7 @@
                         <option value="all">كل الحالات</option>
                         <option value="معلق">معلق</option>
                         <option value="مراجعة">مراجعة</option>
+                        <option value="مؤهل للانترفيو">مرشح للانترفيو</option>
                         <option value="مقبول">مقبول</option>
                         <option value="مرفوض">مرفوض</option>
                     </select>
@@ -2247,6 +2250,205 @@
 
             <div id="applications-admin-list" class="space-y-3">
                 <div class="text-center py-8 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>
+            </div>
+        </div>
+
+        <!-- Tab 2.5: Analytics & Smart Screening (التحليل والفرز الذكي) -->
+        <div id="jobs-tab-analytics" class="jobs-tab-content hidden space-y-5">
+            <!-- Top KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="jobs-analytics-kpis">
+                <div onclick="quickFilterAnalyticsStatus('all')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-users"></i></div>
+                    <div><div class="text-xl font-black text-slate-800" id="ja-kpi-total">0</div><div class="text-[10px] text-slate-500 font-bold">إجمالي المتقدمين</div></div>
+                </div>
+                <div onclick="quickFilterAnalyticsStatus('مؤهل للانترفيو')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-video"></i></div>
+                    <div><div class="text-xl font-black text-purple-700" id="ja-kpi-interview">0</div><div class="text-[10px] text-slate-500 font-bold">مرشح للانترفيو</div></div>
+                </div>
+                <div onclick="quickFilterAnalyticsStatus('مقبول')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-circle-check"></i></div>
+                    <div><div class="text-xl font-black text-emerald-700" id="ja-kpi-accepted">0</div><div class="text-[10px] text-slate-500 font-bold">مقبول نهائياً</div></div>
+                </div>
+                <div onclick="quickFilterAnalyticsStatus('مراجعة')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div><div class="text-xl font-black text-blue-700" id="ja-kpi-review">0</div><div class="text-[10px] text-slate-500 font-bold">قيد المراجعة</div></div>
+                </div>
+                <div onclick="quickFilterAnalyticsStatus('معلق')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-amber-200 hover:border-amber-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div><div class="text-xl font-black text-amber-700" id="ja-kpi-pending">0</div><div class="text-[10px] text-slate-500 font-bold">معلق (جديد)</div></div>
+                </div>
+                <div onclick="quickFilterAnalyticsStatus('مرفوض')" class="cursor-pointer bg-white p-3.5 rounded-2xl border-2 border-rose-200 hover:border-rose-400 transition-all shadow-sm flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-base flex-shrink-0"><i class="fa-solid fa-circle-xmark"></i></div>
+                    <div><div class="text-xl font-black text-rose-700" id="ja-kpi-rejected">0</div><div class="text-[10px] text-slate-500 font-bold">مستبعد / مرفوض</div></div>
+                </div>
+            </div>
+
+            <!-- Smart Filter & Criteria Engine -->
+            <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i> محرك الفلترة والفرز الديناميكي للمتقدمين
+                        </h3>
+                        <p class="text-[11px] text-slate-400 font-bold mt-0.5">فلتر المتقدمين حسب الوظيفة، الدولة، الكلية/التخصص، الملاحظات، أو إجابات أي سؤال في الاستمارة</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="resetJobsAnalyticsFilters()" class="btn-secondary text-xs py-1.5 px-3"><i class="fa-solid fa-rotate-left"></i> إعادة ضبط الفلاتر</button>
+                        <button type="button" onclick="exportFilteredApplicationsExcel()" class="btn-primary text-xs py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700"><i class="fa-solid fa-file-excel"></i> تصدير النتائج Excel</button>
+                        <button type="button" onclick="loadApplicationsFromServer().then(renderJobsAnalytics)" class="btn-secondary text-xs py-1.5 px-3"><i class="fa-solid fa-rotate"></i> تحديث</button>
+                    </div>
+                </div>
+
+                <!-- Primary Filters Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-briefcase text-orange-500 ml-1"></i> الوظيفة المتقدم لها</label>
+                        <select id="ja-filter-job" onchange="onAnalyticsJobFilterChange()" class="field-input text-xs font-bold">
+                            <option value="all">كل الوظائف</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-earth-africa text-emerald-500 ml-1"></i> الدولة / كود الرقم</label>
+                        <select id="ja-filter-country" onchange="renderJobsAnalytics()" class="field-input text-xs font-bold">
+                            <option value="all">كل الدول</option>
+                            <option value="egypt">🇪🇬 مصر فقط (+20)</option>
+                            <option value="non_egypt">🌍 خارج مصر (دول أخرى)</option>
+                            <option value="saudi">🇸🇦 السعودية (+966)</option>
+                            <option value="kuwait">🇰🇼 الكويت (+965)</option>
+                            <option value="uae">🇦🇪 الإمارات (+971)</option>
+                            <option value="qatar">🇶🇦 قطر (+974)</option>
+                            <option value="oman">🇴🇲 عُمان (+968)</option>
+                            <option value="jordan">🇯🇴 الأردن (+962)</option>
+                            <option value="sudan">🇸🇩 السودان (+249)</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-building-columns text-indigo-500 ml-1"></i> الكلية / المؤهل (ديناميكي)</label>
+                        <select id="ja-filter-college" onchange="renderJobsAnalytics()" class="field-input text-xs font-bold">
+                            <option value="all">كل الكليات والتخصصات</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-flag text-purple-500 ml-1"></i> حالة المتقدم / الانترفيو</label>
+                        <select id="ja-filter-status" onchange="renderJobsAnalytics()" class="field-input text-xs font-bold">
+                            <option value="all">كل الحالات</option>
+                            <option value="مؤهل للانترفيو">🎥 مرشح للانترفيو</option>
+                            <option value="مقبول">✅ مقبول نهائياً</option>
+                            <option value="مراجعة">🔍 قيد المراجعة</option>
+                            <option value="معلق">⏳ معلق (جديد)</option>
+                            <option value="مرفوض">❌ مستبعد / مرفوض</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Secondary Filters Grid: Dynamic Question + Notes + CV + Search -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-clipboard-question text-blue-500 ml-1"></i> فلترة بسؤال معين في الاستمارة</label>
+                        <select id="ja-filter-question" onchange="onAnalyticsQuestionSelectChange()" class="field-input text-xs font-bold">
+                            <option value="all">كل أسئلة الاستمارة</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-check-double text-teal-500 ml-1"></i> إجابة السؤال المختار</label>
+                        <select id="ja-filter-answer" onchange="renderJobsAnalytics()" class="field-input text-xs font-bold">
+                            <option value="all">كل الإجابات</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-note-sticky text-amber-500 ml-1"></i> الملاحظات والـ CV والتقييم</label>
+                        <select id="ja-filter-notes" onchange="renderJobsAnalytics()" class="field-input text-xs font-bold">
+                            <option value="all">الكل (بملاحظات أو بدون)</option>
+                            <option value="has_notes">📝 لديه ملاحظة مسجلة</option>
+                            <option value="no_notes">⬜ بدون ملاحظات</option>
+                            <option value="has_cv">📎 مرفق معه سيرة ذاتية (CV)</option>
+                            <option value="no_cv">🚫 بدون سيرة ذاتية (CV)</option>
+                            <option value="high_score">⭐ تقييم مرتفع (4 أو 5 نجوم)</option>
+                            <option value="flagged">🚩 عليه علامة تنبيه / تحذير</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="text-xs font-bold text-slate-600"><i class="fa-solid fa-magnifying-glass text-slate-500 ml-1"></i> بحث حر (الاسم، الكلية، الإجابات، الملاحظة)</label>
+                        <input type="text" id="ja-search-input" oninput="renderJobsAnalytics()" placeholder="ابحث بأي كلمة مثل: آداب، دار علوم، تربية..." class="field-input text-xs font-bold">
+                    </div>
+                </div>
+
+                <!-- Quick Smart Preset Chips -->
+                <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100">
+                    <span class="text-[11px] font-black text-slate-500"><i class="fa-solid fa-wand-magic-sparkles text-amber-500 ml-1"></i> فلاتر سريعة للفرز:</span>
+                    <button type="button" onclick="applySmartAnalyticsPreset('arabic_grads')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition-colors">🎓 تخصصات لغة عربية (تربية/آداب/دار علوم/أزهر)</button>
+                    <button type="button" onclick="applySmartAnalyticsPreset('egypt_only')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] border border-emerald-200 transition-colors">🇪🇬 داخل مصر فقط</button>
+                    <button type="button" onclick="applySmartAnalyticsPreset('outside_egypt')" class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-[11px] border border-sky-200 transition-colors">🌍 خارج مصر</button>
+                    <button type="button" onclick="applySmartAnalyticsPreset('ready_interview')" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[11px] border border-purple-200 transition-colors">🎥 جاهزون للانترفيو</button>
+                    <button type="button" onclick="applySmartAnalyticsPreset('has_notes')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-200 transition-colors">📝 عليهم ملاحظات</button>
+                </div>
+            </div>
+
+            <!-- Visual Distribution Breakdown (Colleges, Countries, Jobs) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="ja-distributions-grid">
+                <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-4">
+                    <h4 class="font-black text-slate-700 text-xs mb-3 flex items-center justify-between">
+                        <span><i class="fa-solid fa-building-columns text-indigo-500 ml-1"></i> توزيع الكليات والتخصصات</span>
+                        <span class="text-[10px] text-slate-400 font-bold">اضغط للفلترة</span>
+                    </h4>
+                    <div id="ja-chart-colleges" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-4">
+                    <h4 class="font-black text-slate-700 text-xs mb-3 flex items-center justify-between">
+                        <span><i class="fa-solid fa-earth-africa text-emerald-500 ml-1"></i> توزيع الدول</span>
+                        <span class="text-[10px] text-slate-400 font-bold">اضغط للفلترة</span>
+                    </h4>
+                    <div id="ja-chart-countries" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-4">
+                    <h4 class="font-black text-slate-700 text-xs mb-3 flex items-center justify-between">
+                        <span><i class="fa-solid fa-briefcase text-orange-500 ml-1"></i> توزيع الوظائف والحالات</span>
+                        <span class="text-[10px] text-slate-400 font-bold">اضغط للفلترة</span>
+                    </h4>
+                    <div id="ja-chart-jobs" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Bulk Actions Bar -->
+            <div id="ja-bulk-bar" class="hidden bg-indigo-950 text-white rounded-2xl p-3.5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-xs font-bold">
+                    <span class="w-7 h-7 rounded-lg bg-indigo-500/30 flex items-center justify-center font-black" id="ja-selected-count">0</span>
+                    <span>متقدم محدد حالياً</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" onclick="bulkUpdateApplicantsStatus('مؤهل للانترفيو')" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors"><i class="fa-solid fa-video ml-1"></i> ترشيح للانترفيو</button>
+                    <button type="button" onclick="bulkUpdateApplicantsStatus('مقبول')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors"><i class="fa-solid fa-check ml-1"></i> قبول</button>
+                    <button type="button" onclick="bulkUpdateApplicantsStatus('مراجعة')" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors"><i class="fa-solid fa-magnifying-glass ml-1"></i> قيد المراجعة</button>
+                    <button type="button" onclick="bulkUpdateApplicantsStatus('مرفوض')" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors"><i class="fa-solid fa-xmark ml-1"></i> استبعاد / رفض</button>
+                    <button type="button" onclick="clearAnalyticsSelection()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">إلغاء التحديد</button>
+                </div>
+            </div>
+
+            <!-- Filtered Applicants Table / Cards -->
+            <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="ja-select-all" onchange="toggleSelectAllAnalytics(this.checked)" class="w-4 h-4 rounded text-indigo-600 cursor-pointer" title="تحديد كل المعروض">
+                        <h4 class="font-black text-slate-800 text-sm">نتائج الفرز والفلترة (<span id="ja-results-count" class="text-indigo-600">0</span> متقدم)</h4>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-bold">يمكنك إضافة ملاحظة فورية أو تقييم أو تغيير حالة المتقدم للانترفيو مباشرة من الجدول</div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-100/80 text-slate-600 font-black text-[11px] border-b border-slate-200">
+                                <th class="px-3 py-3 text-center w-10">#</th>
+                                <th class="px-3 py-3 text-right">المتقدم والوظيفة</th>
+                                <th class="px-3 py-3 text-right">الدولة والواتساب</th>
+                                <th class="px-3 py-3 text-right">الكلية / المؤهل وأبرز الإجابات</th>
+                                <th class="px-3 py-3 text-right min-w-[230px]">ملاحظاتك وتقييم الفرز</th>
+                                <th class="px-3 py-3 text-center">الحالة / القرار</th>
+                                <th class="px-3 py-3 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ja-results-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -2672,7 +2874,7 @@ async function fetchConfigFromBackend() {
     const url = config.booking && config.booking.scriptURL;
     if (!url) return;
     try {
-        const r = await fetch(url + '?action=getConfig');
+        const r = await fetch(url + '?action=getConfig&adminKey=' + encodeURIComponent(getAuthKey()));
         const d = await r.json();
         if (d.result === 'success' && d.config) {
             // الرد ده ممكن يوصل قبل أو بعد بيانات النظام: نحافظ على البيانات الحية ونمنع الإعدادات القديمة من الكتابة فوقها
@@ -3015,6 +3217,8 @@ function applySystemData(data) {
     config.wallets = data.wallets || {};
     config.expenses = data.expenses || [];
     config.potentialExpenses = data.potentialExpenses || [];
+    if (Array.isArray(data.jobs)) window._jobsCache = data.jobs;
+    if (Array.isArray(data.applications)) window._applicationsCache = data.applications;
 
     if (data.stats) {
         window._serverDashStats = data.stats;
@@ -3043,7 +3247,12 @@ function applySystemData(data) {
     if (currentSection === 'dashboard') safe(renderDashboardSummary);
     if (currentSection === 'commitments') safe(renderCommitmentsStats);
     if (currentSection === 'employees') safe(renderEmployeesSection); // ⭐
-    safe(updateExecutiveDashboard);
+    if (currentSection === 'jobs') {
+        safe(renderJobsAdminList);
+        safe(renderApplicationsAdminList);
+        safe(populateAnalyticsDynamicDropdowns);
+        safe(renderJobsAnalytics);
+    }
     safe(updateExecutiveDashboard);
 
     // تشغيل الفحص التلقائي للواتساب بعد ما البيانات تتحمل
@@ -4542,6 +4751,90 @@ async function fetchLiveExchangeRates() {
     }
 }
 
+
+function addNewCustomGradeOption() {
+    const inp = document.getElementById('m-new-grade-input');
+    const container = document.getElementById('grades-checkboxes-container');
+    if (!inp || !container) return;
+    const val = inp.value.trim();
+    if (!val) {
+        showToast('يرجى كتابة اسم الصف الدراسي أولاً', 'error');
+        return;
+    }
+    if (!config.customGrades) config.customGrades = [];
+    if (!config.customGrades.includes(val) && !ALL_GRADES.includes(val)) {
+        config.customGrades.push(val);
+    }
+    const existingChk = Array.from(container.querySelectorAll('.grade-chk')).find(c => c.value === val);
+    if (existingChk) {
+        existingChk.checked = true;
+    } else {
+        const lbl = document.createElement('label');
+        lbl.className = 'flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 py-1';
+        lbl.innerHTML = `<input type="checkbox" class="grade-chk w-4 h-4 text-indigo-600 rounded" value="${esc(val)}" checked> ${esc(val)}`;
+        container.appendChild(lbl);
+    }
+    inp.value = '';
+    renderGlobalGradesBadges();
+    showToast(`تمت إضافة وتحديد صف (${val}) ✓`);
+}
+
+function handleBadgeSelectChange(val) {
+    const customInp = document.getElementById('m-pkg-badge-custom');
+    const maxInp = document.getElementById('m-pkg-maxStudents');
+    if (customInp) {
+        if (val === '__custom__') {
+            customInp.classList.remove('hidden');
+            customInp.focus();
+        } else {
+            customInp.classList.add('hidden');
+        }
+    }
+    if (maxInp && val !== '__custom__') {
+        if (val.includes('طالب واحد') || val.includes('VIP')) maxInp.value = 1;
+        else if (val.includes('طالبان')) maxInp.value = 2;
+        else {
+            const m = val.match(/(\d+)/);
+            if (m) maxInp.value = parseInt(m[1], 10) || 1;
+        }
+    }
+}
+
+function updateDiscountPreview() {
+    const previewEl = document.getElementById('discount-calc-preview');
+    if (!previewEl) return;
+    const pct = Math.min(100, Math.max(0, parseFloat(document.getElementById('m-disc-pct')?.value) || 0));
+    const selectedIds = Array.from(document.querySelectorAll('.pkg-chk:checked')).map(el => el.value);
+    const allPkgs = [];
+    (config.pricing?.curricula || []).forEach(c => {
+        (c.packages || []).forEach(p => {
+            if (selectedIds.length === 0 || selectedIds.includes(p.id)) {
+                allPkgs.push({ currName: c.name, pkg: p });
+            }
+        });
+    });
+    if (allPkgs.length === 0) {
+        previewEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">لا توجد باقات محددة</p>';
+        return;
+    }
+    previewEl.innerHTML = allPkgs.map(({ currName, pkg }) => {
+        const orig = parseFloat(pkg.price) || 0;
+        const saved = Number((orig * (pct / 100)).toFixed(2));
+        const finalP = Number(Math.max(0, orig - saved).toFixed(2));
+        return `<div class="flex items-center justify-between p-2 rounded-xl bg-white border border-indigo-100 text-xs">
+            <div>
+                <span class="font-bold text-slate-800">${esc(pkg.name)}</span>
+                <span class="text-[10px] text-slate-400 mr-1">(${esc(currName)})</span>
+            </div>
+            <div class="flex items-center gap-2 font-mono">
+                <del class="text-slate-400">${orig}</del>
+                <i class="fa-solid fa-arrow-left text-[10px] text-indigo-400"></i>
+                <span class="font-black text-emerald-700">${finalP} ${esc(pkg.currency || 'ج.م')}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function handleCurrencyChange(currencyVal) {
     const price = parseFloat(document.getElementById('m-pkg-price')?.value) || 0;
     const noteEl = document.getElementById('m-pkg-note');
@@ -4647,6 +4940,7 @@ function renderGroupsSection() {
                     </h3>
                     <div class="flex items-center gap-2 mt-1 flex-wrap">
                         ${g.package?`<span class="badge-pill bg-purple-50 text-purple-700 text-[10px] font-bold">${esc(g.package)}</span>`:''}
+                        <span class="badge-pill bg-indigo-50 text-indigo-700 text-[10px] font-bold"><i class="fa-solid fa-calendar-check ml-0.5"></i> ${parseInt(g.sessionsPerMonth) || getPkgMonthlySessionsByName(g.package) || 8} حصص/شهر</span>
                         <span class="badge-pill bg-slate-100 text-slate-600 text-[10px] font-mono">${studentCount} / ${maxStudents} طلاب</span>
                     </div>
                 </div>
@@ -5146,22 +5440,64 @@ function openModal(type, index, defaultKind) {
         }, 100);
     } else if (type === 'group') {
         title.innerHTML = '<span class="text-blue-700"><i class="fa-solid fa-users-rectangle"></i> إنشاء مجموعة ومواعيد</span>';
-        const g = index >= 0 ? config.groups[index] : { name: '', packageId: '', package: '', maxStudents: 3, students: [], sessions: [] };
+        const g = index >= 0 ? config.groups[index] : { name: '', packageId: '', package: '', maxStudents: 3, sessionsPerMonth: 8, students: [], sessions: [] };
+        const initialSessions = parseInt(g.sessionsPerMonth) || getPkgMonthlySessionsByName(g.package) || 8;
         
-        let pkgOptions = '<option value="" disabled selected>اختر الباقة لربطها بالمجموعة</option>';
+        let hasSelectedPkg = false;
+        let pkgOptions = '<option value="" disabled>اختر الباقة لربطها بالمجموعة</option>';
+        const standardPkgNames = new Set();
         (config.pricing?.curricula || []).forEach(c => {
             let groupHtml = `<optgroup label="${esc(c.name)}">`;
             (c.packages || []).forEach(p => {
                 let cur = p.currency.includes('ج') ? 'ج' : (' ' + p.currency.replace(' / للطالب', ''));
                 let badge = p.badge ? p.badge.replace('VIP (طالب واحد)', 'طالب واحد').replace('طالبان اثنان', 'طالبان') : '';
                 let fullName = `${p.name} (${badge} - ${p.price}${cur})`;
-                const isSelected = (g.packageId === p.id || g.package === fullName || g.package === p.name) ? 'selected' : '';
+                standardPkgNames.add(p.name.trim());
+                standardPkgNames.add(fullName.trim());
+                const isSelected = (g.packageId === p.id || g.package === fullName || g.package === p.name);
+                if (isSelected) hasSelectedPkg = true;
                 const maxSt = parseInt(p.maxStudents) > 0 ? parseInt(p.maxStudents) : 3;
-                groupHtml += `<option value="${p.id}" data-max="${maxSt}" data-name="${esc(fullName)}" ${isSelected}>${esc(fullName)}</option>`;
+                const pkgSess = getPkgMonthlySessions(p) || 8;
+                groupHtml += `<option value="${p.id}" data-max="${maxSt}" data-sessions="${pkgSess}" data-name="${esc(fullName)}" ${isSelected ? 'selected' : ''}>${esc(fullName)}</option>`;
             });
             groupHtml += `</optgroup>`;
             pkgOptions += groupHtml;
         });
+
+        // ✨ دعم باقات "صمّم باقتك" (الباقات المخصصة التي صممها الطلاب أو الباقات غير الثابتة)
+        const customPackagesMap = new Map();
+        (allBookings || []).forEach(b => {
+            const bPkg = (b.Package || b['الباقة'] || '').toString().trim();
+            if (!bPkg) return;
+            const isStandard = Array.from(standardPkgNames).some(sp => bPkg === sp || bPkg.startsWith(sp + ' ('));
+            if (bPkg.includes('باقة مخصصة') || !isStandard) {
+                if (!customPackagesMap.has(bPkg)) {
+                    const info = extractCustomPkgInfo(bPkg);
+                    customPackagesMap.set(bPkg, info);
+                }
+            }
+        });
+        if (g.package && !hasSelectedPkg && g.package !== 'باقة مخصصة' && !customPackagesMap.has(g.package)) {
+            customPackagesMap.set(g.package, extractCustomPkgInfo(g.package));
+        }
+
+        let customGroupHtml = `<optgroup label="✨ باقات مخصصة (صمّم باقتك)">`;
+        const isGenericCustomSel = (g.packageId === 'custom_all' || g.package === 'باقة مخصصة');
+        if (isGenericCustomSel) hasSelectedPkg = true;
+        customGroupHtml += `<option value="custom_all" data-max="${g.maxStudents || 3}" data-sessions="${initialSessions}" data-name="باقة مخصصة" ${isGenericCustomSel ? 'selected' : ''}>✨ باقة مخصصة (جميع طلاب صمّم باقتك)</option>`;
+        let customIdx = 1;
+        customPackagesMap.forEach((info, cPkgName) => {
+            const cId = 'custom_pkg_' + (customIdx++);
+            const isSel = (!hasSelectedPkg && (g.package === cPkgName || g.packageId === cId));
+            if (isSel) hasSelectedPkg = true;
+            customGroupHtml += `<option value="${cId}" data-max="${info.maxStudents}" data-sessions="${info.sessionsPerMonth}" data-name="${esc(cPkgName)}" ${isSel ? 'selected' : ''}>✨ ${esc(cPkgName)}</option>`;
+        });
+        customGroupHtml += `</optgroup>`;
+        pkgOptions += customGroupHtml;
+
+        if (!hasSelectedPkg) {
+            pkgOptions = pkgOptions.replace('<option value="" disabled>', '<option value="" disabled selected>');
+        }
 
         const allAvailGrades = Array.from(new Set([...ALL_GRADES, ...(config.customGrades||[])]));
         const gradeOpts = '<option value="all" selected>كل الصفوف</option>' + allAvailGrades.map(gr => `<option value="${gr}">${gr}</option>`).join('');
@@ -5171,10 +5507,11 @@ function openModal(type, index, defaultKind) {
                 <label>اسم المجموعة / الجروب</label>
                 <input id="m-grp-name" class="field-input font-bold text-blue-900 bg-blue-50/30 border-blue-200 focus:border-blue-500" value="${esc(g.name)}">
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="field-group"><label>الباقة (للتسعير)</label><select id="m-grp-pkg" class="field-input text-xs font-bold" onchange="onGroupPackageChange(true)">${pkgOptions}</select></div>
                 <div class="field-group"><label>فلتر الصف الدراسي</label><select id="m-grp-grade" class="field-input text-xs font-bold" onchange="renderGroupStudentsList()">${gradeOpts}</select></div>
                 <div class="field-group"><label>سعة المجموعة</label><input type="number" id="m-grp-capacity" min="1" max="20" class="field-input font-bold" value="${g.maxStudents || 3}" onchange="updateGroupStudentCount()"></div>
+                <div class="field-group"><label>عدد الحصص الشهرية</label><input type="number" id="m-grp-sessions-count" min="1" max="30" class="field-input font-black text-indigo-700 bg-indigo-50/40 border-indigo-200" value="${initialSessions}" title="يُقسم عليه اشتراك الطالب لحساب سعر الحصة الواحدة تلقائياً"></div>
             </div>
             <div class="field-group p-4 bg-slate-50 border border-slate-200 rounded-xl">
                 <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
@@ -5413,12 +5750,13 @@ function openModal(type, index, defaultKind) {
         let defaultAmount = 0;
         let hourlyRate = 50;
 
+        const stSessionsLimit = (stData && stData.monthlySessionsLimit > 0) ? stData.monthlySessionsLimit : 8;
         if (stData) {
             hourlyRate = (stData.personalHourlyRate && stData.personalHourlyRate > 0) ? stData.personalHourlyRate : 50;
-            defaultAmount = Number((hourlyRate * 8).toFixed(2));
+            defaultAmount = Number((hourlyRate * stSessionsLimit).toFixed(2));
         }
         
-        const initialHours = defaultAmount > 0 ? (defaultAmount / hourlyRate).toFixed(2) : 8;
+        const initialHours = defaultAmount > 0 ? (defaultAmount / hourlyRate).toFixed(2) : stSessionsLimit;
 
         title.innerHTML = '<span class="text-emerald-700"><i class="fa-solid fa-wallet"></i> تجديد اشتراك الطالب</span>';
         body.innerHTML = `
@@ -5989,14 +6327,26 @@ function updateMBGradesAndPackages() {
     const curr = config.pricing.curricula[currIdx];
     gradeSelect.innerHTML = curr.grades.map(g => `<option value="${g}">${g}</option>`).join('');
     
-    // التعديل الجديد هنا: إظهار وحفظ الاسم الكامل للباقة
-    pkgSelect.innerHTML = '<option value="" disabled selected>اختر الباقة</option>' + 
+    // التعديل الجديد هنا: إظهار وحفظ الاسم الكامل للباقة + دعم الباقات المخصصة
+    let htmlOpts = '<option value="" disabled selected>اختر الباقة</option>' + 
                           curr.packages.map(p => {
                               let cur = p.currency.includes('ج') ? 'ج' : (' ' + p.currency.replace(' / للطالب', ''));
                               let badge = p.badge ? p.badge.replace('VIP (طالب واحد)', 'طالب واحد').replace('طالبان اثنان', 'طالبان') : '';
                               let fullName = `${p.name} (${badge} - ${p.price}${cur})`;
                               return `<option value="${p.id}" data-price="${p.price}" data-currency="${p.currency}" data-name="${esc(fullName)}">${esc(fullName)}</option>`;
                           }).join('');
+    const customSet = new Set();
+    (allBookings || []).forEach(b => {
+        const bp = (b.Package || b['الباقة'] || '').toString().trim();
+        if (bp.includes('باقة مخصصة')) customSet.add(bp);
+    });
+    if (customSet.size > 0) {
+        htmlOpts += '<optgroup label="✨ باقات مخصصة (صمّم باقتك)">' + Array.from(customSet).map((cp, ci) => {
+            const info = extractCustomPkgInfo(cp);
+            return `<option value="custom_mb_${ci}" data-price="${info.price}" data-currency="${info.currency}" data-name="${esc(cp)}">✨ ${esc(cp)}</option>`;
+        }).join('') + '</optgroup>';
+    }
+    pkgSelect.innerHTML = htmlOpts;
     calculateMBPrices();
 }
 
@@ -6031,7 +6381,15 @@ async function submitManualBooking() {
     const name = gv('mb-name'), wa = gv('mb-wa'), currIdx = gv('mb-curr'), grade = gv('mb-grade'), pkgId = gv('mb-pkg');
     if (!name || !wa || currIdx === "" || !grade || !pkgId) { showToast('يرجى ملء البيانات الأساسية', 'error'); return; }
     const curr = config.pricing.curricula[currIdx];
-    const pkg = curr.packages.find(p => p.id === pkgId);
+    const pkgSelectEl = document.getElementById('mb-pkg');
+    const selectedOpt = pkgSelectEl && pkgSelectEl.options[pkgSelectEl.selectedIndex];
+    const pkg = curr.packages.find(p => p.id === pkgId) || {
+        id: pkgId,
+        name: selectedOpt ? (selectedOpt.getAttribute('data-name') || pkgId) : pkgId,
+        price: selectedOpt ? (selectedOpt.getAttribute('data-price') || 0) : 0,
+        currency: selectedOpt ? (selectedOpt.getAttribute('data-currency') || 'ج.م') : 'ج.م',
+        badge: ''
+    };
     
     // تعديل اسم الباقة هنا برضه عشان تتحفظ بالاسم الطويل في شيت الحجوزات
     let cur = pkg.currency.includes('ج') ? 'ج' : (' ' + pkg.currency.replace(' / للطالب', ''));
@@ -6492,13 +6850,35 @@ function saveModal() {
                 if (day && time) sessions.push({ day, time, duration });
             }
             
-            const rowIndex = idx >= 0 && config.groups[idx].__rowIndex ? config.groups[idx].__rowIndex : -1;
-            const groupId = idx >= 0 ? config.groups[idx].groupId : ('grp_' + Date.now());
-            const grpObj = { groupId: groupId, name: grpName, packageId: grpPkgId, package: grpPkgName, maxStudents: grpCap, students: checkedStudents, sessions: sessions };
+            const grpSessionsPerMonth = Math.max(1, parseInt(gv('m-grp-sessions-count')) || 8);
+            const existingGrp = (idx >= 0 && config.groups[idx]) ? config.groups[idx] : null;
+            const rowIndex = existingGrp && existingGrp.__rowIndex ? existingGrp.__rowIndex : -1;
+            const groupId = existingGrp ? existingGrp.groupId : ('grp_' + Date.now());
+            const grpObj = {
+                groupId: groupId,
+                name: grpName,
+                packageId: grpPkgId,
+                package: grpPkgName,
+                maxStudents: grpCap,
+                sessionsPerMonth: grpSessionsPerMonth,
+                students: checkedStudents,
+                sessions: sessions,
+                attendanceLog: existingGrp ? (existingGrp.attendanceLog || []) : [],
+                __rowIndex: rowIndex > 0 ? rowIndex : undefined
+            };
             
-            const btn = document.getElementById('modal-save-btn');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
-            
+            // ⚡ تحديث فوري في الميموري (Optimistic UI) لإعادة حساب أسعار الحصص وتحديث الواجهة فوراً
+            if (!config.groups) config.groups = [];
+            if (idx >= 0 && idx < config.groups.length) {
+                config.groups[idx] = grpObj;
+            } else {
+                config.groups.push(grpObj);
+            }
+            renderGroupsSection();
+            renderAccountsTable();
+            if (typeof refreshAttendanceGroups === 'function') refreshAttendanceGroups();
+            if (typeof renderSchedMatrix === 'function') renderSchedMatrix();
+
             const url = (config.booking && config.booking.scriptURL) || '';
             const fd = new FormData();
             fd.append('action', 'saveGroupData'); fd.append('adminKey', getAuthKey());
@@ -6506,7 +6886,7 @@ function saveModal() {
 
             closeModal();
             sendInBackground(url, fd, {
-                successMsg: 'تم حفظ المجموعة ✓',
+                successMsg: 'تم حفظ المجموعة وتحديث حساب الحصص ✓',
                 onSuccess: () => loadLiveGroupsData()
             });
             return;
@@ -6703,24 +7083,55 @@ function saveModal() {
             if (!window._qaSelected || window._qaSelected.length === 0) { showToast('يرجى إضافة طالب واحد على الأقل', 'error'); return; }
             if (!date) { showToast('يرجى تحديد التاريخ', 'error'); return; }
 
+            if ((!window._lastAccountsData || window._lastAccountsData.length === 0) && typeof renderAccountsTable === 'function') {
+                renderAccountsTable();
+            }
+
             const url = (config.booking && config.booking.scriptURL) || '';
             const groupsMap = {};
             window._qaSelected.forEach(st => {
-                if(!groupsMap[st.gName]) groupsMap[st.gName] = [];
-                groupsMap[st.gName].push({ name: st.name, status: status });
+                if (!groupsMap[st.gName]) groupsMap[st.gName] = [];
+                let sessionCost = 0;
+                if (status === 'مباشر' || status === 'مسجل') {
+                    const studentData = (window._lastAccountsData || []).find(a => a.name === st.name);
+                    const hourlyRate = studentData ? (studentData.personalHourlyRate || 50) : 50;
+                    sessionCost = (duration / 60) * hourlyRate;
+                }
+                groupsMap[st.gName].push({ name: st.name, status: status, cost: sessionCost });
             });
 
             closeModal();
             const count = window._qaSelected.length;
             Object.keys(groupsMap).forEach(gName => {
+                const sessionId = 'att_' + Date.now() + Math.random().toString(36).substr(2,5);
+                const newSess = {
+                    id: sessionId,
+                    date: date,
+                    duration: duration,
+                    note: 'تسجيل حر/زائر',
+                    groupName: gName,
+                    records: groupsMap[gName],
+                    __origRows: []
+                };
+                // ⚡ تحديث فوري في الذاكرة للمجموعة (Optimistic UI)
+                const grpObj = (config.groups || []).find(g => g.name === gName);
+                if (grpObj) {
+                    if (!grpObj.attendanceLog) grpObj.attendanceLog = [];
+                    grpObj.attendanceLog.push(newSess);
+                }
+
                 const fd = new FormData();
                 fd.append('action', 'saveAttendanceData'); fd.append('adminKey', getAuthKey());
-                fd.append('sessionId', 'att_' + Date.now() + Math.random().toString(36).substr(2,5));
+                fd.append('sessionId', sessionId);
                 fd.append('date', date); fd.append('groupName', gName);
                 fd.append('duration', duration); fd.append('note', 'تسجيل حر/زائر');
                 fd.append('records', JSON.stringify(groupsMap[gName])); fd.append('isEdit', 'false');
                 sendInBackground(url, fd, { silent: true, onSuccess: () => loadLiveGroupsData('accounts') });
             });
+
+            refreshAttendanceGroups();
+            renderAccountsTable();
+            renderGroupsSection();
             showToast(`تم تسجيل الحضور لـ ${count} طالب ✓`);
             return;
         } else if (type === 'edit_attendance') {
@@ -6728,9 +7139,14 @@ function saveModal() {
             const g = config.groups[gIdx];
             const session = g.attendanceLog[sIdx];
             
+            if ((!window._lastAccountsData || window._lastAccountsData.length === 0) && typeof renderAccountsTable === 'function') {
+                renderAccountsTable();
+            }
+
             session.date = gv('m-att-date');
             session.duration = parseInt(gv('m-att-duration')) || 60;
             session.note = gv('m-att-note');
+            session.groupName = session.groupName || g.name;
             
             const newRecords = [];
             const rows = document.querySelectorAll('#m-att-students-list > div > div[data-mod-student]');
@@ -6740,7 +7156,7 @@ function saveModal() {
                 const val = checkedRadio ? checkedRadio.value : 'إلغاء حضور';
                 let sessionCost = 0;
                 if(val === 'مباشر' || val === 'مسجل') {
-                    const studentData = window._lastAccountsData.find(st => st.name === sName);
+                    const studentData = (window._lastAccountsData || []).find(st => st.name === sName);
                     const hourlyRate = studentData ? (studentData.personalHourlyRate || 50) : 50;
                     sessionCost = (session.duration / 60) * hourlyRate;
                 }
@@ -6748,8 +7164,14 @@ function saveModal() {
             });
             session.records = newRecords;
             
-            syncAttendanceSessionToServer(session);
+            // ⚡ تحديث فوري لسجل الحصص السابقة والإحصائيات والحسابات في نفس اللحظة
             closeModal();
+            renderAttendanceHistory(gIdx);
+            updateAttendanceStats();
+            renderAccountsTable();
+            renderGroupsSection();
+
+            syncAttendanceSessionToServer(session);
             return;
         }
 
@@ -6786,7 +7208,6 @@ function setPotRecurring(isRecurring) {
 }
 function gv(id){const el=document.getElementById(id);return el?el.value.trim():'';}
 function esc(s){return(s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function setTxt(id, val){const el=document.getElementById(id);if(el)el.textContent=val;}
 
 // ══════════════════════════════════════════════════
 //  DELETE / TOGGLE
@@ -6925,6 +7346,7 @@ function getCleanConfigForServer() {
     delete cleanConfig.wallets;
     delete cleanConfig.expenses;
     delete cleanConfig.potentialExpenses;
+    delete cleanConfig.applicantMeta;
     return cleanConfig;
 }
 
@@ -6981,32 +7403,6 @@ function backupToSheet() {
     saveAllConfig(true);
 }
 
-function loadConfigViaJSONP(url, adminKey) {
-    return new Promise((resolve, reject) => {
-        const cbName = '__jsonp_cfg_' + Math.floor(Math.random() * 1000000);
-        const script = document.createElement('script');
-        const timeout = setTimeout(() => {
-            cleanup();
-            reject(new Error('JSONP Timeout'));
-        }, 45000);
-
-        function cleanup() {
-            clearTimeout(timeout);
-            if (script.parentNode) script.parentNode.removeChild(script);
-            delete window[cbName];
-        }
-
-        window[cbName] = function(data) {
-            cleanup();
-            resolve(data);
-        };
-
-        script.onerror = function() { cleanup(); reject(new Error('Script Error')); };
-        const delim = url.includes('?') ? '&' : '?';
-        script.src = `${url}${delim}action=getConfig&adminKey=${encodeURIComponent(adminKey)}&callback=${cbName}&_t=${Date.now()}`;
-        document.body.appendChild(script);
-    });
-}
 
 function loadVersionsViaJSONP(url, adminKey) {
     return new Promise((resolve, reject) => {
@@ -7329,38 +7725,11 @@ async function activateVersionFromSheet(versionId, btn) {
     }
 }
 
-async function restoreFromSheet() {
-    openVersionsModal();
-}
 
-function restoreDefaultConfig() {
-    openVersionsModal();
-}
 // ══════════════════════════════════════════════════
 //  SCHEDULE MODULE
 // ══════════════════════════════════════════════════
 const daysOfWeek = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
-function switchScheduleTab(tabId) {
-    document.querySelectorAll('.sched-tab-btn').forEach(b => {
-        b.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
-        b.classList.add('text-slate-500');
-    });
-    const btn = document.getElementById('tab-' + tabId);
-    if(btn) {
-        btn.classList.remove('text-slate-500');
-        btn.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
-    }
-    // التعديل هنا: غيرنا table لـ groups عشان يخفي ويظهر صح
-    ['groups', 'matrix', 'filter'].forEach(t => {
-        const el = document.getElementById('view-' + t);
-        if (el) el.classList.add('hidden');
-    });
-    
-    const targetView = document.getElementById('view-' + tabId);
-    if (targetView) targetView.classList.remove('hidden');
-    
-    if (tabId === 'filter') applySchedFilters();
-}
 
 function normalizeTime(t) {
     if(!t) return '';
@@ -7522,6 +7891,7 @@ document.getElementById('modal-overlay').addEventListener('click',function(e){if
 function onGroupPackageChange(fromUserChange) {
     const pkgSelect = document.getElementById('m-grp-pkg');
     const capInput = document.getElementById('m-grp-capacity');
+    const sessInput = document.getElementById('m-grp-sessions-count');
     
     // التحديث هيتم فقط لو التغيير جاي من ضغطة الماوس بتاعتك (fromUserChange === true)
     if (fromUserChange === true && pkgSelect && pkgSelect.selectedIndex > 0) {
@@ -7529,6 +7899,10 @@ function onGroupPackageChange(fromUserChange) {
         if (capInput) {
             capInput.value = opt.getAttribute('data-max') || 3;
             updateGroupStudentCount(); // عشان لو السعة صغرت، العداد يتلون أحمر
+        }
+        if (sessInput) {
+            const defaultSess = parseInt(opt.getAttribute('data-sessions')) || getPkgMonthlySessionsByName(opt.getAttribute('data-name') || '') || 8;
+            sessInput.value = defaultSess;
         }
     }
     
@@ -7586,10 +7960,24 @@ function renderGroupStudentsList() {
         const sNorm = normalizeStr(rawStatus);
         if (!sNorm.includes('موکد') && !sNorm.includes('مؤكد') && !sNorm.includes('موكد') && !rawStatus.toLowerCase().includes('confirmed')) return false; 
         
-        // 2. فلتر الباقة بمرونة (مقارنة الاسم الأساسي فقط وتجاهل ما بداخل الأقواس)
-        const bPkg = normalizeStr(b.Package || b['الباقة']).split('(')[0].trim();
-        const selPkgClean = normalizeStr(selectedPkgName).split('(')[0].trim();
-        if (selPkgClean && !bPkg.includes(selPkgClean) && !selPkgClean.includes(bPkg)) return false;
+        // 2. فلتر الباقة بمرونة عالية (يدعم الباقات الثابتة وباقات "صمّم باقتك" المخصصة)
+        const rawBPkg = (b.Package || b['الباقة'] || '').toString().trim();
+        const selectedPkgVal = pkgSelect ? pkgSelect.value : '';
+        if (selectedPkgVal === 'custom_all' || selectedPkgName === 'باقة مخصصة') {
+            // عند اختيار "باقة مخصصة (جميع طلاب صمّم باقتك)" يظهر كل الطلاب الذين صمموا باقاتهم
+            if (!rawBPkg.includes('باقة مخصصة')) return false;
+        } else if (selectedPkgName && selectedPkgName.includes('باقة مخصصة')) {
+            // مطابقة الباقة المخصصة المحددة أو أي طالب باقة مخصصة من نفس الصف
+            const bPkgFull = normalizeStr(rawBPkg);
+            const selPkgFull = normalizeStr(selectedPkgName);
+            const bPkgBase = bPkgFull.split('(')[0].trim();
+            const selPkgBase = selPkgFull.split('(')[0].trim();
+            if (bPkgFull !== selPkgFull && !bPkgBase.includes(selPkgBase) && !selPkgBase.includes(bPkgBase)) return false;
+        } else {
+            const bPkg = normalizeStr(rawBPkg).split('(')[0].trim();
+            const selPkgClean = normalizeStr(selectedPkgName).split('(')[0].trim();
+            if (selPkgClean && !bPkg.includes(selPkgClean) && !selPkgClean.includes(bPkg)) return false;
+        }
 
         // 3. فلتر الصف الدراسي بمرونة
         const bGrade = normalizeStr(b.Grade || b['الصف']);
@@ -7732,33 +8120,14 @@ function updateAttendanceStats() {
     setTxt('ast-sessions', totalSessions);
     setTxt('ast-hours', totalHours);
 }
-function switchAttendanceTab(tabId) {
-    document.querySelectorAll('.att-tab-btn').forEach(b => {
-        b.classList.remove('active', 'border-b-2', 'border-emerald-600', 'text-emerald-600');
-        b.classList.add('text-slate-500');
-    });
-    const btn = document.getElementById('tab-att-' + tabId);
-    if(btn) {
-        btn.classList.remove('text-slate-500');
-        btn.classList.add('active', 'border-b-2', 'border-emerald-600', 'text-emerald-600');
-    }
-    
-    ['record', 'accounts'].forEach(t => {
-        const el = document.getElementById('view-att-' + t);
-        if (el) el.classList.add('hidden');
-    });
-    
-    const targetView = document.getElementById('view-att-' + tabId);
-    if (targetView) targetView.classList.remove('hidden');
-    if (tabId === 'accounts') renderAccountsTable();
-}
 function refreshAttendanceGroups() {
     updateAttendanceStats();
     const select = document.getElementById('att-group-select');
     if (!select) return;
     
-    // السر هنا: نحتفظ برقم المجموعة اللي إنت مختارها حالياً
+    // نحتفظ برقم واسم المجموعة المختارة حالياً قبل إعادة بناء القائمة
     const prevIndex = select.selectedIndex;
+    const prevVal = select.value;
     
     let options = '<option value="" disabled selected>يرجى اختيار المجموعة...</option>';
     if (config.groups && config.groups.length > 0) {
@@ -7770,9 +8139,17 @@ function refreshAttendanceGroups() {
     }
     select.innerHTML = options;
     
-    // نرجع التحديد زي ما كان عشان الداتا تتعرض علطول بدون ريفريش!
+    // إرجاع التحديد وتحديث سجل الحصص السابقة للمجموعة فوراً بعد أي تعديل أو مزامنة
     if (prevIndex > 0 && prevIndex < select.options.length) {
         select.selectedIndex = prevIndex;
+        const activeGroupIdx = select.value !== '' ? select.value : prevVal;
+        const panel = document.getElementById('att-session-panel');
+        if (panel && panel.classList.contains('hidden')) {
+            loadGroupForAttendance();
+        } else {
+            renderAttendanceHistory(activeGroupIdx);
+            updateSelectedGroupStats();
+        }
     }
 }
 
@@ -7823,23 +8200,32 @@ function renderQASelected() {
         </div>
     `).join('');
 }
-// دالة حذف حصة واسترداد الرصيد
+// دالة حذف حصة واسترداد الرصيد (تحديث لحظي + مزامنة في الخلفية)
 function deleteAttendanceSession(groupIdx, sessionId) {
     showConfirm('حذف سجل الحصة', 'هل أنت متأكد من حذف سجل هذه الحصة؟ سيتم استرداد الرصيد المخصوم لجميع الطلاب الحاضرين تلقائياً.', () => {
-        const session = config.groups[groupIdx].attendanceLog.find(l => l.id === sessionId);
-        if(!session) return;
-        
+        const g = config.groups[groupIdx];
+        if (!g || !g.attendanceLog) return;
+        const session = g.attendanceLog.find(l => l.id === sessionId);
+        if (!session) return;
+        const origRows = session.__origRows || [];
+
+        // ⚡ حذف فوري من الذاكرة وإعادة رسم سجل الحصص السابقة والحسابات في التو واللحظة
+        g.attendanceLog = g.attendanceLog.filter(l => l.id !== sessionId);
+        renderAttendanceHistory(groupIdx);
+        updateAttendanceStats();
+        renderAccountsTable();
+        renderGroupsSection();
+
         const url = (config.booking && config.booking.scriptURL) || '';
-        showToast('جاري حذف الحصة...', 'info');
         const fd = new FormData();
-        fd.append('action', 'deleteAttendanceData'); fd.append('adminKey', getAuthKey());
-        fd.append('rowsToDelete', JSON.stringify(session.__origRows || []));
+        fd.append('action', 'deleteAttendanceData');
+        fd.append('adminKey', getAuthKey());
+        fd.append('sessionId', sessionId);
+        fd.append('rowsToDelete', JSON.stringify(origRows));
         
-        fetch(url, { method: 'POST', body: fd }).then(r=>r.json()).then(d => {
-            if (d && d.result === 'success') {
-                showToast('تم حذف سجل الحصة واسترداد الرصيد بنجاح ✓');
-                loadLiveGroupsData('accounts');
-            } else showToast('خطأ: ' + (d.error||''), 'error');
+        sendInBackground(url, fd, {
+            successMsg: 'تم حذف سجل الحصة واسترداد الرصيد بنجاح ✓',
+            onSuccess: () => loadLiveGroupsData('accounts')
         });
     }, true);
 }
@@ -8006,6 +8392,10 @@ function saveAttendanceSession() {
 
     if (!dateVal) { showToast('يرجى تحديد تاريخ الحصة', 'error'); return; }
 
+    if ((!window._lastAccountsData || window._lastAccountsData.length === 0) && typeof renderAccountsTable === 'function') {
+        renderAccountsTable();
+    }
+
     const studentsList = document.getElementById('att-students-list');
     const studentRows = studentsList.querySelectorAll('[data-student]');
     const attendanceData = [];
@@ -8016,29 +8406,44 @@ function saveAttendanceSession() {
         
         let sessionCost = 0;
         if(val === 'مباشر' || val === 'مسجل') {
-            const studentData = window._lastAccountsData.find(st => st.name === sName);
+            const studentData = (window._lastAccountsData || []).find(st => st.name === sName);
             const hourlyRate = studentData ? (studentData.personalHourlyRate || 50) : 50;
             sessionCost = (durationVal / 60) * hourlyRate;
         }
         attendanceData.push({ name: sName, status: val, cost: sessionCost });
     });
 
+    const sessionId = 'att_' + Date.now() + Math.random().toString(36).substr(2,5);
+    const newSessionObj = {
+        id: sessionId,
+        date: dateVal,
+        duration: durationVal,
+        note: noteVal,
+        groupName: g.name,
+        records: attendanceData,
+        __origRows: []
+    };
+
+    // ⚡ تحديث لحظي في الذاكرة وعرض الحصة فوراً في سجل الحصص السابقة وتحديث أرصدة الطلاب
+    if (!g.attendanceLog) g.attendanceLog = [];
+    g.attendanceLog.push(newSessionObj);
+    document.getElementById('att-session-note').value = '';
+    renderAttendanceHistory(groupIdx);
+    updateAttendanceStats();
+    renderAccountsTable();
+    renderGroupsSection();
+
     const url = (config.booking && config.booking.scriptURL) || '';
-    showToast('جاري تسجيل الحضور بالشيت...', 'info');
-    
     const fd = new FormData();
     fd.append('action', 'saveAttendanceData'); fd.append('adminKey', getAuthKey());
-    fd.append('sessionId', 'att_' + Date.now() + Math.random().toString(36).substr(2,5));
+    fd.append('sessionId', sessionId);
     fd.append('date', dateVal); fd.append('groupName', g.name);
     fd.append('duration', durationVal); fd.append('note', noteVal);
     fd.append('records', JSON.stringify(attendanceData)); fd.append('isEdit', 'false');
 
-    fetch(url, { method: 'POST', body: fd }).then(r=>r.json()).then(d => {
-        if (d && d.result === 'success') {
-            showToast('تم حفظ سجل الحضور بنجاح ✓');
-            document.getElementById('att-session-note').value = '';
-            loadLiveGroupsData('accounts');
-        } else showToast('خطأ: ' + (d.error||''), 'error');
+    sendInBackground(url, fd, {
+        successMsg: 'تم حفظ سجل الحضور وتحديث الحسابات ✓',
+        onSuccess: () => loadLiveGroupsData('accounts')
     });
 }
 // ==========================================
@@ -8063,7 +8468,71 @@ function getPkgMonthlySessions(pkg) {
     return 8;
 }
 
-// دالة تجيب عدد الحصص بالبحث باسم الباقة
+// دالة استخراج تفاصيل الباقة المخصصة (صمّم باقتك): السعة، السعر، العملة، وعدد الحصص الشهرية
+function extractCustomPkgInfo(pkgName) {
+    const str = String(pkgName || '');
+    let maxStudents = 3;
+    const stMatch = str.match(/(\d+)\s*طالب/);
+    if (stMatch) maxStudents = Math.max(1, parseInt(stMatch[1]) || 3);
+    else if (str.includes('طالب واحد') || str.includes('VIP')) maxStudents = 1;
+    else if (str.includes('طالبان') || str.includes('طالبين')) maxStudents = 2;
+
+    let price = 0;
+    let currency = 'ج.م';
+    const priceMatch = str.match(/(\d+(?:\.\d+)?)\s*(ج\.م|جنيه|ج|ريال|دينار|درهم|دولار)/);
+    if (priceMatch) {
+        price = parseFloat(priceMatch[1]) || 0;
+        if (str.includes('عماني') || str.includes('عُماني')) currency = 'ريال عُماني';
+        else if (str.includes('قطري')) currency = 'ريال قطري';
+        else if (str.includes('كويتي')) currency = 'دينار كويتي';
+        else if (str.includes('سعودي')) currency = 'ريال سعودي';
+        else if (str.includes('إماراتي') || str.includes('درهم')) currency = 'درهم إماراتي';
+    }
+
+    let sessionsPerMonth = 8;
+    // فحص خيارات الساعات في صمّم باقتك
+    const cbCurricula = (config.customBuilder && config.customBuilder.curricula) || [];
+    const periodType = (config.customBuilder && config.customBuilder.periodType) || 'monthly';
+    let matchedCbHours = false;
+    for (let ci = 0; ci < cbCurricula.length; ci++) {
+        const hOpts = cbCurricula[ci].hoursOptions || [];
+        for (let hi = 0; hi < hOpts.length; hi++) {
+            const h = hOpts[hi];
+            if (h.name && str.includes(h.name)) {
+                const rawH = parseFloat(h.hours) || 0;
+                if (rawH > 0) {
+                    const isWeekly = h.name.includes('أسبوع') || h.name.includes('اسبوع') || periodType === 'weekly';
+                    sessionsPerMonth = isWeekly && rawH <= 6 ? Math.round(rawH * 4) : Math.round(rawH);
+                    matchedCbHours = true;
+                    break;
+                }
+            }
+        }
+        if (matchedCbHours) break;
+    }
+
+    if (!matchedCbHours) {
+        const mMonthly = str.match(/(\d+)\s*(?:حصص|حصة|ساعات|ساعة)\s*شهري/);
+        const mWeeklyNum = str.match(/(\d+)\s*(?:حصص|حصة|ساعات|ساعة)\s*(?:أسبوع|اسبوع)/);
+        if (mMonthly) {
+            sessionsPerMonth = parseInt(mMonthly[1]) || 8;
+        } else if (mWeeklyNum) {
+            sessionsPerMonth = (parseInt(mWeeklyNum[1]) || 2) * 4;
+        } else if (str.includes('ساعة أسبوعي') || str.includes('ساعة اسبوعي')) {
+            sessionsPerMonth = 4;
+        } else if (str.includes('ساعتان أسبوعي') || str.includes('ساعتين أسبوعي') || str.includes('ساعتان اسبوعي')) {
+            sessionsPerMonth = 8;
+        } else if (str.includes('ساعة شهري')) {
+            sessionsPerMonth = 1;
+        } else if (str.includes('ساعتان شهري') || str.includes('ساعتين شهري')) {
+            sessionsPerMonth = 2;
+        }
+    }
+
+    return { maxStudents, price, currency, sessionsPerMonth };
+}
+
+// دالة تجيب عدد الحصص بالبحث باسم الباقة (الثابتة أو المخصصة)
 function getPkgMonthlySessionsByName(pkgName) {
     if (!pkgName) return 8;
     const curricula = (config.pricing && config.pricing.curricula) || [];
@@ -8075,6 +8544,9 @@ function getPkgMonthlySessionsByName(pkgName) {
                 return getPkgMonthlySessions(p);
             }
         }
+    }
+    if (String(pkgName).includes('باقة مخصصة')) {
+        return extractCustomPkgInfo(pkgName).sessionsPerMonth || 8;
     }
     return 8;
 }
@@ -8195,14 +8667,22 @@ function renderAccountsTable() {
         });
     }
 
-    // 🔴 التصحيح الثاني: تحديث وتسكين الطلاب المتواجدين فعلياً في مجموعات
+    // 🔴 التصحيح الثاني: تحديث وتسكين الطلاب المتواجدين فعلياً في مجموعات (مع قسمة الاشتراك على عدد حصص المجموعة الشهري)
     (config.groups || []).forEach(g => {
+        const grpSessions = Math.max(1, parseInt(g.sessionsPerMonth) || getPkgMonthlySessionsByName(g.package) || 8);
         let defaultHourlyRate = 50;
-        const cPkg = (config.pricing?.curricula || []).flatMap(c => c.packages || []).find(p => g.package.includes(p.name) || p.name === g.package);
+        const cPkg = (config.pricing?.curricula || []).flatMap(c => c.packages || []).find(p => g.package && (g.package.includes(p.name) || p.name === g.package));
         if (cPkg && parseFloat(cPkg.price) > 0) {
             const rate = getRateForCurrency(cPkg.currency, config.exchangeRates);
             const actualPrice = rate > 0 ? parseFloat(cPkg.price) * rate : parseFloat(cPkg.price);
-            defaultHourlyRate = actualPrice / 8;
+            defaultHourlyRate = actualPrice / grpSessions;
+        } else if (g.package && g.package.includes('باقة مخصصة')) {
+            const cInfo = extractCustomPkgInfo(g.package);
+            if (cInfo.price > 0) {
+                const rate = getRateForCurrency(cInfo.currency, config.exchangeRates);
+                const actualPrice = rate > 0 ? cInfo.price * rate : cInfo.price;
+                defaultHourlyRate = actualPrice / grpSessions;
+            }
         }
 
         (g.students || []).forEach(s => {
@@ -8217,6 +8697,7 @@ function renderAccountsTable() {
             studentsMap[key].pkg = typeof s === 'object' ? (s.Package || g.package) : g.package;
             studentsMap[key].grade = typeof s === 'object' ? (s.Grade || '') : '';
             studentsMap[key].groupName = g.name;
+            studentsMap[key].groupSessionsPerMonth = grpSessions;
 
             let personalHourlyRate = null;
             const studentBooking = allBookings.find(b => {
@@ -8225,18 +8706,24 @@ function renderAccountsTable() {
             });
             
             if (studentBooking) {
-                const finalPriceStr = (studentBooking.FinalPrice || studentBooking['السعر النهائي'] || studentBooking['الإجمالي'] || studentBooking.OriginalPrice || '').toString()
+                const finalPriceStr = (studentBooking.FinalPrice || studentBooking['السعر النهائي'] || studentBooking['الإجمالي'] || studentBooking.OriginalPrice || studentBooking.Package || studentBooking['الباقة'] || '').toString()
                     .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))   // أرقام هندية -> عربية
                     .replace(/(\d)[,٬،](?=\d{3}(\D|$))/g, '$1');            // إزالة فاصل الآلاف: 1,500 -> 1500
                 let extractedPrice = 0;
                 if (finalPriceStr.includes('بما يعادل')) {
                     const match = finalPriceStr.match(/بما يعادل\s*(\d+(\.\d+)?)/);
                     if (match && match[1]) extractedPrice = parseFloat(match[1]);
+                } else if (finalPriceStr.includes('باقة مخصصة')) {
+                    const cInfo = extractCustomPkgInfo(finalPriceStr);
+                    extractedPrice = cInfo.price;
                 } else {
                     const match = finalPriceStr.match(/(\d+(\.\d+)?)/);
                     if (match && match[1]) extractedPrice = parseFloat(match[1]);
                 }
-                if (extractedPrice > 0) personalHourlyRate = extractedPrice / 8; 
+                if (extractedPrice > 0) personalHourlyRate = extractedPrice / grpSessions;
+            } else if (studentsMap[key].pkg && studentsMap[key].pkg.includes('باقة مخصصة')) {
+                const cInfo = extractCustomPkgInfo(studentsMap[key].pkg);
+                if (cInfo.price > 0) personalHourlyRate = cInfo.price / grpSessions;
             }
 
             studentsMap[key].personalHourlyRate = personalHourlyRate || defaultHourlyRate;
@@ -8288,16 +8775,11 @@ function renderAccountsTable() {
 
     if (!config.wallets) config.wallets = {};
 
-    // ✅ جديد: لكل طالب، نحدد إعدادات الدورة الحالية
+    // ✅ لكل طالب: عدد حصص الشهر يُقرأ تلقائياً من إعدادات المجموعة المسكن بها (أو الباقة) بدون تعديل يدوي منفصل
     Object.values(studentsMap).forEach(st => {
         const pkgSessions = (typeof getPkgMonthlySessionsByName === 'function') ? getPkgMonthlySessionsByName(st.pkg) : 8;
-
-        // ✅ تطبيق الـ Override لو موجود (تعديل يدوي من زر "حصص الشهر")
-        if (!config.sessionLimitOverrides) config.sessionLimitOverrides = {};
-        const override = config.sessionLimitOverrides[st.key];
-        const effectiveSessions = (override && override > 0) ? override : pkgSessions;
-        st.hasSessionOverride = !!(override && override > 0 && override !== pkgSessions);
-
+        const effectiveSessions = (st.groupSessionsPerMonth && st.groupSessionsPerMonth > 0) ? st.groupSessionsPerMonth : pkgSessions;
+        st.hasSessionOverride = false;
         st.monthlySessionsLimit = effectiveSessions;
     });
 
@@ -8413,13 +8895,10 @@ function renderAccountsTable() {
                 <div class="text-[10px]"><i class="fa-solid fa-users text-slate-400"></i> ${esc(st.groupName)}</div>
             </td>
             <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1">
-                    <span class="font-black ${st.hasSessionOverride ? 'text-amber-700' : 'text-indigo-700'}" dir="ltr">${st.monthlyAttendedCount || 0} / ${st.monthlySessionsLimit || 8}</span>
-                    <button onclick="openSessionLimitEditor('${esc(st.key)}')" class="w-5 h-5 rounded-md ${st.hasSessionOverride ? 'bg-amber-100 hover:bg-amber-200 text-amber-700' : 'bg-slate-100 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600'} flex items-center justify-center text-[9px] transition-colors" title="تعديل عدد الحصص (افتراضي: ${st.monthlySessionsLimit || 8})">
-                        <i class="fa-solid fa-sliders"></i>
-                    </button>
+                <div class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-indigo-50/70 border border-indigo-100">
+                    <span class="font-black text-indigo-700" dir="ltr">${st.monthlyAttendedCount || 0} / ${st.monthlySessionsLimit || 8}</span>
                 </div>
-                <div class="text-[10px] ${st.hasSessionOverride ? 'text-amber-600 font-black' : 'text-slate-500 font-bold'}">حصة الشهر${st.hasSessionOverride ? ' • مخصص' : ''}</div>
+                <div class="text-[10px] text-slate-500 font-bold mt-0.5">حصة الشهر</div>
             </td>
             <td class="px-4 py-3 text-center">
                 <div class="font-black text-slate-800"><span dir="ltr">${st.attendedHours.toFixed(2)}</span> ساعة</div>
@@ -8517,10 +8996,10 @@ function syncAttendanceSessionToServer(session) {
     fd.append('oldRows', JSON.stringify(session.__origRows || []));
     fd.append('records', JSON.stringify(session.records));
 
-    fetch(url, { method: 'POST', body: fd }).then(r=>r.json()).then(d => {
-        if(d && d.result === 'success'){ showToast('تم حفظ التعديلات بنجاح ✓'); loadLiveGroupsData('accounts'); }
-        else { showToast('خطأ: ' + (d.error||''), 'error'); }
-    }).catch(e => showToast('تعذر الاتصال بالسيرفر', 'error'));
+    sendInBackground(url, fd, {
+        successMsg: 'تم حفظ تعديلات الحصة وتحديث الرصيد ✓',
+        onSuccess: () => loadLiveGroupsData('accounts')
+    });
 }
 
 function generateWhatsAppMessage(studentKey) {
@@ -8543,6 +9022,18 @@ function generateWhatsAppMessage(studentKey) {
             }
         }
         if (pkgPrice > 0) break;
+    }
+    if (pkgPrice === 0) {
+        if (st.pkg && st.pkg.includes('باقة مخصصة')) {
+            const cInfo = extractCustomPkgInfo(st.pkg);
+            if (cInfo.price > 0) {
+                const rate = getRateForCurrency(cInfo.currency, config.exchangeRates);
+                pkgPrice = rate > 0 ? Math.round(cInfo.price * rate) : cInfo.price;
+            }
+        }
+        if (pkgPrice === 0 && st.personalHourlyRate > 0) {
+            pkgPrice = Math.round(st.personalHourlyRate * (st.monthlySessionsLimit || 8));
+        }
     }
 
     let msg = tmpl;
@@ -9366,34 +9857,6 @@ function toggleNavGroup(btn) {
 // ══════════════════════════════════════════════════
 window._dashboardPeriod = { type: 'month', from: null, to: null };
 
-function setDashboardPeriod(type) {
-    window._dashboardPeriod.type = type;
-    document.querySelectorAll('.period-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-period') === type);
-    });
-    const customBox = document.getElementById('dashboard-custom-range');
-    if (type === 'custom') {
-        customBox.classList.remove('hidden');
-        if (!document.getElementById('dash-period-from').value) {
-            const t = new Date();
-            const f = new Date(t.getFullYear(), t.getMonth(), 1);
-            document.getElementById('dash-period-from').value = f.toISOString().split('T')[0];
-            document.getElementById('dash-period-to').value = t.toISOString().split('T')[0];
-        }
-        window._dashboardPeriod.from = document.getElementById('dash-period-from').value;
-        window._dashboardPeriod.to = document.getElementById('dash-period-to').value;
-    } else {
-        customBox.classList.add('hidden');
-    }
-    updateExecutiveDashboard();
-}
-
-function applyCustomDashboardPeriod() {
-    window._dashboardPeriod.from = document.getElementById('dash-period-from').value;
-    window._dashboardPeriod.to = document.getElementById('dash-period-to').value;
-    updateExecutiveDashboard();
-}
-
 function getDashboardPeriodRange() {
     const now = new Date();
     const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -9671,153 +10134,11 @@ function closeMonthSnapshot() {
 //  اللوحة القيادية الشاملة (Executive Dashboard)
 // ══════════════════════════════════════════════════
 function updateExecutiveDashboard() {
-    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-
-    // ═══ الجزء الأول: أداء الفترة (بيتأثر بالفلتر) ═══
-    const period = getDashboardPeriodRange();
-    const periodStats = computePeriodStats(period.from, period.to);
-
-    setTxt('period-bk-total', periodStats.bookings);
-    setTxt('period-earned', periodStats.earnedRevenue.toFixed(2));
-    setTxt('period-revenue', periodStats.revenue.toFixed(2));
-    setTxt('period-expenses', periodStats.expenses.toFixed(2));
-    setTxt('period-hours', periodStats.hours.toFixed(1));
-
-    const profitEl = document.getElementById('period-profit');
-    if (profitEl) {
-        profitEl.textContent = periodStats.profit.toFixed(2);
-        profitEl.className = periodStats.profit >= 0 ? 'text-2xl font-black text-purple-700' : 'text-2xl font-black text-red-600';
-    }
-
-    const lbl = document.getElementById('dash-period-text');
-    if (lbl) lbl.textContent = `يتم عرض أداء: ${period.label} (من ${period.from.toLocaleDateString('ar-EG')} إلى ${period.to.toLocaleDateString('ar-EG')})`;
-
-    // ═══ الجزء الثاني: المركز الحالي (لحظي، مش بيتأثر بالفلتر) ═══
-    const totalBookings = allBookings.length;
-    let pending = 0, confirmed = 0, rejected = 0;
-    allBookings.forEach(b => {
-        const s = (b.Status || b['الحالة'] || '').trim().toLowerCase();
-        if (s === 'مؤكد' || s === 'confirmed') confirmed++;
-        else if (s === 'مرفوض' || s === 'rejected') rejected++;
-        else if (s === 'منسحب' || s === 'withdrawn') { /* لا نحسبه */ }
-        else pending++;
-    });
-
-    setTxt('exec-bk-total', totalBookings);
-    setTxt('exec-bk-pending', pending);
-    setTxt('exec-bk-confirmed', confirmed);
-    setTxt('exec-bk-rejected', rejected);
-
-    // المجموعات
-    let totalGroups = config.groups ? config.groups.length : 0;
-    let totalHours = 0;
-    const uniqueGrouped = new Set();
-    (config.groups || []).forEach(g => {
-        (g.students || []).forEach(s => {
-            const wa = typeof s === 'object' ? (s.WhatsApp || '') : '';
-            const n = typeof s === 'object' ? (s.StudentName || s.name) : s;
-            uniqueGrouped.add(`${wa}_${n}`);
-        });
-        (g.attendanceLog || []).forEach(rec => {
-            const hasAtt = (rec.records || []).some(r => r.status === 'مباشر' || r.status === 'مسجل');
-            if (hasAtt) totalHours += (parseInt(rec.duration) || 0) / 60;
-        });
-    });
-    const groupedCount = uniqueGrouped.size;
-    const ungroupedCount = Math.max(0, confirmed - groupedCount);
-
-    setTxt('exec-gr-total', totalGroups);
-    setTxt('exec-gr-students', groupedCount);
-    setTxt('exec-gr-waiting', ungroupedCount);
-    setTxt('exec-gr-hours', totalHours.toFixed(1));
-
-    // المالية الكلية التراكمية (بنفس منطق الفلتر بس على كل الفترات)
-    let totalCollected = 0, totalEarned = 0, totalDebt = 0;
-
-    // 1) الإيرادات المحصلة التراكمية = كل الدفعات - كل الاستردادات
-    Object.values(config.wallets || {}).forEach(w => {
-        (w.payments || []).forEach(p => {
-            totalCollected += parseFloat(p.amount) || 0;
-        });
-        (w.adjustments || []).forEach(a => {
-            if (a.type === 'استرداد') totalCollected -= parseFloat(a.amount) || 0;
-        });
-    });
-    if (totalCollected < 0) totalCollected = 0;
-
-    // 2) الإيرادات المؤكدة التراكمية = كل الحصص + كل التسويات (نفس منطق الفلتر)
-    (window._lastAccountsData || []).forEach(st => {
-        (st.attendanceHistoryListAll || []).forEach(a => {
-            totalEarned += parseFloat(a.cost) || 0;
-        });
-        totalDebt += (st.debtAmount || 0);
-    });
-    Object.values(config.wallets || {}).forEach(w => {
-        (w.adjustments || []).forEach(a => {
-            if (a.type === 'تسوية/خصم') totalEarned += parseFloat(a.amount) || 0;
-        });
-    });
-
-    let totalExp = 0;
-    (config.expenses || []).forEach(e => { totalExp += parseFloat(e.amount) || 0; });
-
-    const potentialDeduction = (typeof renderPotentialBoard === 'function') ? (renderPotentialBoard() || 0) : 0;
-    const netProfit = totalEarned - totalExp - potentialDeduction;
-
-    // 💰 حساب "المتاح للسحب الآن" (بناءً على الإيرادات المؤكدة)
-    const availData = (typeof calculateAvailableCash === 'function') ? calculateAvailableCash() : { available: 0 };
-    const availEl = document.getElementById('exec-fin-available');
-    if (availEl) {
-        availEl.textContent = availData.available.toFixed(2);
-        availEl.className = availData.available >= 0
-        ? 'text-3xl font-black text-emerald-700'
-        : 'text-3xl font-black text-red-600';
-    }
-
-    // عرض الـ breakdown المختصر
-    const breakdownEl = document.getElementById('exec-fin-available-breakdown');
-    if (breakdownEl && availData.confirmed !== undefined) {
-         breakdownEl.innerHTML = 
-             `<span class="text-emerald-700">مؤكدة ${availData.confirmed.toFixed(2)}</span>` +
-             ` <span class="text-slate-400">−</span> ` +
-             `<span class="text-rose-700">مدفوع ${availData.expensesPaid.toFixed(2)}</span>` +
-             ` <span class="text-slate-400">−</span> ` +
-             `<span class="text-amber-700">محجوز ${availData.reserved.toFixed(2)}</span>`;
-    }
-
-    const actualVC = parseFloat(config.actualVCBalance) || 0;
-    const expectedCash = totalCollected - totalExp;
-    const diff = expectedCash - actualVC;
-
-    setTxt('exec-fin-collected', totalCollected.toFixed(2));
-    setTxt('exec-fin-earned', totalEarned.toFixed(2));
-    setTxt('exec-fin-exp', totalExp.toFixed(2));
-    setTxt('exec-fin-debt', totalDebt.toFixed(2));
-    setTxt('exec-fin-vc', actualVC.toFixed(2));
-
-    const netProfitEl = document.getElementById('exec-fin-profit');
-    if (netProfitEl) {
-        netProfitEl.textContent = netProfit.toFixed(2);
-        netProfitEl.className = netProfit >= 0 ? 'text-2xl font-black text-indigo-700' : 'text-2xl font-black text-red-600';
-    }
-
-    const diffEl = document.getElementById('exec-fin-diff');
-    const diffLabel = document.getElementById('exec-fin-diff-label');
-    if (diffEl && diffLabel) {
-        if (diff > 0) {
-            diffEl.textContent = diff.toFixed(2);
-            diffEl.className = 'text-2xl font-black text-red-600';
-            diffLabel.textContent = 'عجز (نقص في المحفظة)';
-        } else if (diff < 0) {
-            diffEl.textContent = Math.abs(diff).toFixed(2);
-            diffEl.className = 'text-2xl font-black text-emerald-600';
-            diffLabel.textContent = 'زيادة (فائض غير مسجل)';
-        } else {
-            diffEl.textContent = '0.00';
-            diffEl.className = 'text-2xl font-black text-slate-700';
-            diffLabel.textContent = 'الحساب مطابق تماماً';
-        }
-    }
+    if (typeof renderPotentialBoard === 'function') renderPotentialBoard();
+    if (typeof renderDashboardSummary === 'function') renderDashboardSummary();
+    if (typeof renderFinanceOverview === 'function') renderFinanceOverview();
+    if (typeof updateFinanceExtras === 'function') updateFinanceExtras();
+    if (typeof renderCommitmentsStats === 'function') renderCommitmentsStats();
 }
 // دالة بحث سريعة لفلترة الطلاب داخل مجموعة الحضور
 function filterAttendanceStudents() {
@@ -10296,34 +10617,7 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
-// ==========================================
-// دوال إلغاء العمليات المالية (التجديد والتسويات اليدوية)
-// ==========================================
-function deletePaymentRecord(stKey, pIdx) {
-    showConfirm('إلغاء عملية التجديد', 'هل أنت متأكد من حذف هذه الدفعة؟ سيتم سحب قيمتها من رصيد الطالب فوراً وقد تظهر عليه مديونية.', () => {
-        if (config.wallets && config.wallets[stKey] && config.wallets[stKey].payments) {
-            config.wallets[stKey].payments.splice(pIdx, 1);
-            syncConfigToServerSilent();
-            if (typeof renderAccountsTable === 'function') renderAccountsTable();
-            // إعادة فتح النافذة لتحديث الأرقام أمامك فوراً
-            openModal('student_statement', stKey);
-            showToast('تم إلغاء التجديد واسترجاع حالة المحفظة بنجاح ✓');
-        }
-    }, true);
-}
 
-function deleteAdjustmentRecord(stKey, aIdx) {
-    showConfirm('حذف التسوية اليدوية', 'هل أنت متأكد من حذف عملية التسوية/الخصم؟ سيعود المبلغ المخصوم لرصيد الطالب.', () => {
-        if (config.wallets && config.wallets[stKey] && config.wallets[stKey].adjustments) {
-            config.wallets[stKey].adjustments.splice(aIdx, 1);
-            syncConfigToServerSilent();
-            if (typeof renderAccountsTable === 'function') renderAccountsTable();
-            // إعادة فتح النافذة لتحديث الأرقام أمامك فوراً
-            openModal('student_statement', stKey);
-            showToast('تم حذف التسوية بنجاح ✓');
-        }
-    }, true);
-}
 function openEditBookingModal(rowIndex) {
     const booking = allBookings.find(b => b.__rowIndex === rowIndex);
     if (!booking) return;
@@ -10375,42 +10669,70 @@ function updateEBGradesAndPackages(selectedGrade, selectedPackage) {
     if (currIdx === "") return;
     const curr = config.pricing.curricula[currIdx];
     
-    document.getElementById('eb-grade').innerHTML = curr.grades.map(g => `<option value="${g}" ${g === selectedGrade ? 'selected' : ''}>${g}</option>`).join('');
-    document.getElementById('eb-pkg').innerHTML = curr.packages.map(p => {
+    let gradeHtml = curr.grades.map(g => `<option value="${g}" ${g === selectedGrade ? 'selected' : ''}>${g}</option>`).join('');
+    if (selectedGrade && !curr.grades.includes(selectedGrade)) {
+        gradeHtml += `<option value="${esc(selectedGrade)}" selected>${esc(selectedGrade)}</option>`;
+    }
+    document.getElementById('eb-grade').innerHTML = gradeHtml;
+
+    let anySelected = false;
+    let pkgHtml = curr.packages.map(p => {
         let cur = p.currency.includes('ج') ? 'ج' : (' ' + p.currency.replace(' / للطالب', ''));
         let badge = p.badge ? p.badge.replace('VIP (طالب واحد)', 'طالب واحد') : '';
         let fullName = `${p.name} (${badge} - ${p.price}${cur})`;
-        const isSelected = selectedPackage && (selectedPackage.includes(p.name) || fullName === selectedPackage) ? 'selected' : '';
-        return `<option value="${p.id}" data-price="${p.price}" data-currency="${p.currency}" data-name="${esc(fullName)}" ${isSelected}>${esc(fullName)}</option>`;
+        const isSelected = selectedPackage && (selectedPackage.includes(p.name) || fullName === selectedPackage);
+        if (isSelected) anySelected = true;
+        return `<option value="${p.id}" data-price="${p.price}" data-currency="${p.currency}" data-name="${esc(fullName)}" ${isSelected ? 'selected' : ''}>${esc(fullName)}</option>`;
     }).join('');
-    
+
+    // دعم باقات "صمّم باقتك" المخصصة داخل نافذة تعديل الحجز
+    const customSet = new Set();
+    if (selectedPackage && !anySelected) customSet.add(selectedPackage);
+    (allBookings || []).forEach(b => {
+        const bp = (b.Package || b['الباقة'] || '').toString().trim();
+        if (bp.includes('باقة مخصصة')) customSet.add(bp);
+    });
+    if (customSet.size > 0) {
+        pkgHtml += '<optgroup label="✨ باقات مخصصة (صمّم باقتك)">' + Array.from(customSet).map((cp, ci) => {
+            const info = extractCustomPkgInfo(cp);
+            const isSel = (!anySelected && selectedPackage === cp);
+            if (isSel) anySelected = true;
+            return `<option value="custom_eb_${ci}" data-price="${info.price}" data-currency="${info.currency}" data-name="${esc(cp)}" ${isSel ? 'selected' : ''}>✨ ${esc(cp)}</option>`;
+        }).join('') + '</optgroup>';
+    }
+
+    document.getElementById('eb-pkg').innerHTML = pkgHtml;
     calculateEBPrices();
 }
 
 function calculateEBPrices() {
     const pkgSelect = document.getElementById('eb-pkg');
     const code = (document.getElementById('eb-discount').value || '').trim().toUpperCase();
-    if (!pkgSelect.options[pkgSelect.selectedIndex]) return;
+    if (!pkgSelect || !pkgSelect.options[pkgSelect.selectedIndex]) return;
     
     const opt = pkgSelect.options[pkgSelect.selectedIndex];
-    let price = parseFloat(opt.getAttribute('data-price')) || 0;
+    const price = parseFloat(opt.getAttribute('data-price')) || 0;
     const currency = opt.getAttribute('data-currency') || 'ج.م';
-    
     const rate = getRateForCurrency(currency, config.exchangeRates);
-    let priceInEgp = price;
-    if(rate > 0) priceInEgp = Math.round(price * rate);
+
+    const fmtPriceWithEgp = (amt) => {
+        if (amt <= 0) return '0 ' + currency;
+        const cleanAmt = Number(amt.toFixed(2));
+        let s = cleanAmt + ' ' + currency;
+        if (rate > 0) s += ' (بما يعادل ' + Math.round(cleanAmt * rate) + ' ج.م)';
+        return s;
+    };
 
     let discountPct = 0;
     const discObj = (config.pricing.discountCodes || []).find(d => d.code === code && d.active);
     if (discObj) discountPct = parseFloat(discObj.discount) || 0;
     
-    const discountAmt = priceInEgp * (discountPct / 100);
-    const finalPrice = Math.max(0, priceInEgp - discountAmt);
+    const discountAmt = price * (discountPct / 100);
+    const finalPrice = Math.max(0, price - discountAmt);
     
-    // عرض القيم في الحقول
-    document.getElementById('eb-orig-price').value = price + ' ' + currency;
-    document.getElementById('eb-discount-amt').value = discountAmt > 0 ? discountAmt.toFixed(2) + ' ' + currency : '0 ' + currency;
-    document.getElementById('eb-final-price').value = finalPrice.toFixed(2) + ' ' + currency;
+    document.getElementById('eb-orig-price').value = fmtPriceWithEgp(price);
+    document.getElementById('eb-discount-amt').value = discountAmt > 0 ? fmtPriceWithEgp(discountAmt) : ('0 ' + currency);
+    document.getElementById('eb-final-price').value = fmtPriceWithEgp(finalPrice);
 }
 
 async function saveEditedBooking() {
@@ -10435,24 +10757,27 @@ async function saveEditedBooking() {
         showToast('يرجى ملء كافة البيانات', 'error'); return;
     }
 
-    document.getElementById('modal-save-btn').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
-    const url = (config.booking && config.booking.scriptURL) || '';
-
-    try {
-        const fd = new FormData();
-        fd.append('action', 'updateBookingData');
-        fd.append('adminKey', getAuthKey());
-        fd.append('row', rowIndex);
-        fd.append('updates', JSON.stringify(updates));
-        
-        await fetch(url, { method: 'POST', body: fd, mode: 'no-cors' });
-        showToast('تم التعديل بنجاح ✓');
-        closeModal();
-        loadDashboard(true); 
-    } catch(e) {
-        showToast('تعذر الاتصال بالسيرفر', 'error');
+    // تحديث لحظي في الذاكرة (Optimistic UI)
+    const entry = (allBookings || []).find(b => b.__rowIndex === rowIndex);
+    if (entry) {
+        Object.assign(entry, updates);
     }
-    document.getElementById('modal-save-btn').innerHTML = '<i class="fa-solid fa-save"></i> حفظ التعديلات';
+    applyDashFilters(true);
+    renderGroupsSection();
+    renderAccountsTable();
+
+    const url = (config.booking && config.booking.scriptURL) || '';
+    const fd = new FormData();
+    fd.append('action', 'updateBookingData');
+    fd.append('adminKey', getAuthKey());
+    fd.append('row', rowIndex);
+    fd.append('updates', JSON.stringify(updates));
+
+    closeModal();
+    sendInBackground(url, fd, {
+        successMsg: 'تم تعديل بيانات الحجز بنجاح ✓',
+        onSuccess: () => loadDashboard('hard')
+    });
 }
 
 // ══════════════════════════════════════════════════
@@ -12521,7 +12846,8 @@ function generateRenewalsReportNew() {
     window._renewalsData = expiredStudents.map(function(st) {
         const group = (config.groups || []).find(function(g) { return g.name === st.groupName; }) || {};
         const hourlyRate = (st.personalHourlyRate && st.personalHourlyRate > 0) ? st.personalHourlyRate : 50;
-        const reqAmount = Math.round(hourlyRate * 8);
+        const sessionsLimit = st.monthlySessionsLimit || parseInt(group.sessionsPerMonth) || 8;
+        const reqAmount = Math.round(hourlyRate * sessionsLimit);
         const nextSession = (group.sessions && group.sessions.length > 0)
             ? 'قبل حصة ' + group.sessions[0].day
             : 'قبل الحصة القادمة';
@@ -14794,31 +15120,6 @@ async function runAutoWhatsAppCheck(forceNow) {
         showToast('تعذّر الاتصال بالسيرفر', 'error');
     }
 }
-// ══════════════════════════════════════════════════
-//  📤 بناء رسالة التحويل لغير المصريين
-// ══════════════════════════════════════════════════
-function buildForwardedMessage(st, originalMessage) {
-    const name = st.name || 'طالب';
-    const targetWa = st.wa || '';
-    return '📤 رسالة لولي أمر الطالب: ' + name + '\n' +
-           '📱 رقم الواتساب: ' + targetWa + '\n' +
-           '─────────────────────\n\n' +
-           originalMessage;
-}
-
-// ══════════════════════════════════════════════════
-//  📄 PDF Export — رسائل الواتساب لغير المصريين
-// ══════════════════════════════════════════════════
-function isEgyptianPhone(phone) {
-    let clean = String(phone || '').replace(/\D/g, '');
-    if (!clean) return false;
-    // أرقام مصر: تبدأ بـ 20 وتكون 12 رقم، أو بـ 0 وتكون 11 رقم، أو بـ 1 وتكون 10 أرقام
-    if (clean.startsWith('20') && clean.length === 12) return true;
-    if (clean.startsWith('0') && clean.length === 11) return true;
-    if (clean.startsWith('1') && clean.length === 10) return true;
-    return false;
-}
-
 function insertWaBookingVar(varKey) {
     const ta = document.getElementById('wa-booking-template-input');
     if (!ta) return;
@@ -14826,180 +15127,6 @@ function insertWaBookingVar(varKey) {
     ta.value = ta.value.substring(0, pos) + varKey + ta.value.substring(pos);
     ta.focus();
     ta.setSelectionRange(pos + varKey.length, pos + varKey.length);
-}
-
-function exportNonEgyptianWaMessagesPDF() {
-    const allDebtors = getDebtorStudents();
-    const nonEgyptianDebtors = allDebtors.filter(st => !isEgyptianPhone(st.wa));
-
-    if (nonEgyptianDebtors.length === 0) {
-        showToast('لا يوجد طلاب مطالبون بالدفع من خارج مصر حالياً', 'info');
-        return;
-    }
-
-    const pdfTemplate = config.waPdfTemplate || "السلام عليكم ورحمة الله وبركاته،\nولي أمر الطالب/ة: {اسم_الطالب}\n\nنود تذكيركم بأن موعد تجديد اشتراك الباقة ({الباقة}) قد اقترب. قيمة الاشتراك هي: {قيمة_الاشتراك} ج.م.\n\nيمكنكم التواصل معنا لطلب سجل الحضور والرصيد بالتفصيل.";
-
-    let pagesHTML = '';
-    nonEgyptianDebtors.forEach((st, index) => {
-        // تجهيز بيانات الطالب
-        const rate = st.personalHourlyRate || 50;
-        const pkgPrice = Math.round(rate * (st.monthlySessionsLimit || 8));
-        
-        let msgBody = pdfTemplate
-            .replace(/{اسم_الطالب}/g, st.name || '')
-            .replace(/{الباقة}/g, st.pkg || '')
-            .replace(/{قيمة_الاشتراك}/g, pkgPrice);
-
-        // جدول الحضور
-        let historyRows = '';
-        if (st.attendanceHistoryList && st.attendanceHistoryList.length > 0) {
-            st.attendanceHistoryList.forEach(h => {
-                const statusColor = h.status === 'مباشر' || h.status === 'مسجل' ? 'color: #16a34a;' : 'color: #dc2626;';
-                historyRows += `
-                <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-family: monospace;">${h.date}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: bold; ${statusColor}">${h.status}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: bold; color: #4f46e5;">${parseFloat(h.cost).toFixed(2)} ج</td>
-                </tr>`;
-            });
-        } else {
-            historyRows = '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #94a3b8;">لا توجد حصص مسجلة في الدورة الحالية</td></tr>';
-        }
-
-        pagesHTML += `
-        <div class="pdf-page">
-            <div class="header">
-                <div>
-                    <h2>كشف حساب وتذكير بالاشتراك</h2>
-                    <p>نظام إدارة التعليم الأونلاين</p>
-                </div>
-                <div class="date">${new Date().toLocaleDateString('ar-EG')}</div>
-            </div>
-
-            <div class="student-info">
-                <div class="info-row"><span>اسم الطالب:</span> <strong>${esc(st.name)}</strong></div>
-                <div class="info-row"><span>رقم الواتساب:</span> <strong>${esc(st.wa || '—')}</strong></div>
-                <div class="info-row"><span>الباقة:</span> <strong>${esc(st.pkg || '—')}</strong></div>
-                <div class="info-row"><span>المجموعة:</span> <strong>${esc(st.groupName || '—')}</strong></div>
-            </div>
-
-            <div class="summary-cards">
-                <div class="card ${st.unearnedRevenue > 0 ? 'green' : 'amber'}">
-                    <div class="label">الرصيد المالي المتبقي</div>
-                    <div class="value">${st.unearnedRevenue > 0 ? st.unearnedRevenue.toFixed(2) : '0.00'} ج</div>
-                    <div class="sub">(${st.balanceHours > 0 ? st.balanceHours.toFixed(1) : '0'} ساعة متبقية)</div>
-                </div>
-                <div class="card ${st.debtAmount > 0 ? 'red' : 'slate'}">
-                    <div class="label">المديونية المستحقة</div>
-                    <div class="value">${st.debtAmount > 0 ? st.debtAmount.toFixed(2) : '0.00'} ج</div>
-                    <div class="sub">${st.debtAmount > 0 ? 'يرجى السداد' : 'لا يوجد مديونية'}</div>
-                </div>
-            </div>
-
-            <div class="message-box">
-                ${esc(msgBody).replace(/\n/g, '<br>')}
-            </div>
-
-            <div class="table-container">
-                <h3>سجل الحضور في الدورة الحالية (آخر ${st.monthlySessionsLimit} حصة)</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>التاريخ</th>
-                            <th>الحالة</th>
-                            <th>التكلفة المخصومة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${historyRows}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="footer">
-                <p>نظام إدارة الأستاذ / محمود الهليهي — تم الإنشاء آلياً</p>
-            </div>
-        </div>
-        `;
-    });
-
-    const html = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>رسائل_تذكير_غير_المصريين_${new Date().toISOString().split('T')[0]}</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Cairo', sans-serif; background: #fff; color: #0f172a; direction: rtl; }
-    
-    .pdf-page { 
-        page-break-after: always; 
-        padding: 30px; 
-        min-height: 100vh; 
-        position: relative; 
-        display: flex;
-        flex-direction: column;
-    }
-    .pdf-page:last-child { page-break-after: auto; }
-
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #6366f1; padding-bottom: 15px; margin-bottom: 25px; }
-    .header h2 { font-size: 22px; font-weight: 900; color: #1e1b4b; margin-bottom: 4px; }
-    .header p { font-size: 13px; color: #64748b; font-weight: 700; }
-    .header .date { font-size: 14px; font-weight: 800; color: #4f46e5; background: #eef2ff; padding: 4px 12px; border-radius: 8px; }
-
-    .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-    .info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px dashed #cbd5e1; }
-    .info-row:last-child { border-bottom: none; }
-    .info-row span { color: #64748b; font-weight: 700; }
-    .info-row strong { color: #0f172a; font-weight: 900; }
-
-    .summary-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .card { padding: 15px; border-radius: 12px; text-align: center; border: 2px solid; }
-    .card.green { background: #f0fdf4; border-color: #86efac; }
-    .card.amber { background: #fffbeb; border-color: #fcd34d; }
-    .card.red { background: #fef2f2; border-color: #fca5a5; }
-    .card.slate { background: #f8fafc; border-color: #e2e8f0; }
-    .card .label { font-size: 11px; font-weight: 800; margin-bottom: 5px; color: #475569; }
-    .card .value { font-size: 22px; font-weight: 900; }
-    .card.green .value { color: #16a34a; }
-    .card.amber .value { color: #d97706; }
-    .card.red .value { color: #dc2626; }
-    .card.slate .value { color: #64748b; }
-    .card .sub { font-size: 10px; font-weight: 700; margin-top: 4px; color: #64748b; }
-
-    .message-box { background: #f8fafc; border-right: 4px solid #6366f1; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.8; color: #1e293b; margin-bottom: 25px; }
-
-    .table-container { flex-grow: 1; }
-    .table-container h3 { font-size: 15px; font-weight: 900; color: #1e293b; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-    thead { background: #f1f5f9; }
-    th { padding: 12px; font-size: 12px; font-weight: 900; color: #334155; text-align: center; border-bottom: 2px solid #cbd5e1; }
-    td { font-size: 12px; font-weight: 600; }
-
-    .footer { margin-top: 30px; text-align: center; font-size: 11px; font-weight: 800; color: #94a3b8; padding-top: 15px; border-top: 1px solid #e2e8f0; }
-
-    @media print {
-        @page { margin: 12mm 15mm; size: A4; }
-        body { padding: 0; }
-        .pdf-page { padding: 0; min-height: auto; }
-    }
-</style>
-</head>
-<body>
-    ${pagesHTML}
-    <script>
-        window.onload = function() { setTimeout(function() { window.print(); }, 800); };
-    <\/script>
-</body>
-</html>`;
-
-    const win = window.open('', '_blank');
-    if (!win) { showToast('من فضلك اسمح بالنوافذ المنبثقة للطباعة', 'error'); return; }
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    showToast('جاري فتح نافذة الطباعة...', 'info');
 }
 
 // ══════════════════════════════════════════════════
@@ -15113,14 +15240,49 @@ function switchJobsTab(tabName) {
     if (target) target.classList.remove('hidden');
     if (tabName === 'list') renderJobsAdminList();
     if (tabName === 'apps') renderApplicationsAdminList();
+    if (tabName === 'analytics') {
+        populateAnalyticsDynamicDropdowns();
+        renderJobsAnalytics();
+    }
     if (tabName === 'settings') populateJobsSettings();
 }
 
-async function renderJobsSection() {
-    await loadJobsFromServer();
-    await loadApplicationsFromServer();
+async function renderJobsSection(forceNetwork = false) {
+    // 🚀 عرض فوري من الكاش في الذاكرة (0ms) بنفس سرعة قسم إدارة الطلاب والحسابات
+    if (Array.isArray(window._jobsCache) && Array.isArray(window._applicationsCache) && !forceNetwork) {
+        renderJobsAdminList();
+        renderApplicationsAdminList();
+        populateAnalyticsDynamicDropdowns();
+        renderJobsAnalytics();
+        // مزامنة صامتة في الخلفية فقط إذا كانت المصفوفات فارغة تماماً ولم تُجلب بعد
+        if (window._jobsCache.length === 0 && window._applicationsCache.length === 0 && !window._jobsInitialFetched) {
+            window._jobsInitialFetched = true;
+            Promise.all([loadJobsFromServer(), loadApplicationsFromServer()]).then(() => {
+                if (currentSection === 'jobs') {
+                    renderJobsAdminList();
+                    renderApplicationsAdminList();
+                    populateAnalyticsDynamicDropdowns();
+                    renderJobsAnalytics();
+                }
+            });
+        }
+        return;
+    }
+
+    // في حالة عدم وجود كاش بعد أو طلب تحديث مباشر، نعرض الموجود فوراً ثم نحدث في الخلفية
+    window._jobsCache = window._jobsCache || [];
+    window._applicationsCache = window._applicationsCache || [];
     renderJobsAdminList();
     renderApplicationsAdminList();
+    populateAnalyticsDynamicDropdowns();
+    renderJobsAnalytics();
+
+    await Promise.all([loadJobsFromServer(), loadApplicationsFromServer()]);
+    window._jobsInitialFetched = true;
+    renderJobsAdminList();
+    renderApplicationsAdminList();
+    populateAnalyticsDynamicDropdowns();
+    renderJobsAnalytics();
 }
 
 async function loadJobsFromServer() {
@@ -15249,6 +15411,7 @@ function renderApplicationsAdminList() {
         const statusColors = {
             'معلق': 'bg-amber-50 text-amber-700',
             'مراجعة': 'bg-blue-50 text-blue-700',
+            'مؤهل للانترفيو': 'bg-purple-50 text-purple-700',
             'مقبول': 'bg-emerald-50 text-emerald-700',
             'مرفوض': 'bg-rose-50 text-rose-700'
         };
@@ -15513,120 +15676,6 @@ function moveBuilderQuestion(idx, dir) {
     window._tempJobQuestions[idx + dir] = temp;
     renderBuilderQuestions();
 }
-// ═══════════════════════════════════════════
-//  Question Builder Functions
-// ═══════════════════════════════════════════
-function renderBuilderQuestions() {
-    const container = document.getElementById('m-job-questions-builder');
-    if (!container) return;
-    
-    if (window._tempJobQuestions.length === 0) {
-        container.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs font-bold border-2 border-dashed border-slate-200 rounded-xl">لا توجد أسئلة بعد — اضغط "إضافة سؤال"</div>';
-        return;
-    }
-
-    container.innerHTML = window._tempJobQuestions.map((q, i) => {
-        const isOptionType = q.type === 'radio' || q.type === 'select';
-        return `
-        <div class="bg-white border-2 border-slate-200 rounded-xl p-3 space-y-2 relative group">
-            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                <span class="text-xs font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">سؤال ${i+1}</span>
-                <div class="flex gap-1">
-                    <button type="button" onclick="moveBuilderQuestion(${i}, -1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===0?'disabled':''}><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
-                    <button type="button" onclick="moveBuilderQuestion(${i}, 1)" class="w-6 h-6 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center" ${i===window._tempJobQuestions.length-1?'disabled':''}><i class="fa-solid fa-arrow-down text-[10px]"></i></button>
-                    <button type="button" onclick="deleteBuilderQuestion(${i})" class="w-6 h-6 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div class="sm:col-span-2">
-                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نص السؤال / العنوان</label>
-                    <input type="text" oninput="updateBuilderQ(${i}, 'label', this.value)" class="field-input text-xs py-1.5" value="${esc(q.label || '')}">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-1">نوع السؤال</label>
-                    <select onchange="updateBuilderQ(${i}, 'type', this.value); renderBuilderQuestions();" class="field-input text-xs py-1.5 cursor-pointer">
-                        <option value="text" ${q.type==='text'?'selected':''}>نص قصير</option>
-                        <option value="textarea" ${q.type==='textarea'?'selected':''}>نص طويل</option>
-                        <option value="number" ${q.type==='number'?'selected':''}>رقم</option>
-                        <option value="tel" ${q.type==='tel'?'selected':''}>هاتف</option>
-                        <option value="radio" ${q.type==='radio'?'selected':''}>اختيار من متعدد (Radio)</option>
-                        <option value="select" ${q.type==='select'?'selected':''}>قائمة منسدلة (Select)</option>
-                        <option value="file" ${q.type==='file'?'selected':''}>رفع ملف</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-1">نص مساعد (اختياري)</label>
-                <input type="text" oninput="updateBuilderQ(${i}, 'helpText', this.value)" class="field-input text-xs py-1.5" value="${esc(q.helpText || '')}">
-            </div>
-
-            ${isOptionType ? `
-            <div>
-                <label class="block text-[10px] font-bold text-slate-500 mb-1">الخيارات (كل خيار في سطر جديد)</label>
-                <textarea oninput="updateBuilderQOptions(${i}, this.value)" rows="3" class="field-input text-xs py-1.5 resize-none" placeholder="خيار 1&#10;خيار 2">${(q.options || []).join('\n')}</textarea>
-            </div>` : ''}
-
-            <label class="flex items-center gap-2 cursor-pointer mt-2">
-                <input type="checkbox" onchange="updateBuilderQ(${i}, 'required', this.checked)" ${q.required?'checked':''} class="w-3.5 h-3.5 rounded text-indigo-600">
-                <span class="text-[11px] font-bold text-slate-700">هذا السؤال إلزامي</span>
-            </label>
-        </div>
-        `;
-    }).join('');
-}
-
-function addBuilderQuestion() {
-    window._tempJobQuestions.push({
-        id: 'q_' + Date.now(),
-        type: 'text',
-        label: '',
-        required: true,
-        options: []
-    });
-    renderBuilderQuestions();
-}
-
-function updateBuilderQ(idx, key, val) {
-    if (window._tempJobQuestions[idx]) {
-        window._tempJobQuestions[idx][key] = val;
-    }
-}
-
-function updateBuilderQOptions(idx, val) {
-    if (window._tempJobQuestions[idx]) {
-        window._tempJobQuestions[idx].options = val.split('\n').filter(o => o.trim() !== '');
-    }
-}
-
-function deleteBuilderQuestion(idx) {
-    window._tempJobQuestions.splice(idx, 1);
-    renderBuilderQuestions();
-}
-
-function moveBuilderQuestion(idx, dir) {
-    if (idx + dir < 0 || idx + dir >= window._tempJobQuestions.length) return;
-    const temp = window._tempJobQuestions[idx];
-    window._tempJobQuestions[idx] = window._tempJobQuestions[idx + dir];
-    window._tempJobQuestions[idx + dir] = temp;
-    renderBuilderQuestions();
-}
-
-function addSampleQuestion(type) {
-    const ta = document.getElementById('m-job-questions');
-    if (!ta) return;
-    let existing = [];
-    try { existing = JSON.parse(ta.value || '[]'); } catch(e) { existing = []; }
-    const sample = type === 'textarea' ?
-        { text: 'اكتب نبذة عن خبراتك السابقة', type: 'textarea', required: false } :
-        type === 'number' ?
-        { text: 'عدد سنوات الخبرة', type: 'number', required: true } :
-        { text: 'سؤال جديد', type: 'text', required: true };
-    existing.push(sample);
-    ta.value = JSON.stringify(existing, null, 2);
-}
-
 async function saveJob() {
     const title = document.getElementById('m-job-title').value.trim();
     if (!title) { showToast('اسم الوظيفة مطلوب', 'error'); return; }
@@ -15661,29 +15710,26 @@ async function saveJob() {
     fd.append('jobData', JSON.stringify(jobData));
     fd.append('rowIndex', isNew ? -1 : (window._jobsCache[idx].__rowIndex || -1));
 
-    const saveBtn = document.getElementById('modal-save-btn');
-    const originalText = saveBtn.innerHTML;
-    if (saveBtn.disabled) return;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+    // ⚡ تحديث لحظي في الذاكرة (Optimistic UI) ثم حفظ في الخلفية عبر sendInBackground بنفس آلية الطلاب والمالية
+    if (!Array.isArray(window._jobsCache)) window._jobsCache = [];
+    if (isNew) {
+        const tempJob = Object.assign({ id: 'job_' + Date.now(), createdAt: new Date().toISOString() }, jobData);
+        window._jobsCache.push(tempJob);
+    } else if (window._jobsCache[idx]) {
+        window._jobsCache[idx] = Object.assign({}, window._jobsCache[idx], jobData);
+    }
+    closeModal();
+    renderJobsAdminList();
+    populateAnalyticsDynamicDropdowns();
 
-    try {
-        const r = await fetch(url, { method: 'POST', body: fd });
-        const d = await r.json();
-        if (d && d.result === 'success') {
-            showToast(isNew ? 'تمت إضافة الوظيفة ✓' : 'تم تحديث الوظيفة ✓');
-            closeModal();
+    sendInBackground(url, fd, {
+        successMsg: isNew ? 'تمت إضافة الوظيفة ✓' : 'تم تحديث الوظيفة ✓',
+        onSuccess: async () => {
             await loadJobsFromServer();
             renderJobsAdminList();
-        } else {
-            showToast('خطأ: ' + (d.error || 'غير معروف'), 'error');
+            populateAnalyticsDynamicDropdowns();
         }
-    } catch(e) {
-        showToast('تعذر الاتصال بالسيرفر', 'error');
-    } finally {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
-    }
+    });
 }
 
 function previewJob() {
@@ -15848,45 +15894,43 @@ function sendCustomWhatsAppToApplicant(idx) {
     overlay.classList.add('active');
 }
 
-async function toggleJobActive(idx) {
+function toggleJobActive(idx) {
     const job = window._jobsCache[idx];
     if (!job) return;
     const newState = (job.active === false || job.active === 'لا') ? 'نعم' : 'لا';
+    job.active = newState === 'نعم';
+    renderJobsAdminList();
+
     const url = (config.booking && config.booking.scriptURL) || '';
-    try {
-        const fd = new FormData();
-        fd.append('action', 'toggleJobActive');
-        fd.append('adminKey', getAuthKey());
-        fd.append('rowIndex', job.__rowIndex);
-        fd.append('active', newState);
-        const r = await fetch(url, { method: 'POST', body: fd });
-        const d = await r.json();
-        if (d && d.result === 'success') {
-            job.active = newState === 'نعم';
-            renderJobsAdminList();
-            showToast(newState === 'نعم' ? 'تم تفعيل الوظيفة ✓' : 'تم إيقاف الوظيفة ✓');
-        }
-    } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+    const fd = new FormData();
+    fd.append('action', 'toggleJobActive');
+    fd.append('adminKey', getAuthKey());
+    fd.append('rowIndex', job.__rowIndex);
+    fd.append('active', newState);
+    sendInBackground(url, fd, {
+        successMsg: newState === 'نعم' ? 'تم تفعيل الوظيفة ✓' : 'تم إيقاف الوظيفة ✓',
+        onSuccess: () => loadJobsFromServer().then(renderJobsAdminList)
+    });
 }
 
 function deleteJob(idx) {
     const job = window._jobsCache[idx];
     if (!job) return;
-    showConfirm('حذف الوظيفة', `هل أنت متأكد من حذف "${job.title || job.name}"؟ سيتم حذف الوظيفة نهائياً (الطلبات المرتبطة ستبقى في السجل).`, async () => {
+    showConfirm('حذف الوظيفة', `هل أنت متأكد من حذف "${job.title || job.name}"؟ سيتم حذف الوظيفة نهائياً (الطلبات المرتبطة ستبقى في السجل).`, () => {
+        const rowIndex = job.__rowIndex;
+        window._jobsCache.splice(idx, 1);
+        renderJobsAdminList();
+        populateAnalyticsDynamicDropdowns();
+
         const url = (config.booking && config.booking.scriptURL) || '';
-        try {
-            const fd = new FormData();
-            fd.append('action', 'deleteJob');
-            fd.append('adminKey', getAuthKey());
-            fd.append('rowIndex', job.__rowIndex);
-            const r = await fetch(url, { method: 'POST', body: fd });
-            const d = await r.json();
-            if (d && d.result === 'success') {
-                showToast('تم حذف الوظيفة ✓');
-                await loadJobsFromServer();
-                renderJobsAdminList();
-            }
-        } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+        const fd = new FormData();
+        fd.append('action', 'deleteJob');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', rowIndex);
+        sendInBackground(url, fd, {
+            successMsg: 'تم حذف الوظيفة ✓',
+            onSuccess: () => loadJobsFromServer().then(renderJobsAdminList)
+        });
     }, true);
 }
 
@@ -15909,6 +15953,7 @@ function openJobApplicationDetail(idx) {
     const statusColors = {
         'معلق': 'bg-amber-50 text-amber-700 border-amber-200',
         'مراجعة': 'bg-blue-50 text-blue-700 border-blue-200',
+        'مؤهل للانترفيو': 'bg-purple-50 text-purple-700 border-purple-200',
         'مقبول': 'bg-emerald-50 text-emerald-700 border-emerald-200',
         'مرفوض': 'bg-rose-50 text-rose-700 border-rose-200'
     };
@@ -15971,9 +16016,10 @@ function openJobApplicationDetail(idx) {
 
         <div class="border-t border-slate-200 pt-3 space-y-2">
             <div class="text-xs font-black text-slate-500 uppercase mb-2">تغيير حالة الطلب</div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 <button onclick="updateApplicationStatus(${idx}, 'معلق')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'معلق' ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}">معلق</button>
                 <button onclick="updateApplicationStatus(${idx}, 'مراجعة')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مراجعة' ? 'bg-blue-500 text-white border-blue-500' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'}">مراجعة</button>
+                <button onclick="updateApplicationStatus(${idx}, 'مؤهل للانترفيو')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مؤهل للانترفيو' ? 'bg-purple-600 text-white border-purple-600' : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'}">مرشح للانترفيو</button>
                 <button onclick="updateApplicationStatus(${idx}, 'مقبول')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مقبول' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'}">مقبول</button>
                 <button onclick="updateApplicationStatus(${idx}, 'مرفوض')" class="py-2 rounded-lg text-xs font-bold border-2 ${status === 'مرفوض' ? 'bg-rose-500 text-white border-rose-500' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'}">مرفوض</button>
             </div>
@@ -15988,46 +16034,54 @@ function openJobApplicationDetail(idx) {
     overlay.classList.add('active');
 }
 
-async function updateApplicationStatus(idx, newStatus) {
+function updateApplicationStatus(idx, newStatus) {
     const app = window._applicationsCache[idx];
     if (!app) return;
+    app.status = newStatus;
+    openJobApplicationDetail(idx);
+    renderApplicationsAdminList();
+    renderJobsAdminList();
+    renderJobsAnalytics();
+
     const url = (config.booking && config.booking.scriptURL) || '';
-    try {
-        const fd = new FormData();
-        fd.append('action', 'updateApplicationStatus');
-        fd.append('adminKey', getAuthKey());
-        fd.append('rowIndex', app.__rowIndex);
-        fd.append('status', newStatus);
-        const r = await fetch(url, { method: 'POST', body: fd });
-        const d = await r.json();
-        if (d && d.result === 'success') {
-            app.status = newStatus;
-            showToast('تم تحديث الحالة إلى: ' + newStatus);
-            openJobApplicationDetail(idx);
+    const fd = new FormData();
+    fd.append('action', 'updateApplicationStatus');
+    fd.append('adminKey', getAuthKey());
+    fd.append('rowIndex', app.__rowIndex);
+    fd.append('status', newStatus);
+    sendInBackground(url, fd, {
+        successMsg: 'تم تحديث الحالة إلى: ' + newStatus + ' ✓',
+        onSuccess: () => loadApplicationsFromServer().then(() => {
             renderApplicationsAdminList();
-        }
-    } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+            renderJobsAnalytics();
+        })
+    });
 }
 
 function deleteApplication(idx) {
     const app = window._applicationsCache[idx];
     if (!app) return;
-    showConfirm('حذف الطلب', `هل أنت متأكد من حذف طلب "${app.name}"؟ لا يمكن التراجع.`, async () => {
+    showConfirm('حذف الطلب', `هل أنت متأكد من حذف طلب "${app.name}"؟ لا يمكن التراجع.`, () => {
+        const rowIndex = app.__rowIndex;
+        window._applicationsCache.splice(idx, 1);
+        closeModal();
+        renderApplicationsAdminList();
+        renderJobsAdminList();
+        populateAnalyticsDynamicDropdowns();
+        renderJobsAnalytics();
+
         const url = (config.booking && config.booking.scriptURL) || '';
-        try {
-            const fd = new FormData();
-            fd.append('action', 'deleteApplication');
-            fd.append('adminKey', getAuthKey());
-            fd.append('rowIndex', app.__rowIndex);
-            const r = await fetch(url, { method: 'POST', body: fd });
-            const d = await r.json();
-            if (d && d.result === 'success') {
-                showToast('تم حذف الطلب ✓');
-                closeModal();
-                await loadApplicationsFromServer();
+        const fd = new FormData();
+        fd.append('action', 'deleteApplication');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', rowIndex);
+        sendInBackground(url, fd, {
+            successMsg: 'تم حذف الطلب ✓',
+            onSuccess: () => loadApplicationsFromServer().then(() => {
                 renderApplicationsAdminList();
-            }
-        } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+                renderJobsAnalytics();
+            })
+        });
     }, true);
 }
 
@@ -16057,6 +16111,805 @@ function saveJobsSettings() {
     try { localStorage.setItem('lp_admin_config', JSON.stringify(config)); } catch(e) {}
     syncConfigToServerSilent();
     showToast('تم حفظ الإعدادات ✓');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  🎯 JOBS ANALYTICS & SMART SCREENING ENGINE — التحليل والفرز الذكي
+// ═══════════════════════════════════════════════════════════════════
+window._selectedAnalyticsApps = new Set();
+
+function getApplicantKey(app) {
+    if (!app) return '';
+    return String(app.__rowIndex || app.id || ((app.phone || '') + '_' + (app.name || '')));
+}
+
+function getApplicantMetaMap() {
+    if (!config.applicantMeta || typeof config.applicantMeta !== 'object') {
+        config.applicantMeta = {};
+    }
+    try {
+        const localMeta = JSON.parse(localStorage.getItem('lp_applicant_meta') || '{}');
+        config.applicantMeta = Object.assign({}, localMeta, config.applicantMeta);
+    } catch (e) {}
+    return config.applicantMeta;
+}
+
+function getApplicantMeta(app) {
+    if (!app) return { note: '', rating: 0, flagged: false, tags: [] };
+    const key = getApplicantKey(app);
+    const map = getApplicantMetaMap();
+    const saved = map[key] || {};
+    return {
+        note: app.notes !== undefined && app.notes !== '' ? app.notes : (saved.note || ''),
+        rating: app.rating !== undefined ? (parseInt(app.rating) || 0) : (parseInt(saved.rating) || 0),
+        flagged: app.flagged !== undefined ? !!app.flagged : !!saved.flagged,
+        tags: Array.isArray(saved.tags) ? saved.tags : []
+    };
+}
+
+function saveApplicantMetaField(appIdx, field, value) {
+    const app = (window._applicationsCache || [])[appIdx];
+    if (!app) return;
+    const key = getApplicantKey(app);
+    const map = getApplicantMetaMap();
+    if (!map[key]) map[key] = { note: app.notes || '', rating: parseInt(app.rating) || 0, flagged: !!app.flagged };
+    map[key][field] = value;
+
+    try {
+        localStorage.setItem('lp_applicant_meta', JSON.stringify(map));
+    } catch (e) {}
+
+    // تحديث الكائن في الذاكرة مباشرة ومزامنته في الخلفية مع شيت طلبات_الوظائف (عمود Notes)
+    app.adminNote = map[key].note || '';
+    app.notes = map[key].note || '';
+    app.rating = parseInt(map[key].rating) || 0;
+    app.flagged = !!map[key].flagged;
+
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (url && app.__rowIndex) {
+        const fd = new FormData();
+        fd.append('action', 'updateApplicationMeta');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', app.__rowIndex);
+        fd.append('note', app.notes);
+        fd.append('rating', app.rating);
+        fd.append('flagged', app.flagged ? 'نعم' : 'لا');
+        sendInBackground(url, fd, {
+            silent: true
+        });
+    }
+}
+
+function parseApplicantAnswers(app) {
+    if (!app) return [];
+    if (Array.isArray(app.answers)) return app.answers;
+    if (typeof app.answers === 'string' && app.answers.trim()) {
+        try {
+            const parsed = JSON.parse(app.answers);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && typeof parsed === 'object') {
+                return Object.entries(parsed).map(function([k, v]) {
+                    return { question: k, answer: String(v || '') };
+                });
+            }
+        } catch (e) {}
+    }
+    return [];
+}
+
+function detectApplicantCountry(app) {
+    const rawPhone = String(app?.phone || '').replace(/\s+/g, '');
+    const digits = rawPhone.replace(/\D/g, '');
+    const answers = parseApplicantAnswers(app);
+
+    // فحص إذا كان هناك سؤال صريح عن الدولة أو الجنسية أو الإقامة
+    for (let i = 0; i < answers.length; i++) {
+        const q = String(answers[i].question || '').toLowerCase();
+        const a = String(answers[i].answer || '').trim();
+        if ((q.includes('دول') || q.includes('جنسي') || q.includes('محافظ') || q.includes('بلد') || q.includes('إقام')) && a) {
+            if (a.includes('مصر') || a.includes('القاهرة') || a.includes('الإسكندرية') || a.includes('البحيرة') || a.includes('الجيزة') || a.includes('الدقهلية') || a.includes('الشرقية') || a.includes('الغربية') || a.includes('المنوفية') || a.includes('كفر') || a.includes('الفيوم') || a.includes('بني سويف') || a.includes('المنيا') || a.includes('أسيوط') || a.includes('سوهاج') || a.includes('قنا') || a.includes('الأقصر') || a.includes('أسوان') || a.includes('دمياط') || a.includes('بورسعيد') || a.includes('الإسماعيلية') || a.includes('السويس')) {
+                return { code: 'egypt', label: '🇪🇬 مصر', isEgypt: true };
+            }
+            if (a.includes('سعود') || a.includes('الرياض') || a.includes('جدة')) return { code: 'saudi', label: '🇸🇦 السعودية', isEgypt: false };
+            if (a.includes('كويت')) return { code: 'kuwait', label: '🇰🇼 الكويت', isEgypt: false };
+            if (a.includes('إمارات') || a.includes('امارات') || a.includes('دبي')) return { code: 'uae', label: '🇦🇪 الإمارات', isEgypt: false };
+            if (a.includes('قطر') || a.includes('الدوحة')) return { code: 'qatar', label: '🇶🇦 قطر', isEgypt: false };
+            if (a.includes('عمان') || a.includes('عُمان') || a.includes('مسقط')) return { code: 'oman', label: '🇴🇲 عُمان', isEgypt: false };
+            if (a.includes('أردن') || a.includes('اردن')) return { code: 'jordan', label: '🇯🇴 الأردن', isEgypt: false };
+            if (a.includes('سودان')) return { code: 'sudan', label: '🇸🇩 السودان', isEgypt: false };
+            if (a.includes('سوري') || a.includes('فلسطين') || a.includes('يمن') || a.includes('ليبي') || a.includes('جزائر') || a.includes('مغرب') || a.includes('تونس') || a.includes('عراق')) {
+                return { code: 'other', label: '🌍 ' + a, isEgypt: false };
+            }
+        }
+    }
+
+    // الفحص من رقم الهاتف
+    if (
+        (digits.startsWith('20') && digits.length === 12) ||
+        (digits.startsWith('0020') && digits.length === 14) ||
+        (digits.startsWith('01') && digits.length === 11) ||
+        (/^(10|11|12|15)\d{8}$/.test(digits))
+    ) {
+        return { code: 'egypt', label: '🇪🇬 مصر', isEgypt: true };
+    }
+    if (digits.startsWith('966') || digits.startsWith('00966') || (digits.startsWith('05') && digits.length === 10)) {
+        return { code: 'saudi', label: '🇸🇦 السعودية', isEgypt: false };
+    }
+    if (digits.startsWith('965') || digits.startsWith('00965')) return { code: 'kuwait', label: '🇰🇼 الكويت', isEgypt: false };
+    if (digits.startsWith('971') || digits.startsWith('00971')) return { code: 'uae', label: '🇦🇪 الإمارات', isEgypt: false };
+    if (digits.startsWith('974') || digits.startsWith('00974')) return { code: 'qatar', label: '🇶🇦 قطر', isEgypt: false };
+    if (digits.startsWith('968') || digits.startsWith('00968')) return { code: 'oman', label: '🇴🇲 عُمان', isEgypt: false };
+    if (digits.startsWith('962') || digits.startsWith('00962')) return { code: 'jordan', label: '🇯🇴 الأردن', isEgypt: false };
+    if (digits.startsWith('249') || digits.startsWith('00249')) return { code: 'sudan', label: '🇸🇩 السودان', isEgypt: false };
+    if (digits.length > 0) return { code: 'other', label: '🌍 خارج مصر', isEgypt: false };
+    return { code: 'unknown', label: 'غير محدد', isEgypt: false };
+}
+
+function extractApplicantCollege(app) {
+    const answers = parseApplicantAnswers(app);
+    for (let i = 0; i < answers.length; i++) {
+        const q = String(answers[i].question || '').toLowerCase();
+        const a = String(answers[i].answer || '').trim();
+        if (!a) continue;
+        if (q.includes('كلي') || q.includes('مؤهل') || q.includes('تخصص') || q.includes('جامع') || q.includes('قسم') || q.includes('دراسي')) {
+            return a;
+        }
+    }
+    // فحص داخل النبذة أو الإجابات عن كلمات الكليات الشهيرة
+    const allText = (String(app?.coverLetter || '') + ' ' + answers.map(x => x.answer || '').join(' ')).trim();
+    const knownColleges = ['دار العلوم', 'دار علوم', 'تربية', 'آداب', 'اداب', 'ألسن', 'السن', 'لغة عربية', 'أصول الدين', 'شريعة', 'الدراسات الإسلامية', 'جامعة الأزهر', 'الأزهر', 'تجارة', 'حقوق', 'هندسة', 'علوم', 'حاسبات', 'إعلام'];
+    for (let j = 0; j < knownColleges.length; j++) {
+        if (allText.includes(knownColleges[j])) return knownColleges[j];
+    }
+    return 'غير محدد بالاستمارة';
+}
+
+function normalizeCollegeCategory(rawCollege) {
+    const s = String(rawCollege || '').trim();
+    if (!s || s === 'غير محدد بالاستمارة') return 'غير محدد بالاستمارة';
+    const norm = s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').toLowerCase();
+    if (norm.includes('دار العلوم') || norm.includes('دار علوم')) return 'كلية دار العلوم';
+    if (norm.includes('تربيه')) return 'كلية التربية';
+    if (norm.includes('اداب')) return 'كلية الآداب';
+    if (norm.includes('السن')) return 'كلية الألسن';
+    if (norm.includes('لغه عربيه') || norm.includes('ازهر') || norm.includes('اصول الدين') || norm.includes('دراسات اسلاميه') || norm.includes('شريعه')) return 'كليات الأزهر واللغة العربية';
+    if (s.length > 32) return s.substring(0, 32) + '...';
+    return s;
+}
+
+function populateAnalyticsDynamicDropdowns() {
+    const apps = window._applicationsCache || [];
+    const jobs = window._jobsCache || [];
+
+    // 1. الوظائف
+    const jobSel = document.getElementById('ja-filter-job');
+    if (jobSel) {
+        const curJob = jobSel.value || 'all';
+        const jobMap = new Map();
+        jobs.forEach(function(j) { if (j.id) jobMap.set(j.id, j.title || j.name || j.id); });
+        apps.forEach(function(a) {
+            if (a.jobId && !jobMap.has(a.jobId)) jobMap.set(a.jobId, a.jobName || a.jobId);
+        });
+        let jobOpts = '<option value="all">كل الوظائف (' + apps.length + ')</option>';
+        jobMap.forEach(function(title, id) {
+            const cnt = apps.filter(a => a.jobId === id || a.jobName === title).length;
+            jobOpts += `<option value="${esc(id)}">${esc(title)} (${cnt})</option>`;
+        });
+        jobSel.innerHTML = jobOpts;
+        if ([...jobSel.options].some(o => o.value === curJob)) jobSel.value = curJob;
+    }
+
+    // 2. الكليات والتخصصات المستخرجة ديناميكياً
+    const colSel = document.getElementById('ja-filter-college');
+    if (colSel) {
+        const curCol = colSel.value || 'all';
+        const colCounts = {};
+        apps.forEach(function(a) {
+            const cat = normalizeCollegeCategory(extractApplicantCollege(a));
+            colCounts[cat] = (colCounts[cat] || 0) + 1;
+        });
+        let colOpts = '<option value="all">كل الكليات والتخصصات</option>';
+        colOpts += '<option value="__arabic_specialist__">🎯 تخصصات اللغة العربية (تربية/آداب/دار علوم/أزهر)</option>';
+        colOpts += '<option value="__other_colleges__">⚠️ كليات وتخصصات أخرى</option>';
+        Object.keys(colCounts).sort(function(a, b) { return colCounts[b] - colCounts[a]; }).forEach(function(cat) {
+            colOpts += `<option value="${esc(cat)}">${esc(cat)} (${colCounts[cat]})</option>`;
+        });
+        colSel.innerHTML = colOpts;
+        if ([...colSel.options].some(o => o.value === curCol)) colSel.value = curCol;
+    }
+
+    // 3. أسئلة الاستمارة الديناميكية
+    populateAnalyticsQuestionsDropdown();
+}
+
+function populateAnalyticsQuestionsDropdown() {
+    const qSel = document.getElementById('ja-filter-question');
+    if (!qSel) return;
+    const curQ = qSel.value || 'all';
+    const selectedJob = document.getElementById('ja-filter-job')?.value || 'all';
+    const apps = window._applicationsCache || [];
+
+    const questionsSet = new Set();
+    apps.forEach(function(a) {
+        if (selectedJob !== 'all' && a.jobId !== selectedJob) return;
+        parseApplicantAnswers(a).forEach(function(ans) {
+            const qText = String(ans.question || '').trim();
+            if (qText) questionsSet.add(qText);
+        });
+    });
+
+    let qOpts = '<option value="all">كل أسئلة الاستمارة</option>';
+    Array.from(questionsSet).forEach(function(qText) {
+        qOpts += `<option value="${esc(qText)}">${esc(qText)}</option>`;
+    });
+    qSel.innerHTML = qOpts;
+    if ([...qSel.options].some(o => o.value === curQ)) qSel.value = curQ;
+    else qSel.value = 'all';
+
+    onAnalyticsQuestionSelectChange(false);
+}
+
+function onAnalyticsJobFilterChange() {
+    populateAnalyticsQuestionsDropdown();
+    renderJobsAnalytics();
+}
+
+function onAnalyticsQuestionSelectChange(doRender = true) {
+    const qVal = document.getElementById('ja-filter-question')?.value || 'all';
+    const aSel = document.getElementById('ja-filter-answer');
+    if (!aSel) return;
+
+    const selectedJob = document.getElementById('ja-filter-job')?.value || 'all';
+    const apps = window._applicationsCache || [];
+
+    if (qVal === 'all') {
+        aSel.innerHTML = '<option value="all">كل الإجابات</option>';
+        if (doRender) renderJobsAnalytics();
+        return;
+    }
+
+    const ansCounts = {};
+    apps.forEach(function(a) {
+        if (selectedJob !== 'all' && a.jobId !== selectedJob) return;
+        parseApplicantAnswers(a).forEach(function(ans) {
+            if (String(ans.question || '').trim() === qVal) {
+                const val = String(ans.answer || '—').trim() || '—';
+                ansCounts[val] = (ansCounts[val] || 0) + 1;
+            }
+        });
+    });
+
+    let aOpts = '<option value="all">كل الإجابات</option>';
+    Object.keys(ansCounts).sort(function(x, y) { return ansCounts[y] - ansCounts[x]; }).forEach(function(ansVal) {
+        const shortLabel = ansVal.length > 45 ? ansVal.substring(0, 45) + '...' : ansVal;
+        aOpts += `<option value="${esc(ansVal)}">${esc(shortLabel)} (${ansCounts[ansVal]})</option>`;
+    });
+    aSel.innerHTML = aOpts;
+    if (doRender) renderJobsAnalytics();
+}
+
+function isArabicSpecialistCollege(rawCollege) {
+    const norm = String(rawCollege || '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').toLowerCase();
+    return (
+        norm.includes('دار العلوم') ||
+        norm.includes('دار علوم') ||
+        norm.includes('تربيه') ||
+        norm.includes('اداب') ||
+        norm.includes('السن') ||
+        norm.includes('عربي') ||
+        norm.includes('ازهر') ||
+        norm.includes('اصول الدين') ||
+        norm.includes('شريعه') ||
+        norm.includes('دراسات اسلاميه')
+    );
+}
+
+function getFilteredAnalyticsApplications() {
+    const apps = window._applicationsCache || [];
+    const jobFilter = document.getElementById('ja-filter-job')?.value || 'all';
+    const countryFilter = document.getElementById('ja-filter-country')?.value || 'all';
+    const collegeFilter = document.getElementById('ja-filter-college')?.value || 'all';
+    const statusFilter = document.getElementById('ja-filter-status')?.value || 'all';
+    const questionFilter = document.getElementById('ja-filter-question')?.value || 'all';
+    const answerFilter = document.getElementById('ja-filter-answer')?.value || 'all';
+    const notesFilter = document.getElementById('ja-filter-notes')?.value || 'all';
+    const q = (document.getElementById('ja-search-input')?.value || '').toLowerCase().trim();
+
+    return apps.filter(function(app) {
+        // 1. الوظيفة
+        if (jobFilter !== 'all' && app.jobId !== jobFilter && app.jobName !== jobFilter) return false;
+
+        // 2. الدولة
+        const countryInfo = detectApplicantCountry(app);
+        if (countryFilter === 'egypt' && !countryInfo.isEgypt) return false;
+        if (countryFilter === 'non_egypt' && countryInfo.isEgypt) return false;
+        if (countryFilter !== 'all' && countryFilter !== 'egypt' && countryFilter !== 'non_egypt') {
+            if (countryInfo.code !== countryFilter) return false;
+        }
+
+        // 3. الكلية / التخصص
+        const rawCollege = extractApplicantCollege(app);
+        const normCat = normalizeCollegeCategory(rawCollege);
+        if (collegeFilter === '__arabic_specialist__') {
+            if (!isArabicSpecialistCollege(rawCollege)) return false;
+        } else if (collegeFilter === '__other_colleges__') {
+            if (isArabicSpecialistCollege(rawCollege)) return false;
+        } else if (collegeFilter !== 'all') {
+            if (normCat !== collegeFilter && rawCollege !== collegeFilter) return false;
+        }
+
+        // 4. الحالة
+        const st = app.status || 'معلق';
+        if (statusFilter !== 'all' && st !== statusFilter) return false;
+
+        // 5. سؤال وإجابة محددة
+        if (questionFilter !== 'all' && answerFilter !== 'all') {
+            const answers = parseApplicantAnswers(app);
+            const matched = answers.some(function(ans) {
+                return String(ans.question || '').trim() === questionFilter &&
+                       String(ans.answer || '—').trim() === answerFilter;
+            });
+            if (!matched) return false;
+        }
+
+        // 6. الملاحظات والـ CV والتقييم
+        const meta = getApplicantMeta(app);
+        const hasNote = !!(meta.note && String(meta.note).trim());
+        const hasCv = !!(app.cvUrl && String(app.cvUrl).trim());
+        if (notesFilter === 'has_notes' && !hasNote) return false;
+        if (notesFilter === 'no_notes' && hasNote) return false;
+        if (notesFilter === 'has_cv' && !hasCv) return false;
+        if (notesFilter === 'no_cv' && hasCv) return false;
+        if (notesFilter === 'high_score' && (meta.rating || 0) < 4) return false;
+        if (notesFilter === 'flagged' && !meta.flagged) return false;
+
+        // 7. البحث النصي الحر
+        if (q) {
+            const answersText = parseApplicantAnswers(app).map(a => (a.question + ' ' + a.answer)).join(' ').toLowerCase();
+            const haystack = [
+                app.name || '',
+                app.phone || '',
+                app.email || '',
+                app.jobName || '',
+                app.coverLetter || '',
+                rawCollege,
+                countryInfo.label,
+                meta.note || '',
+                answersText
+            ].join(' ').toLowerCase();
+            if (!haystack.includes(q)) return false;
+        }
+
+        return true;
+    });
+}
+
+function renderJobsAnalytics() {
+    const allApps = window._applicationsCache || [];
+    const filtered = getFilteredAnalyticsApplications();
+
+    // تحديث كروت الـ KPI العليا بناءً على إجمالي المتقدمين (أو الوظيفة المختارة)
+    const jobFilter = document.getElementById('ja-filter-job')?.value || 'all';
+    const baseApps = jobFilter === 'all' ? allApps : allApps.filter(a => a.jobId === jobFilter || a.jobName === jobFilter);
+
+    const setTxt = function(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('ja-kpi-total', baseApps.length);
+    setTxt('ja-kpi-interview', baseApps.filter(a => a.status === 'مؤهل للانترفيو').length);
+    setTxt('ja-kpi-accepted', baseApps.filter(a => a.status === 'مقبول').length);
+    setTxt('ja-kpi-review', baseApps.filter(a => a.status === 'مراجعة').length);
+    setTxt('ja-kpi-pending', baseApps.filter(a => (a.status || 'معلق') === 'معلق').length);
+    setTxt('ja-kpi-rejected', baseApps.filter(a => a.status === 'مرفوض').length);
+    setTxt('ja-results-count', filtered.length);
+
+    // رسم التوزيعات التحليلية (الكليات، الدول، الوظائف)
+    renderAnalyticsDistributions(filtered);
+
+    // رسم جدول النتائج
+    const tbody = document.getElementById('ja-results-tbody');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-400 font-bold">
+            <i class="fa-solid fa-filter-circle-xmark text-4xl mb-2 opacity-30 block"></i>
+            لا يوجد متقدمون يطابقون شروط الفلترة الحالية
+        </td></tr>`;
+        updateAnalyticsBulkBar();
+        return;
+    }
+
+    const statusBadgeMap = {
+        'معلق': 'bg-amber-50 text-amber-700 border-amber-200',
+        'مراجعة': 'bg-blue-50 text-blue-700 border-blue-200',
+        'مؤهل للانترفيو': 'bg-purple-100 text-purple-800 border-purple-300',
+        'مقبول': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        'مرفوض': 'bg-rose-50 text-rose-700 border-rose-200'
+    };
+
+    tbody.innerHTML = filtered.map(function(app) {
+        const origIdx = allApps.indexOf(app);
+        const appKey = getApplicantKey(app);
+        const isSelected = window._selectedAnalyticsApps.has(appKey);
+        const countryInfo = detectApplicantCountry(app);
+        const rawCollege = extractApplicantCollege(app);
+        const isSpecialist = isArabicSpecialistCollege(rawCollege);
+        const meta = getApplicantMeta(app);
+        const status = app.status || 'معلق';
+        const answers = parseApplicantAnswers(app);
+
+        // استخراج أبرز 3 إجابات لعرضها سريعاً في الجدول
+        const snippetAnswers = answers.filter(function(a) {
+            const q = String(a.question || '');
+            return !q.includes('الاسم') && !q.includes('واتساب') && !q.includes('بريد') && !q.includes('سيرة');
+        }).slice(0, 3);
+
+        const starsHtml = [1, 2, 3, 4, 5].map(function(star) {
+            const active = (meta.rating || 0) >= star;
+            return `<button type="button" onclick="setApplicantRating(${origIdx}, ${star})" class="text-xs transition-transform hover:scale-125 ${active ? 'text-amber-400' : 'text-slate-300'}" title="تقييم ${star}/5"><i class="fa-solid fa-star"></i></button>`;
+        }).join('');
+
+        return `<tr class="hover:bg-slate-50/90 transition-colors ${meta.flagged ? 'bg-rose-50/40' : ''} ${status === 'مؤهل للانترفيو' ? 'bg-purple-50/20' : ''}">
+            <td class="px-3 py-3 text-center align-top">
+                <input type="checkbox" class="ja-row-chk w-4 h-4 rounded text-indigo-600 cursor-pointer" data-key="${esc(appKey)}" ${isSelected ? 'checked' : ''} onchange="toggleAnalyticsRowSelect('${esc(appKey)}', this.checked)">
+            </td>
+            <td class="px-3 py-3 align-top">
+                <div class="flex items-start gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-xs flex-shrink-0 mt-0.5">
+                        ${esc((app.name || '؟').charAt(0))}
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-black text-slate-800 text-xs flex items-center gap-1.5 flex-wrap">
+                            <span>${esc(app.name || 'بدون اسم')}</span>
+                            ${meta.flagged ? '<span class="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded font-black" title="عليه ملاحظة تحذيرية">🚩 تنبيه</span>' : ''}
+                        </div>
+                        <div class="text-[11px] text-indigo-600 font-bold mt-0.5"><i class="fa-solid fa-briefcase text-[10px] ml-1"></i>${esc(app.jobName || 'وظيفة عامة')}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">${app.timestamp ? new Date(app.timestamp).toLocaleDateString('ar-EG') : ''}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-3 py-3 align-top">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${countryInfo.isEgypt ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-sky-50 text-sky-700 border border-sky-200'}">
+                    ${esc(countryInfo.label)}
+                </span>
+                <div class="font-mono text-xs text-slate-700 font-bold mt-1" dir="ltr">${esc(app.phone || '—')}</div>
+                ${app.cvUrl ? `<a href="${esc(app.cvUrl)}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 hover:underline mt-1"><i class="fa-solid fa-file-pdf"></i> فتح الـ CV</a>` : '<span class="text-[10px] text-slate-400 block mt-1">بدون CV مرفق</span>'}
+            </td>
+            <td class="px-3 py-3 align-top max-w-xs">
+                <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
+                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-black ${isSpecialist ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}">
+                        <i class="fa-solid fa-graduation-cap ml-1"></i>${esc(rawCollege)}
+                    </span>
+                </div>
+                ${snippetAnswers.length > 0 ? `<div class="space-y-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    ${snippetAnswers.map(a => `<div class="truncate" title="${esc(a.question + ': ' + a.answer)}"><span class="font-bold text-slate-400">${esc(a.question)}:</span> <span class="font-bold text-slate-700">${esc(a.answer)}</span></div>`).join('')}
+                </div>` : (app.coverLetter ? `<div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100 line-clamp-2">${esc(app.coverLetter)}</div>` : '<span class="text-[10px] text-slate-400">لا توجد تفاصيل إضافية</span>')}
+            </td>
+            <td class="px-3 py-3 align-top">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-0.5">${starsHtml}</div>
+                        <button type="button" onclick="toggleApplicantFlag(${origIdx})" class="text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${meta.flagged ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-400 border-slate-200 hover:text-rose-600'}" title="وضع علامة تنبيه أو تحذير على المتقدم">
+                            <i class="fa-solid fa-flag"></i> ${meta.flagged ? 'مُعلّم' : 'تنبيه'}
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input type="text" value="${esc(meta.note || '')}"
+                            onchange="saveApplicantQuickNote(${origIdx}, this.value)"
+                            placeholder="اكتب ملاحظتك هنا (تُحفظ تلقائياً)..."
+                            class="w-full px-2.5 py-1.5 text-xs font-bold bg-amber-50/50 border border-amber-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none text-slate-700">
+                    </div>
+                </div>
+            </td>
+            <td class="px-3 py-3 text-center align-top">
+                <select onchange="quickChangeApplicantStatus(${origIdx}, this.value)" class="text-xs font-black px-2.5 py-1.5 rounded-xl border-2 cursor-pointer outline-none ${statusBadgeMap[status] || statusBadgeMap['معلق']}">
+                    <option value="معلق" ${status === 'معلق' ? 'selected' : ''}>⏳ معلق</option>
+                    <option value="مراجعة" ${status === 'مراجعة' ? 'selected' : ''}>🔍 مراجعة</option>
+                    <option value="مؤهل للانترفيو" ${status === 'مؤهل للانترفيو' ? 'selected' : ''}>🎥 للانترفيو</option>
+                    <option value="مقبول" ${status === 'مقبول' ? 'selected' : ''}>✅ مقبول</option>
+                    <option value="مرفوض" ${status === 'مرفوض' ? 'selected' : ''}>❌ مرفوض</option>
+                </select>
+            </td>
+            <td class="px-3 py-3 text-center align-top">
+                <div class="flex items-center justify-center gap-1">
+                    <button type="button" onclick="openJobApplicationDetail(${origIdx})" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center text-xs" title="عرض كل إجابات الاستمارة"><i class="fa-solid fa-eye"></i></button>
+                    <button type="button" onclick="sendCustomWhatsAppToApplicant(${origIdx})" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center text-xs" title="إرسال رسالة واتساب (دعوة انترفيو أو اعتذار)"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button type="button" onclick="deleteApplication(${origIdx})" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center text-xs" title="حذف الطلب"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    updateAnalyticsBulkBar();
+}
+
+function renderAnalyticsDistributions(appsList) {
+    const total = appsList.length || 1;
+
+    // 1. توزيع الكليات
+    const colBox = document.getElementById('ja-chart-colleges');
+    if (colBox) {
+        const counts = {};
+        appsList.forEach(function(a) {
+            const cat = normalizeCollegeCategory(extractApplicantCollege(a));
+            counts[cat] = (counts[cat] || 0) + 1;
+        });
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        colBox.innerHTML = entries.length === 0 ? '<p class="text-xs text-slate-400 text-center py-4">لا توجد بيانات</p>' : entries.map(function([cat, cnt]) {
+            const pct = Math.round((cnt / total) * 100);
+            return `<div onclick="filterAnalyticsByCollege('${esc(cat)}')" class="cursor-pointer group p-1.5 rounded-lg hover:bg-indigo-50/60 transition-colors">
+                <div class="flex justify-between text-[11px] font-bold mb-1">
+                    <span class="text-slate-700 group-hover:text-indigo-700 truncate">${esc(cat)}</span>
+                    <span class="text-indigo-600 font-black">${cnt} (${pct}%)</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-500 rounded-full" style="width:${pct}%"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // 2. توزيع الدول
+    const cntBox = document.getElementById('ja-chart-countries');
+    if (cntBox) {
+        const counts = {};
+        const codeMap = {};
+        appsList.forEach(function(a) {
+            const info = detectApplicantCountry(a);
+            counts[info.label] = (counts[info.label] || 0) + 1;
+            codeMap[info.label] = info.code;
+        });
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        cntBox.innerHTML = entries.length === 0 ? '<p class="text-xs text-slate-400 text-center py-4">لا توجد بيانات</p>' : entries.map(function([lbl, cnt]) {
+            const pct = Math.round((cnt / total) * 100);
+            const code = codeMap[lbl] || 'all';
+            return `<div onclick="filterAnalyticsByCountry('${esc(code)}')" class="cursor-pointer group p-1.5 rounded-lg hover:bg-emerald-50/60 transition-colors">
+                <div class="flex justify-between text-[11px] font-bold mb-1">
+                    <span class="text-slate-700 group-hover:text-emerald-700 truncate">${esc(lbl)}</span>
+                    <span class="text-emerald-600 font-black">${cnt} (${pct}%)</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width:${pct}%"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // 3. توزيع الوظائف
+    const jobBox = document.getElementById('ja-chart-jobs');
+    if (jobBox) {
+        const counts = {};
+        const idMap = {};
+        appsList.forEach(function(a) {
+            const jName = a.jobName || 'وظيفة عامة';
+            counts[jName] = (counts[jName] || 0) + 1;
+            if (a.jobId) idMap[jName] = a.jobId;
+        });
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        jobBox.innerHTML = entries.length === 0 ? '<p class="text-xs text-slate-400 text-center py-4">لا توجد بيانات</p>' : entries.map(function([jName, cnt]) {
+            const pct = Math.round((cnt / total) * 100);
+            const jId = idMap[jName] || jName;
+            return `<div onclick="filterAnalyticsByJob('${esc(jId)}')" class="cursor-pointer group p-1.5 rounded-lg hover:bg-orange-50/60 transition-colors">
+                <div class="flex justify-between text-[11px] font-bold mb-1">
+                    <span class="text-slate-700 group-hover:text-orange-700 truncate">${esc(jName)}</span>
+                    <span class="text-orange-600 font-black">${cnt} (${pct}%)</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-orange-500 rounded-full" style="width:${pct}%"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+}
+
+function filterAnalyticsByCollege(cat) {
+    const el = document.getElementById('ja-filter-college');
+    if (el) { el.value = cat; renderJobsAnalytics(); }
+}
+
+function filterAnalyticsByCountry(code) {
+    const el = document.getElementById('ja-filter-country');
+    if (el && [...el.options].some(o => o.value === code)) {
+        el.value = code;
+        renderJobsAnalytics();
+    }
+}
+
+function filterAnalyticsByJob(jobId) {
+    const el = document.getElementById('ja-filter-job');
+    if (el && [...el.options].some(o => o.value === jobId)) {
+        el.value = jobId;
+        onAnalyticsJobFilterChange();
+    }
+}
+
+function quickFilterAnalyticsStatus(statusVal) {
+    const el = document.getElementById('ja-filter-status');
+    if (el) {
+        el.value = statusVal;
+        renderJobsAnalytics();
+    }
+}
+
+function applySmartAnalyticsPreset(preset) {
+    resetJobsAnalyticsFilters(false);
+    if (preset === 'arabic_grads') {
+        const colEl = document.getElementById('ja-filter-college');
+        if (colEl) colEl.value = '__arabic_specialist__';
+    } else if (preset === 'egypt_only') {
+        const cntEl = document.getElementById('ja-filter-country');
+        if (cntEl) cntEl.value = 'egypt';
+    } else if (preset === 'outside_egypt') {
+        const cntEl = document.getElementById('ja-filter-country');
+        if (cntEl) cntEl.value = 'non_egypt';
+    } else if (preset === 'ready_interview') {
+        const stEl = document.getElementById('ja-filter-status');
+        if (stEl) stEl.value = 'مؤهل للانترفيو';
+    } else if (preset === 'has_notes') {
+        const ntEl = document.getElementById('ja-filter-notes');
+        if (ntEl) ntEl.value = 'has_notes';
+    }
+    renderJobsAnalytics();
+}
+
+function resetJobsAnalyticsFilters(doRender = true) {
+    ['ja-filter-job', 'ja-filter-country', 'ja-filter-college', 'ja-filter-status', 'ja-filter-question', 'ja-filter-answer', 'ja-filter-notes'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = 'all';
+    });
+    const sEl = document.getElementById('ja-search-input');
+    if (sEl) sEl.value = '';
+    if (doRender) {
+        populateAnalyticsQuestionsDropdown();
+        renderJobsAnalytics();
+    }
+}
+
+function saveApplicantQuickNote(appIdx, noteText) {
+    saveApplicantMetaField(appIdx, 'note', noteText.trim());
+    showToast('تم حفظ الملاحظة على المتقدم ✓');
+}
+
+function setApplicantRating(appIdx, ratingVal) {
+    const app = (window._applicationsCache || [])[appIdx];
+    if (!app) return;
+    const current = getApplicantMeta(app).rating || 0;
+    const nextRating = current === ratingVal ? 0 : ratingVal;
+    saveApplicantMetaField(appIdx, 'rating', nextRating);
+    renderJobsAnalytics();
+}
+
+function toggleApplicantFlag(appIdx) {
+    const app = (window._applicationsCache || [])[appIdx];
+    if (!app) return;
+    const current = getApplicantMeta(app).flagged;
+    saveApplicantMetaField(appIdx, 'flagged', !current);
+    renderJobsAnalytics();
+}
+
+function quickChangeApplicantStatus(appIdx, newStatus) {
+    const app = (window._applicationsCache || [])[appIdx];
+    if (!app) return;
+    app.status = newStatus;
+    renderJobsAnalytics();
+    renderApplicationsAdminList();
+    renderJobsAdminList();
+
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (!url) return;
+    const fd = new FormData();
+    fd.append('action', 'updateApplicationStatus');
+    fd.append('adminKey', getAuthKey());
+    fd.append('rowIndex', app.__rowIndex);
+    fd.append('status', newStatus);
+    sendInBackground(url, fd, {
+        successMsg: 'تم تحديث حالة المتقدم إلى: ' + newStatus + ' ✓'
+    });
+}
+
+function toggleAnalyticsRowSelect(appKey, checked) {
+    if (checked) window._selectedAnalyticsApps.add(appKey);
+    else window._selectedAnalyticsApps.delete(appKey);
+    updateAnalyticsBulkBar();
+}
+
+function toggleSelectAllAnalytics(checked) {
+    const filtered = getFilteredAnalyticsApplications();
+    filtered.forEach(function(app) {
+        const key = getApplicantKey(app);
+        if (checked) window._selectedAnalyticsApps.add(key);
+        else window._selectedAnalyticsApps.delete(key);
+    });
+    renderJobsAnalytics();
+}
+
+function clearAnalyticsSelection() {
+    window._selectedAnalyticsApps.clear();
+    const selAll = document.getElementById('ja-select-all');
+    if (selAll) selAll.checked = false;
+    renderJobsAnalytics();
+}
+
+function updateAnalyticsBulkBar() {
+    const bar = document.getElementById('ja-bulk-bar');
+    const cnt = document.getElementById('ja-selected-count');
+    const size = window._selectedAnalyticsApps.size;
+    if (cnt) cnt.textContent = size;
+    if (bar) {
+        if (size > 0) bar.classList.remove('hidden');
+        else bar.classList.add('hidden');
+    }
+}
+
+async function bulkUpdateApplicantsStatus(newStatus) {
+    const selectedKeys = Array.from(window._selectedAnalyticsApps);
+    if (selectedKeys.length === 0) return;
+
+    const allApps = window._applicationsCache || [];
+    const targets = allApps.filter(a => selectedKeys.includes(getApplicantKey(a)));
+    if (targets.length === 0) return;
+
+    targets.forEach(function(app) { app.status = newStatus; });
+    clearAnalyticsSelection();
+    renderJobsAnalytics();
+    renderApplicationsAdminList();
+    showToast(`جاري تحديث حالة ${targets.length} متقدم إلى "${newStatus}"...`);
+
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (!url) return;
+
+    for (let i = 0; i < targets.length; i++) {
+        try {
+            const fd = new FormData();
+            fd.append('action', 'updateApplicationStatus');
+            fd.append('adminKey', getAuthKey());
+            fd.append('rowIndex', targets[i].__rowIndex);
+            fd.append('status', newStatus);
+            await fetch(url, { method: 'POST', body: fd });
+        } catch (e) {}
+    }
+    showToast(`تم تحديث ${targets.length} متقدم إلى "${newStatus}" ✓`);
+}
+
+function exportFilteredApplicationsExcel() {
+    const filtered = getFilteredAnalyticsApplications();
+    if (filtered.length === 0) {
+        showToast('لا توجد نتائج لتصديرها', 'warn');
+        return;
+    }
+    if (typeof XLSX === 'undefined') {
+        showToast('مكتبة Excel غير محملة', 'error');
+        return;
+    }
+
+    const rows = filtered.map(function(app, idx) {
+        const country = detectApplicantCountry(app);
+        const college = extractApplicantCollege(app);
+        const meta = getApplicantMeta(app);
+        const answersObj = {};
+        parseApplicantAnswers(app).forEach(function(a) {
+            if (a.question) answersObj[a.question] = a.answer || '';
+        });
+        return Object.assign({
+            '#': idx + 1,
+            'اسم المتقدم': app.name || '',
+            'الوظيفة': app.jobName || '',
+            'الحالة': app.status || 'معلق',
+            'الدولة': country.label,
+            'رقم الواتساب': app.phone || '',
+            'البريد الإلكتروني': app.email || '',
+            'الكلية / المؤهل': college,
+            'التقييم (من 5)': meta.rating || 0,
+            'تنبيه / تحذير': meta.flagged ? 'نعم' : 'لا',
+            'ملاحظات الإدارة': meta.note || '',
+            'رابط السيرة الذاتية': app.cvUrl || '',
+            'تاريخ التقديم': app.timestamp ? new Date(app.timestamp).toLocaleString('ar-EG') : ''
+        }, answersObj);
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'فرز_المتقدمين');
+    XLSX.writeFile(wb, 'تحليل_وفرز_المتقدمين_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+    showToast('تم تصدير ملف الإكسيل بنجاح ✓');
 }
 </script>
 <!-- 🔍 Global Search Modal -->
