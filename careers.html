@@ -13,10 +13,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // إخفاء الصفحة الرئيسية فوراً لو كان الرابط يحتوي على ?job= لمنع الوميض
-        if (new URLSearchParams(window.location.search).has('job')) {
-            document.write('<style>body > header, body > section, #jobs, #faq { display: none !important; } #job-page-view { display: block !important; }</style>');
-        }
+        // إخفاء الصفحة الرئيسية فوراً لو كان الرابط يحتوي على ?job= أو ?portal= أو ?exam= لمنع الوميض
+        (function() {
+            const sp = new URLSearchParams(window.location.search);
+            if (sp.has('job')) {
+                document.write('<style>body > header, body > section, #jobs, #faq { display: none !important; } #job-page-view { display: block !important; }</style>');
+            } else if (sp.has('portal') || sp.has('exam') || sp.has('track')) {
+                document.write('<style>body > header, body > section, #jobs, #faq { display: none !important; } #applicant-portal-page-view { display: block !important; }</style>');
+            }
+        })();
     </script>
 
     <!-- Config loader (نفس index.html) -->
@@ -150,6 +155,51 @@
             transform: rotate(180deg); 
             color: #4f46e5; 
         }
+
+        .no-select-exam, .no-select-exam * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+        .no-select-exam input, .no-select-exam textarea {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+        .corr-word-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            margin: 3px 2px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .corr-word-chip:hover {
+            border-color: #6366f1;
+            background: #e0e7ff;
+            color: #312e81;
+            transform: translateY(-1px);
+        }
+        .corr-word-chip.is-corrected {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #065f46;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.18);
+        }
+        .corr-word-chip.is-active-edit {
+            border-color: #f59e0b;
+            background: #fffbeb;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+        }
+
     </style>
 </head>
 <body class="text-slate-800">
@@ -177,11 +227,15 @@
                 </div>
             </a>
             <div class="hidden lg:flex items-center gap-1">
-                <a href="careers.html" class="nav-link"><i class="fa-solid fa-house text-xs"></i> الرئيسية</a>
-                <a href="#jobs" onclick="scrollToId('jobs'); return false;" class="nav-link">الوظائف المتاحة</a>
-                <a href="#faq" onclick="scrollToId('faq'); return false;" class="nav-link">الأسئلة الشائعة</a>
+                <a href="careers.html" onclick="if(window.closePortalFullPage){closePortalFullPage(); return false;}" class="nav-link"><i class="fa-solid fa-house text-xs"></i> الرئيسية</a>
+                <a href="#jobs" onclick="if(window.closePortalFullPage && !document.getElementById('applicant-portal-page-view').classList.contains('hidden')){closePortalFullPage(); return false;} scrollToId('jobs'); return false;" class="nav-link">الوظائف المتاحة</a>
+                <a href="#faq" onclick="if(window.closePortalFullPage && !document.getElementById('applicant-portal-page-view').classList.contains('hidden')){closePortalFullPage(); return false;} scrollToId('faq'); return false;" class="nav-link">الأسئلة الشائعة</a>
+                <a href="careers.html?portal=1" onclick="openPortalFullPage(); return false;" class="nav-link"><i class="fa-solid fa-user-check text-xs"></i> متابعة التوظيف</a>
             </div>
-            <a href="#jobs" onclick="scrollToId('jobs'); return false;" class="nav-link nav-link-cta hidden sm:inline-flex"><i class="fa-solid fa-briefcase"></i> قدّم الآن</a>
+            <div class="flex items-center gap-2">
+                <a href="careers.html?portal=1" onclick="openPortalFullPage(); return false;" class="nav-link lg:hidden"><i class="fa-solid fa-user-check text-xs"></i> متابعة التوظيف</a>
+                <a href="#jobs" onclick="if(window.closePortalFullPage && !document.getElementById('applicant-portal-page-view').classList.contains('hidden')){closePortalFullPage(); return false;} scrollToId('jobs'); return false;" class="nav-link nav-link-cta hidden sm:inline-flex"><i class="fa-solid fa-briefcase"></i> قدّم الآن</a>
+            </div>
         </div>
     </nav>
 
@@ -303,6 +357,168 @@
             </div>
         </div>
     </div>
+
+    <!-- ============= صفحة متابعة التوظيف (تظهر عند الضغط على "متابعة التوظيف" في القائمة أو فتح ?portal=1) ============= -->
+    <div id="applicant-portal-page-view" class="hidden relative z-10 pt-24 pb-20 min-h-screen">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
+
+            <!-- الشريط العلوي لصفحة متابعة التوظيف -->
+            <div id="portal-top-bar" class="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl px-5 py-3.5 shadow-sm border border-slate-200">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600 text-yellow-400 flex items-center justify-center font-black">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div id="portal-page-header-title" class="font-black text-slate-800 text-sm sm:text-base">متابعة التوظيف</div>
+                        <div class="text-[11px] text-slate-500 font-bold">متابعة حالة طلب التوظيف • الاختبارات • مواعيد الانترفيو</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="portal-refresh-btn" onclick="refreshPortalData()" class="hidden px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs transition-colors items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> تحديث
+                    </button>
+                    <button type="button" id="portal-logout-btn" onclick="logoutApplicantPortal()" class="hidden px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-bold text-xs transition-colors items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i> خروج
+                    </button>
+                    <a href="careers.html" onclick="closePortalFullPage(); return false;" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right"></i> العودة للوظائف
+                    </a>
+                </div>
+            </div>
+
+            <!-- 1) شاشة الدخول برقم الواتساب (الكود السري) -->
+            <div id="portal-login-card" class="max-w-lg mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden my-8">
+                <div class="bg-gradient-to-br from-indigo-900 via-blue-800 to-indigo-950 p-7 text-white text-center relative overflow-hidden">
+                    <div class="w-16 h-16 rounded-2xl bg-yellow-400 text-indigo-950 flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <h1 class="text-2xl font-black mb-1">متابعة التوظيف</h1>
+                    <p class="text-blue-200 text-xs sm:text-sm font-medium">أدخل كود الدخول الخاص بك (رقم الواتساب الذي سجلت به في التقديم على الوظيفة)</p>
+                </div>
+                <form onsubmit="submitPortalLogin(event)" class="p-6 sm:p-8 space-y-5">
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-2">كود الدخول (رقم الواتساب المسجل) <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <input type="tel" id="portal-login-code-input" dir="ltr" required placeholder="01xxxxxxxxx"
+                                class="w-full px-4 py-3.5 pl-11 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:border-indigo-600 focus:bg-white transition-all text-left font-mono text-base">
+                            <i class="fa-brands fa-whatsapp text-emerald-500 text-xl absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+                    <div id="portal-login-error" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold text-center"></div>
+                    <button type="submit" id="portal-login-submit-btn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-base shadow-lg hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> دخول لمتابعة حالة الطلب
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2) محتوى صفحة المتابعة بعد الدخول (يتفاعل ديناميكياً حسب الحالة: معلق / رفض / اختبار / انترفيو / قبول) -->
+            <div id="portal-dashboard-content" class="hidden space-y-6">
+                <!-- بطاقة بيانات المتقدم الأساسية -->
+                <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="bg-gradient-to-l from-indigo-900 via-indigo-800 to-slate-900 p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div id="ap-avatar" class="w-14 h-14 rounded-2xl bg-yellow-400 text-indigo-950 flex items-center justify-center font-black text-2xl shadow-lg flex-shrink-0">م</div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h2 id="ap-name" class="text-xl sm:text-2xl font-black">اسم المتقدم</h2>
+                                    <span class="px-3 py-0.5 rounded-full bg-white/15 text-yellow-300 text-xs font-bold font-mono" dir="ltr" id="ap-phone">01000000000</span>
+                                </div>
+                                <p id="ap-email" class="text-blue-200 text-xs font-bold mt-1 font-mono" dir="ltr"></p>
+                            </div>
+                        </div>
+                        <div id="ap-overall-score-box" class="hidden bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl px-5 py-3 text-center">
+                            <div class="text-[11px] text-blue-200 font-bold">نتيجة الاختبار</div>
+                            <div id="ap-overall-score" class="text-base sm:text-lg font-black text-yellow-400 mt-0.5">—</div>
+                        </div>
+                    </div>
+
+                    <!-- محتوى الطلب المتفاعل حسب الحالة (معلق - رفض - اختبار - انترفيو - قبول) -->
+                    <div id="ap-applications-list" class="p-6 space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- 3) شاشة أداء الاختبار الفعلي (مع طبقات منع الغش الـ 4) -->
+            <div id="portal-active-exam-view" class="hidden no-select-exam space-y-6">
+                <div class="sticky top-16 z-50 bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-indigo-500/40 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-yellow-400 flex items-center justify-center font-black">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h3 id="active-exam-title" class="font-black text-sm sm:text-base">اختبار الوظيفة</h3>
+                            <div id="active-exam-meta" class="text-[11px] text-slate-300 font-bold">بيئة اختبار محمية ضد الغش</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <!-- عداد تحذيرات مغادرة التبويب (الطبقة 2) -->
+                        <div id="exam-tab-warning-pill" class="hidden px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black items-center gap-1.5">
+                            <i class="fa-solid fa-eye-slash"></i>
+                            <span>مغادرة التبويب: <strong id="exam-tab-switches-count">0</strong> / 2</span>
+                        </div>
+
+                        <!-- المؤقت التنازلي (الطبقة 1) -->
+                        <div id="exam-timer-box" class="px-4 py-2 rounded-xl bg-indigo-950 border border-indigo-400/40 flex items-center gap-2 font-mono text-base sm:text-lg font-black text-yellow-400">
+                            <i class="fa-regular fa-clock animate-pulse"></i>
+                            <span id="exam-timer-display" dir="ltr">00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="exam-protection-banner" class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-xs font-bold text-amber-900 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-lock text-amber-600 text-base"></i>
+                        <span>تنبيه هام: الاختبار محمي بنظام منع الغش (النسخ واللصق معطل، ومغادرة التبويب 3 مرات تغلق الاختبار وتسلّم الإجابات تلقائياً).</span>
+                    </div>
+                </div>
+
+                <div id="active-exam-questions-list" class="space-y-5"></div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-lg border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-xs font-bold text-slate-600">
+                        تأكد من مراجعة جميع إجاباتك وتصويباتك قبل الضغط على زر التسليم النهائي.
+                    </div>
+                    <button type="button" id="submit-exam-final-btn" onclick="confirmAndSubmitExam()" class="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-base shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> تسليم الاختبار وإرسال الإجابات
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4) شاشة مراجعة تصحيح الاختبار النموذجي (بعد تصحيح المقالي وتأكيد الدرجة من لوحة التحكم) -->
+            <div id="portal-exam-correction-view" class="hidden space-y-6">
+                <div class="bg-white rounded-3xl p-6 shadow-lg border border-slate-200">
+                    <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-4 mb-5">
+                        <div>
+                            <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200"><i class="fa-solid fa-check-double"></i> التصحيح النهائي المعتمد</span>
+                            <h3 id="corr-view-title" class="text-xl font-black text-slate-800 mt-2">نموذج تصحيح الاختبار</h3>
+                        </div>
+                        <button type="button" onclick="backToPortalDashboard()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-right"></i> العودة لمتابعة التوظيف
+                        </button>
+                    </div>
+                    <div id="corr-view-summary" class="mb-6"></div>
+                    <div id="corr-view-questions" class="space-y-4"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- نافذة التحذير الصارم عند مغادرة تبويب الاختبار (الطبقة 2 لمنع الغش) -->
+    <div id="anti-cheat-warning-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-md z-[99998] items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center border-4 border-amber-500 space-y-4">
+            <div class="w-20 h-20 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-4xl animate-bounce">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="ac-modal-title" class="text-2xl font-black text-slate-800">⚠️ تحذير مغادرة صفحة الاختبار!</h3>
+            <p id="ac-modal-msg" class="text-sm text-slate-600 font-bold leading-relaxed"></p>
+            <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-black" id="ac-modal-counter"></div>
+            <button type="button" onclick="acknowledgeAntiCheatWarning()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg">
+                فهمت، العودة لإكمال الاختبار فوراً
+            </button>
+        </div>
+    </div>
+
     <!-- FAQ -->
     <section id="faq" class="py-16 relative bg-transparent">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 reveal-on-scroll">
@@ -556,6 +772,9 @@
     async function loadJobs() {
         const urlParams = new URLSearchParams(window.location.search);
         const jobId = urlParams.get('job');
+        const portalParam = urlParams.get('portal');
+        const examParam = urlParams.get('exam');
+        const trackCodeParam = urlParams.get('track') || urlParams.get('code');
 
         try {
             const cached = localStorage.getItem('careers_jobs_cache');
@@ -585,8 +804,19 @@
                 }
                 setTimeout(hidePreloader, 100);
             }
+        } else if (portalParam || examParam || trackCodeParam) {
+            renderJobs();
+            openPortalFullPage(false);
+            setTimeout(hidePreloader, 100);
+            const savedOrParamCode = trackCodeParam || sessionStorage.getItem('careers_applicant_code') || localStorage.getItem('careers_applicant_code') || '';
+            if (savedOrParamCode) {
+                const inp = document.getElementById('portal-login-code-input');
+                if (inp) inp.value = savedOrParamCode;
+                fetchAndRenderApplicantPortal(savedOrParamCode, examParam);
+            }
         } else {
             renderJobs();
+            setTimeout(hidePreloader, 100);
         }
     }
     // ✅ دالة جديدة لفحص رابط الوظيفة
@@ -1231,7 +1461,11 @@
                 document.getElementById('jp-form-wrapper').classList.add('hidden');
                 const cfg = window.__LP_CONFIG?.jobsConfig || {};
                 document.getElementById('jp-success-title').textContent = cfg.successTitle || 'تم إرسال طلبك بنجاح! 🎉';
-                document.getElementById('jp-success-msg').textContent = cfg.successMsg || 'شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً.';
+                document.getElementById('jp-success-msg').innerHTML = (cfg.successMsg || 'شكراً لاهتمامك. سنراجع طلبك ونتواصل معك قريباً.') +
+                    `<div class="mt-4 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-sm font-bold space-y-2">
+                        <div>🔑 كود الدخول لمتابعة حالة طلبك هو رقم الواتساب المسجل: <span class="font-mono font-black text-indigo-700 bg-white px-2.5 py-0.5 rounded border border-indigo-200" dir="ltr">${esc(extractedPhone)}</span></div>
+                        <div><button type="button" onclick="openPortalWithCode('${esc(extractedPhone)}')" class="mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs shadow transition-all inline-flex items-center gap-2"><i class="fa-solid fa-user-check"></i> فتح متابعة التوظيف</button></div>
+                    </div>`;
                 document.getElementById('jp-success').classList.remove('hidden');
             } else {
                 showToast(data.error || 'حدث خطأ أثناء الإرسال', 'error');
@@ -1279,6 +1513,1201 @@
             }
         }, 100);
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  🛡️ متابعة التوظيف (التفاعل مع الـ 5 حالات + الاختبارات + حجز موعد الانترفيو + مانع الغش)
+    // ═══════════════════════════════════════════════════════════════════
+    window._portalData = null;
+    window._activeExam = null;
+    window._selectedInterviewSlotId = '';
+    window._forceShowSlotPickerForApp = {};
+    window._examState = {
+        inProgress: false,
+        examId: null,
+        applicationId: null,
+        startedAt: 0,
+        timerInterval: null,
+        remainingSeconds: 0,
+        tabSwitches: 0,
+        maxTabWarnings: 2,
+        gracePeriodUntil: 0,
+        answers: {},
+        activeWordEdit: null
+    };
+
+    function normalizePortalStatus(rawStatus) {
+        const s = String(rawStatus || '').trim();
+        if (!s || s === 'معلق') return 'معلق';
+        if (s === 'رفض' || s === 'مرفوض') return 'رفض';
+        if (s === 'اختبار' || s === 'مراجعة') return 'اختبار';
+        if (s === 'انترفيو' || s === 'مؤهل للانترفيو' || s === 'مرشح للانترفيو') return 'انترفيو';
+        if (s === 'قبول' || s === 'مقبول') return 'قبول';
+        return s;
+    }
+
+    function getScriptEndpointUrl() {
+        return (window.__LP_CONFIG && window.__LP_CONFIG.booking && window.__LP_CONFIG.booking.scriptURL)
+            || 'https://script.google.com/macros/s/AKfycbyScdvPl8iMbxZltPiZA6nVm-2quNCzGF5-QT9Sp4RfOnq53eQrRM-qA-yoLmCD8m__zQ/exec';
+    }
+
+    function normalizeApplicantPhoneCode(raw) {
+        if (!raw) return '';
+        const ar = '٠١٢٣٤٥٦٧٨٩', fa = '۰۱۲۳۴۵۶۷۸۹';
+        let s = String(raw);
+        for (let i = 0; i < 10; i++) {
+            s = s.replace(new RegExp(ar[i], 'g'), i).replace(new RegExp(fa[i], 'g'), i);
+        }
+        let d = s.replace(/\D/g, '');
+        if (d.startsWith('00')) d = d.substring(2);
+        if (d.startsWith('201') && d.length === 12) d = '0' + d.substring(2);
+        else if (/^1[0125]\d{8}$/.test(d)) d = '0' + d;
+        return d;
+    }
+
+    function openPortalWithCode(phoneCode) {
+        const clean = normalizeApplicantPhoneCode(phoneCode);
+        try {
+            sessionStorage.setItem('careers_applicant_code', clean);
+            localStorage.setItem('careers_applicant_code', clean);
+        } catch(e) {}
+        openPortalFullPage(true);
+        const inp = document.getElementById('portal-login-code-input');
+        if (inp) inp.value = clean;
+        fetchAndRenderApplicantPortal(clean);
+    }
+
+    function openPortalFullPage(pushUrl = true) {
+        const header = document.querySelector('header');
+        if (header) header.classList.add('hidden');
+        const stats = document.querySelector('section.py-12');
+        if (stats) stats.classList.add('hidden');
+        const jobs = document.getElementById('jobs');
+        if (jobs) jobs.classList.add('hidden');
+        const faq = document.getElementById('faq');
+        if (faq) faq.classList.add('hidden');
+        const jobPageView = document.getElementById('job-page-view');
+        if (jobPageView) jobPageView.classList.add('hidden');
+
+        const portalView = document.getElementById('applicant-portal-page-view');
+        if (portalView) portalView.classList.remove('hidden');
+
+        if (pushUrl) {
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('job');
+                url.searchParams.set('portal', '1');
+                window.history.pushState({}, '', url.toString());
+            } catch(e) {}
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closePortalFullPage() {
+        if (window._examState.inProgress) {
+            showToast('لا يمكن الخروج أثناء أداء الاختبار! يرجى تسليم الاختبار أولاً.', 'warn');
+            return;
+        }
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('portal');
+            url.searchParams.delete('exam');
+            url.searchParams.delete('track');
+            url.searchParams.delete('code');
+            window.history.pushState({}, '', url.pathname);
+        } catch(e) {}
+        window.location.href = 'careers.html';
+    }
+
+    function submitPortalLogin(e) {
+        e.preventDefault();
+        const raw = document.getElementById('portal-login-code-input')?.value || '';
+        const code = normalizeApplicantPhoneCode(raw);
+        if (!code || code.length < 8) {
+            showToast('يرجى إدخال رقم الواتساب الصحيح الذي سجلت به', 'error');
+            return;
+        }
+        fetchAndRenderApplicantPortal(code);
+    }
+
+    function logoutApplicantPortal() {
+        if (window._examState.inProgress) {
+            showToast('لا يمكن تسجيل الخروج أثناء أداء الاختبار!', 'error');
+            return;
+        }
+        try {
+            sessionStorage.removeItem('careers_applicant_code');
+            localStorage.removeItem('careers_applicant_code');
+        } catch(e) {}
+        window._portalData = null;
+        document.getElementById('portal-dashboard-content').classList.add('hidden');
+        document.getElementById('portal-active-exam-view').classList.add('hidden');
+        document.getElementById('portal-exam-correction-view').classList.add('hidden');
+        document.getElementById('portal-login-card').classList.remove('hidden');
+        document.getElementById('portal-refresh-btn').classList.add('hidden');
+        document.getElementById('portal-logout-btn').classList.add('hidden');
+    }
+
+    function refreshPortalData() {
+        if (window._examState.inProgress) return;
+        const code = (window._portalData && window._portalData.applicant && window._portalData.applicant.code)
+            || sessionStorage.getItem('careers_applicant_code')
+            || localStorage.getItem('careers_applicant_code');
+        if (code) fetchAndRenderApplicantPortal(code);
+    }
+
+    async function fetchAndRenderApplicantPortal(code, autoOpenExamId) {
+        const btn = document.getElementById('portal-login-submit-btn');
+        const errBox = document.getElementById('portal-login-error');
+        if (errBox) errBox.classList.add('hidden');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق وجلب بياناتك...';
+        }
+
+        const url = getScriptEndpointUrl();
+        try {
+            const data = await fetchJSONP(url, {
+                action: 'getApplicantPortal',
+                code: code,
+                examId: autoOpenExamId || ''
+            });
+
+            if (data && data.result === 'success') {
+                try {
+                    sessionStorage.setItem('careers_applicant_code', code);
+                    localStorage.setItem('careers_applicant_code', code);
+                } catch(e) {}
+                window._portalData = data;
+                renderApplicantPortalDashboard(data);
+
+                if (autoOpenExamId) {
+                    const targetEx = (data.exams || []).find(x => x.id === autoOpenExamId);
+                    if (targetEx && targetEx.canTakeExam) {
+                        startApplicantExam(targetEx.id);
+                    }
+                }
+            } else {
+                const msg = (data && data.error) || 'لم يتم العثور على بيانات مسجلة بهذا الرقم.';
+                if (errBox) {
+                    errBox.textContent = msg;
+                    errBox.classList.remove('hidden');
+                }
+                showToast(msg, 'error');
+            }
+        } catch(err) {
+            console.error('Portal fetch error:', err);
+            if (errBox) {
+                errBox.textContent = 'تعذر الاتصال بالخادم حالياً، يرجى المحاولة مرة أخرى.';
+                errBox.classList.remove('hidden');
+            }
+            showToast('تعذر الاتصال بالخادم', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> دخول لمتابعة حالة الطلب';
+            }
+        }
+    }
+
+    function renderExamsListForApp(app, exams) {
+        const jobExams = (exams || []).filter(function(ex) {
+            return !ex.jobId || ex.jobId === 'all' || ex.jobId === app.jobId || ex.jobName === app.jobName;
+        });
+
+        if (jobExams.length === 0) {
+            return `
+                <div class="p-6 rounded-2xl bg-indigo-50/60 border-2 border-dashed border-indigo-200 text-center space-y-1">
+                    <i class="fa-solid fa-laptop-file text-3xl text-indigo-400 mb-1"></i>
+                    <div class="font-black text-slate-700 text-sm">أنت مرشح لأداء الاختبار التقييمي للوظيفة</div>
+                    <p class="text-xs text-slate-500 font-bold">جاري تجهيز وإتاحة الاختبار لك من قِبل الإدارة — يرجى تحديث الصفحة بعد قليل.</p>
+                </div>`;
+        }
+
+        return jobExams.map(function(ex) {
+            const ac = ex.antiCheat || {};
+            const res = ex.latestResult;
+            const isGradedAndConfirmed = res && res.gradingStatus === 'معتمد';
+
+            return `
+            <div class="rounded-2xl border-2 ${res ? 'border-emerald-200 bg-emerald-50/30' : 'border-indigo-200 bg-white'} p-5 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-black">اختبار الوظيفة</span>
+                            <h4 class="text-lg font-black text-slate-800">${esc(ex.title)}</h4>
+                        </div>
+                        ${ex.description ? `<p class="text-xs text-slate-600 font-bold mt-1 leading-relaxed">${esc(ex.description)}</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap text-xs font-black">
+                        <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700"><i class="fa-solid fa-list-ol text-indigo-500 ml-1"></i> ${ex.questionsCount} سؤال</span>
+                        ${ac.layer1TimerEnabled ? `<span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200"><i class="fa-regular fa-clock ml-1"></i> ${ac.durationMinutes || 20} دقيقة</span>` : ''}
+                        <span class="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-800 border border-purple-200">المحاولات: ${ex.attemptsUsed} / ${ex.maxAllowedAttempts}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 text-[11px] font-bold text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                    <span class="text-slate-700 font-black"><i class="fa-solid fa-shield-halved text-indigo-600 ml-1"></i> تعليمات الاختبار:</span>
+                    ${ac.layer1TimerEnabled ? `<span>• مؤقت زمني (${ac.durationMinutes} د)</span>` : ''}
+                    ${ac.layer2TabSwitchEnabled ? `<span>• كشف مغادرة التبويب (يغلق في المرة 3)</span>` : ''}
+                    ${ac.layer3AttemptLimitEnabled ? `<span>• متاح لـ ${ex.maxAllowedAttempts} محاولة</span>` : ''}
+                    ${ac.layer4NoCopyPasteEnabled ? `<span>• منع النسخ واللصق</span>` : ''}
+                </div>
+
+                ${res ? `
+                <div class="p-4 rounded-2xl bg-white border-2 ${isGradedAndConfirmed ? 'border-emerald-300' : 'border-amber-200'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-black ${isGradedAndConfirmed ? 'text-emerald-700' : 'text-amber-700'}">
+                                <i class="fa-solid ${isGradedAndConfirmed ? 'fa-circle-check' : 'fa-hourglass-half'} ml-1"></i>
+                                حالة التصحيح: ${esc(res.gradingStatus)}
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black">المستوى: ${esc(res.level)}</span>
+                        </div>
+                        <div class="text-sm font-black text-slate-800">
+                            الدرجة: <span class="text-indigo-700" dir="ltr">${res.totalScore} / ${res.maxScore} (${res.percentage}%)</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 font-bold">${esc(res.resultSummary || '')}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${ex.canViewCorrection ? `
+                        <button type="button" onclick="openExamCorrectionReview('${esc(ex.id)}')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs shadow transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-magnifying-glass-check"></i> مشاهدة تصحيح الاختبار
+                        </button>` : `
+                        <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                            <i class="fa-solid fa-lock ml-1"></i> يظهر التصحيح بعد مراجعة المقالي وتأكيد الدرجة من الإدارة
+                        </span>`}
+                    </div>
+                </div>` : ''}
+
+                <div class="flex items-center justify-end gap-3 pt-1">
+                    ${ex.canTakeExam ? `
+                    <button type="button" onclick="startApplicantExam('${esc(ex.id)}')" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-play"></i> ${ex.attemptsUsed > 0 ? 'إعادة أداء الاختبار (محاولة إضافية)' : 'بدء الاختبار الآن'}
+                    </button>` : `
+                    <span class="text-xs font-black text-slate-500 bg-slate-100 px-4 py-2 rounded-xl">
+                        <i class="fa-solid fa-check-circle text-emerald-500 ml-1"></i> ${ex.attemptsUsed > 0 ? 'تم تسليم الاختبار بنجاح' : 'الاختبار مغلق حالياً'}
+                    </span>`}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderInterviewSectionForApp(app, intSettings) {
+        const cfg = intSettings || {};
+        const durationMin = parseInt(app.interviewDuration) || parseInt(cfg.durationMinutes) || 15;
+        const allSlots = Array.isArray(cfg.slots) ? cfg.slots : [];
+        const jobSlots = allSlots.filter(function(s) {
+            return (!s.jobId || s.jobId === 'all' || s.jobId === app.jobId) && s.isAvailable;
+        });
+
+        const bookedSlot = allSlots.find(function(s) { return s.isBookedByMe; });
+        const hasBookedOrAssigned = !!(bookedSlot || app.interviewDate);
+        const showPicker = !hasBookedOrAssigned || !!window._forceShowSlotPickerForApp[app.applicationId];
+
+        const displayDate = bookedSlot ? bookedSlot.date : (app.interviewDate || '');
+        const displayTime = bookedSlot ? (bookedSlot.endTime ? (bookedSlot.time + ' - ' + bookedSlot.endTime) : bookedSlot.time) : (app.interviewTime || '');
+        const displayDuration = bookedSlot ? (bookedSlot.durationMinutes || durationMin) : durationMin;
+        const displayLink = app.interviewLink || cfg.defaultLink || '';
+        const displayNotes = app.interviewNotes || (bookedSlot && bookedSlot.notes) || cfg.defaultNotes || '';
+
+        if (!showPicker && hasBookedOrAssigned) {
+            return `
+            <div class="p-6 rounded-2xl bg-gradient-to-l from-purple-900 to-indigo-900 text-white shadow-xl space-y-4">
+                <div class="flex items-start justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-yellow-400 text-indigo-950 flex items-center justify-center text-xl font-black shadow">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-black text-yellow-300 bg-white/10 px-2.5 py-0.5 rounded-full">تم تأكيد موعد المقابلة الشخصية</span>
+                            <h5 class="font-black text-lg mt-1">موعد الانترفيو الخاص بك</h5>
+                        </div>
+                    </div>
+                    <span class="px-3.5 py-1.5 rounded-xl bg-white/15 border border-white/20 text-yellow-300 font-black text-xs">
+                        <i class="fa-regular fa-clock ml-1"></i> مدة الانترفيو: ${displayDuration} دقيقة
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white/10 rounded-2xl p-4 border border-white/15">
+                    <div>
+                        <div class="text-[11px] text-purple-200 font-bold">التاريخ</div>
+                        <div class="font-black text-base text-white mt-0.5" dir="ltr">${esc(displayDate || 'محدد من الإدارة')}</div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] text-purple-200 font-bold">الوقت</div>
+                        <div class="font-black text-base text-yellow-300 mt-0.5" dir="ltr">${esc(displayTime || '—')}</div>
+                    </div>
+                </div>
+
+                ${displayNotes ? `<p class="text-xs text-blue-100 font-bold bg-white/10 p-3.5 rounded-xl leading-relaxed">${esc(displayNotes)}</p>` : ''}
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    ${displayLink ? `
+                    <a href="${esc(displayLink)}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-indigo-950 rounded-xl font-black text-xs sm:text-sm shadow-lg transition-all">
+                        <i class="fa-solid fa-video"></i> الدخول إلى رابط الانترفيو
+                    </a>` : `<span class="text-xs text-purple-200 font-bold"><i class="fa-solid fa-circle-info ml-1"></i> يرجى التواجد في الموعد المحدد أعلاه.</span>`}
+
+                    ${(cfg.allowChangeSlot !== false && jobSlots.length > 1) ? `
+                    <button type="button" onclick="toggleChangeInterviewSlot('${esc(app.applicationId)}', true)" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs border border-white/20 transition-all">
+                        <i class="fa-solid fa-calendar-day ml-1"></i> تغيير الموعد
+                    </button>` : ''}
+                </div>
+            </div>`;
+        }
+
+        // عرض قائمة المواعيد المتاحة ليختار منها المتقدم موعداً واحداً
+        if (jobSlots.length === 0) {
+            return `
+            <div class="p-6 rounded-2xl bg-purple-50 border-2 border-purple-200 text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center mx-auto text-xl shadow">
+                    <i class="fa-solid fa-video"></i>
+                </div>
+                <h5 class="font-black text-purple-950 text-base">أنت مرشح للمقابلة الشخصية (الانترفيو)</h5>
+                <p class="text-xs text-purple-700 font-bold">مدة الانترفيو: <strong>${durationMin} دقيقة</strong> — جاري إضافة المواعيد المتاحة من قِبل الإدارة لتختار منها موعدك المناسب.</p>
+            </div>`;
+        }
+
+        const currentSelected = window._selectedInterviewSlotId || (bookedSlot ? bookedSlot.id : '');
+
+        return `
+        <div class="p-6 rounded-2xl bg-white border-2 border-purple-200 shadow-md space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-lg">
+                        <i class="fa-regular fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h5 class="font-black text-slate-800 text-base">اختر موعد الانترفيو المناسب لك</h5>
+                        <p class="text-xs text-slate-500 font-bold">اختر موعداً واحداً من المواعيد المتاحة بالأسفل ثم اضغط تأكيد الحجز</p>
+                    </div>
+                </div>
+                <span class="px-3.5 py-1.5 rounded-xl bg-purple-100 text-purple-800 border border-purple-200 font-black text-xs">
+                    <i class="fa-regular fa-clock ml-1"></i> مدة الانترفيو للموعد الواحد: ${durationMin} دقيقة
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                ${jobSlots.map(function(slot) {
+                    const isSel = currentSelected === slot.id;
+                    const sDur = slot.durationMinutes || durationMin;
+                    const tLabel = slot.endTime ? (slot.time + ' - ' + slot.endTime) : slot.time;
+                    return `
+                    <button type="button" onclick="selectInterviewSlotOption('${esc(slot.id)}')"
+                        class="text-right p-4 rounded-2xl border-2 transition-all flex flex-col justify-between gap-2 ${isSel ? 'border-purple-600 bg-purple-50 shadow-md ring-2 ring-purple-300' : 'border-slate-200 bg-slate-50/70 hover:border-purple-300 hover:bg-white'}">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-xs font-black ${isSel ? 'text-purple-800' : 'text-slate-700'}"><i class="fa-regular fa-calendar ml-1 text-purple-600"></i> <span dir="ltr">${esc(slot.date)}</span></span>
+                            <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSel ? 'border-purple-600 bg-purple-600 text-white' : 'border-slate-300 bg-white'}">
+                                ${isSel ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                            </span>
+                        </div>
+                        <div class="font-black text-sm ${isSel ? 'text-indigo-950' : 'text-slate-800'}" dir="ltr">
+                            <i class="fa-regular fa-clock text-purple-500 mr-1"></i> ${esc(tLabel)}
+                        </div>
+                        <div class="text-[11px] font-bold text-slate-500 flex items-center justify-between w-full pt-1 border-t border-slate-200/60">
+                            <span>المدة: ${sDur} دقيقة</span>
+                            ${slot.isBookedByMe ? '<span class="text-emerald-600 font-black">موعدك الحالي</span>' : '<span class="text-purple-600 font-black">متاح للحجز</span>'}
+                        </div>
+                    </button>`;
+                }).join('')}
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                ${hasBookedOrAssigned ? `
+                <button type="button" onclick="toggleChangeInterviewSlot('${esc(app.applicationId)}', false)" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs">
+                    إلغاء التغيير
+                </button>` : ''}
+                <button type="button" id="confirm-slot-btn-${esc(app.applicationId)}" onclick="confirmBookInterviewSlot('${esc(app.applicationId)}')"
+                    class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black text-xs sm:text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-check-circle"></i> تأكيد حجز الموعد المختار
+                </button>
+            </div>
+        </div>`;
+    }
+
+    function selectInterviewSlotOption(slotId) {
+        window._selectedInterviewSlotId = slotId;
+        if (window._portalData) renderApplicantPortalDashboard(window._portalData);
+    }
+
+    function toggleChangeInterviewSlot(applicationId, show) {
+        window._forceShowSlotPickerForApp[applicationId] = !!show;
+        if (window._portalData) renderApplicantPortalDashboard(window._portalData);
+    }
+
+    async function confirmBookInterviewSlot(applicationId) {
+        const slotId = window._selectedInterviewSlotId;
+        if (!slotId) {
+            showToast('يرجى الضغط على أحد المواعيد المتاحة لاختياره أولاً', 'warn');
+            return;
+        }
+        const applicantCode = (window._portalData && window._portalData.applicant && window._portalData.applicant.code)
+            || sessionStorage.getItem('careers_applicant_code') || '';
+        if (!applicantCode) return;
+
+        const btn = document.getElementById('confirm-slot-btn-' + applicationId);
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري تأكيد حجز الموعد...';
+        }
+
+        const url = getScriptEndpointUrl();
+        try {
+            const fd = new FormData();
+            fd.append('action', 'bookApplicantInterviewSlot');
+            fd.append('applicantCode', applicantCode);
+            fd.append('applicationId', applicationId);
+            fd.append('slotId', slotId);
+
+            const res = await fetch(url, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data && data.result === 'success') {
+                window._forceShowSlotPickerForApp[applicationId] = false;
+                showToast('تم حجز وتأكيد موعد الانترفيو بنجاح! 🎉', 'success');
+                await fetchAndRenderApplicantPortal(applicantCode);
+            } else {
+                showToast((data && data.error) || 'تعذر حجز هذا الموعد، يرجى المحاولة مرة أخرى', 'error');
+                await fetchAndRenderApplicantPortal(applicantCode);
+            }
+        } catch(err) {
+            console.error('Book slot error:', err);
+            showToast('حدث خطأ في الاتصال أثناء حجز الموعد', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> تأكيد حجز الموعد المختار';
+            }
+        }
+    }
+
+    function renderApplicantPortalDashboard(data) {
+        document.getElementById('portal-login-card').classList.add('hidden');
+        document.getElementById('portal-active-exam-view').classList.add('hidden');
+        document.getElementById('portal-exam-correction-view').classList.add('hidden');
+        document.getElementById('portal-dashboard-content').classList.remove('hidden');
+
+        const refBtn = document.getElementById('portal-refresh-btn');
+        const outBtn = document.getElementById('portal-logout-btn');
+        if (refBtn) { refBtn.classList.remove('hidden'); refBtn.classList.add('inline-flex'); }
+        if (outBtn) { outBtn.classList.remove('hidden'); outBtn.classList.add('inline-flex'); }
+
+        const applicant = data.applicant || {};
+        const apps = data.applications || [];
+        const exams = data.exams || [];
+        const results = data.results || [];
+        const intSettings = data.interviewSettings || {};
+        const portalCfg = data.portalConfig || {};
+
+        document.getElementById('ap-name').textContent = applicant.name || 'متقدم';
+        document.getElementById('ap-avatar').textContent = (applicant.name || 'م').charAt(0);
+        document.getElementById('ap-phone').textContent = applicant.phone || applicant.code || '';
+        const emailEl = document.getElementById('ap-email');
+        if (emailEl) {
+            emailEl.textContent = applicant.email ? ('✉️ ' + applicant.email) : '';
+        }
+
+        // Show overall score box only if applicant has taken an exam and is in اختبار / انترفيو / قبول
+        const overallBox = document.getElementById('ap-overall-score-box');
+        const overallEl = document.getElementById('ap-overall-score');
+        const primaryStatus = apps[0] ? normalizePortalStatus(apps[0].status) : 'معلق';
+        if (results.length > 0 && ['اختبار', 'انترفيو', 'قبول'].includes(primaryStatus)) {
+            overallBox.classList.remove('hidden');
+            const latest = results[0];
+            if (latest.gradingStatus === 'معتمد' || portalCfg.showScoresImmediately !== false) {
+                overallEl.innerHTML = `${latest.percentage}% • ${esc(latest.level)} <span class="text-xs text-blue-200 block font-bold mt-0.5">(${latest.totalScore} / ${latest.maxScore})</span>`;
+            } else {
+                overallEl.innerHTML = `<span class="text-xs text-amber-300">بانتظار اعتماد التصحيح</span>`;
+            }
+        } else {
+            overallBox.classList.add('hidden');
+        }
+
+        // Render each application according to its exact status:
+        // 1. معلق (مفيش حاجة)
+        // 2. رفض (خلاص كدا)
+        // 3. اختبار (يظهر له الاختبار)
+        // 4. انترفيو (يظهر له اختيار موعد مع مدة الانترفيو)
+        // 5. قبول (تم القبول)
+        const appsContainer = document.getElementById('ap-applications-list');
+        appsContainer.innerHTML = apps.map(function(app) {
+            const status = normalizePortalStatus(app.status || 'معلق');
+            const dateFormatted = app.timestamp ? new Date(app.timestamp).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+
+            const badgeStyles = {
+                'معلق': 'bg-amber-100 text-amber-800 border-amber-300',
+                'رفض': 'bg-rose-100 text-rose-800 border-rose-300',
+                'اختبار': 'bg-blue-100 text-blue-800 border-blue-300',
+                'انترفيو': 'bg-purple-100 text-purple-800 border-purple-300',
+                'قبول': 'bg-emerald-100 text-emerald-800 border-emerald-300'
+            };
+            const badgeIcons = {
+                'معلق': 'fa-hourglass-half',
+                'رفض': 'fa-circle-xmark',
+                'اختبار': 'fa-file-signature',
+                'انترفيو': 'fa-video',
+                'قبول': 'fa-circle-check'
+            };
+
+            let statusInteractiveBody = '';
+
+            if (status === 'معلق') {
+                // 1) معلق: مفيش حاجة
+                statusInteractiveBody = `
+                <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-900 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg flex-shrink-0">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    </div>
+                    <div>
+                        <div class="font-black text-sm">طلبك معلق (قيد المراجعة الأولية)</div>
+                        <p class="text-xs text-amber-700 font-bold mt-0.5">تم استلام طلب التقديم الخاص بك، ولا يوجد إجراء مطلوب منك حالياً.</p>
+                    </div>
+                </div>`;
+            } else if (status === 'رفض') {
+                // 2) رفض: خلاص كدا
+                statusInteractiveBody = `
+                <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 space-y-1.5">
+                    <div class="font-black text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-base"></i> نعتذر، لم يتم قبول طلبك في هذه الوظيفة
+                    </div>
+                    <p class="text-xs text-rose-700 font-bold leading-relaxed whitespace-pre-line">${esc(app.statusReason || 'شكراً لاهتمامك بالتقديم لدينا، ونتمنى لك التوفيق في الفرص القادمة.')}</p>
+                </div>`;
+            } else if (status === 'اختبار') {
+                // 3) اختبار: يظهر له الاختبار
+                statusInteractiveBody = `
+                <div class="space-y-4">
+                    ${app.statusReason ? `<div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">${esc(app.statusReason)}</div>` : ''}
+                    ${renderExamsListForApp(app, exams)}
+                </div>`;
+            } else if (status === 'انترفيو') {
+                // 4) انترفيو: يظهر له اختيار موعد + مدة الانترفيو
+                const completedExamsHtml = (exams && exams.some(e => e.latestResult)) ? `
+                    <div class="pt-2">${renderExamsListForApp(app, exams.filter(e => e.latestResult))}</div>
+                ` : '';
+                statusInteractiveBody = `
+                <div class="space-y-4">
+                    ${app.statusReason ? `<div class="p-3.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold">${esc(app.statusReason)}</div>` : ''}
+                    ${renderInterviewSectionForApp(app, intSettings)}
+                    ${completedExamsHtml}
+                </div>`;
+            } else if (status === 'قبول') {
+                // 5) قبول: مبارك القبول النهائي
+                statusInteractiveBody = `
+                <div class="p-6 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-700 text-white shadow-lg space-y-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-white text-emerald-600 flex items-center justify-center text-2xl font-black shadow">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-black text-lg">🎉 مبارك! تم قبولك في الوظيفة</h5>
+                            <p class="text-xs text-emerald-100 font-bold mt-0.5">${esc(app.statusReason || 'يسعدنا انضمامك إلى فريق العمل! سنتواصل معك عبر الواتساب لإجراءات بدء العمل.')}</p>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            return `
+            <div class="rounded-2xl border-2 border-slate-100 bg-slate-50/70 p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400">الوظيفة المتقدم عليها</span>
+                        <h4 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-briefcase text-indigo-600"></i> ${esc(app.jobName || 'وظيفة عامة')}
+                        </h4>
+                        <span class="text-[11px] text-slate-400 font-bold">تاريخ التقديم: ${dateFormatted}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-4 py-1.5 rounded-full border text-xs font-black flex items-center gap-1.5 ${badgeStyles[status] || badgeStyles['معلق']}">
+                            <i class="fa-solid ${badgeIcons[status] || 'fa-circle-info'}"></i> التصنيف: ${esc(status)}
+                        </span>
+                    </div>
+                </div>
+                ${statusInteractiveBody}
+            </div>`;
+        }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  🚀 تشغيل الاختبار وتطبيق طبقات منع الغش الأربع + الأسئلة التفاعلية
+    // ═══════════════════════════════════════════════════════════════════
+    function startApplicantExam(examId) {
+        if (!window._portalData || !window._portalData.exams) return;
+        const exam = window._portalData.exams.find(x => x.id === examId);
+        if (!exam) return;
+        if (!exam.canTakeExam) {
+            showToast('لا يمكنك دخول هذا الاختبار حالياً (تم استنفاد المحاولات أو إغلاقه)', 'error');
+            return;
+        }
+
+        window._activeExam = exam;
+        const ac = exam.antiCheat || {};
+        window._examState = {
+            inProgress: true,
+            examId: exam.id,
+            applicationId: exam.applicationId || '',
+            startedAt: Date.now(),
+            timerInterval: null,
+            remainingSeconds: (parseInt(ac.durationMinutes) || 20) * 60,
+            tabSwitches: 0,
+            maxTabWarnings: parseInt(ac.maxTabWarnings) || 2,
+            gracePeriodUntil: Date.now() + 3000,
+            answers: {},
+            activeWordEdit: null
+        };
+
+        (exam.questions || []).forEach(function(q) {
+            if (q.type === 'correction') {
+                window._examState.answers[q.id] = { corrections: [] };
+            } else {
+                window._examState.answers[q.id] = { answer: '' };
+            }
+        });
+
+        document.getElementById('portal-dashboard-content').classList.add('hidden');
+        document.getElementById('portal-exam-correction-view').classList.add('hidden');
+        document.getElementById('portal-active-exam-view').classList.remove('hidden');
+        document.getElementById('portal-refresh-btn').classList.add('hidden');
+        document.getElementById('portal-logout-btn').classList.add('hidden');
+
+        document.getElementById('active-exam-title').textContent = exam.title;
+        document.getElementById('active-exam-meta').textContent = `${exam.jobName || ''} • ${exam.questionsCount} سؤال`;
+
+        // Layer 1: Timer setup
+        const timerBox = document.getElementById('exam-timer-box');
+        if (ac.layer1TimerEnabled !== false) {
+            timerBox.classList.remove('hidden');
+            updateExamTimerDisplay();
+            if (window._examState.timerInterval) clearInterval(window._examState.timerInterval);
+            window._examState.timerInterval = setInterval(function() {
+                if (!window._examState.inProgress) return;
+                window._examState.remainingSeconds--;
+                updateExamTimerDisplay();
+                if (window._examState.remainingSeconds <= 0) {
+                    clearInterval(window._examState.timerInterval);
+                    showToast('⏰ انتهى وقت الاختبار! جاري تسليم إجاباتك تلقائياً...', 'warn');
+                    submitApplicantExamNow('انتهاء الوقت المحدد للاختبار (تلقائي)');
+                }
+            }, 1000);
+        } else {
+            timerBox.classList.add('hidden');
+        }
+
+        // Layer 2: Tab switch counter badge
+        const tabPill = document.getElementById('exam-tab-warning-pill');
+        if (ac.layer2TabSwitchEnabled !== false) {
+            tabPill.classList.remove('hidden');
+            tabPill.classList.add('inline-flex');
+            document.getElementById('exam-tab-switches-count').textContent = '0';
+        } else {
+            tabPill.classList.add('hidden');
+        }
+
+        renderActiveExamQuestions();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateExamTimerDisplay() {
+        const sec = Math.max(0, window._examState.remainingSeconds);
+        const m = String(Math.floor(sec / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        const el = document.getElementById('exam-timer-display');
+        const box = document.getElementById('exam-timer-box');
+        if (el) el.textContent = `${m}:${s}`;
+        if (box) {
+            if (sec <= 60) {
+                box.className = 'px-4 py-2 rounded-xl bg-rose-600 text-white flex items-center gap-2 font-mono text-base sm:text-lg font-black animate-pulse';
+            } else if (sec <= 180) {
+                box.className = 'px-4 py-2 rounded-xl bg-amber-500 text-slate-950 flex items-center gap-2 font-mono text-base sm:text-lg font-black';
+            }
+        }
+    }
+
+    function renderActiveExamQuestions() {
+        const container = document.getElementById('active-exam-questions-list');
+        if (!container || !window._activeExam) return;
+        const questions = window._activeExam.questions || [];
+
+        container.innerHTML = questions.map(function(q, qIdx) {
+            const qId = q.id || ('q_' + qIdx);
+            const pts = parseFloat(q.points) || 1;
+            const typeLabels = {
+                'mcq': 'اختيار من متعدد',
+                'tf': 'صح أم خطأ',
+                'essay': 'سؤال مقالي',
+                'correction': q.mode === 'standard' ? 'صوّب الخطأ (عادي)' : 'صوّب الخطأ (تفاعلي بالضغط على الكلمة)'
+            };
+
+            let bodyHtml = '';
+            if (q.type === 'mcq') {
+                const selectedVal = (window._examState.answers[qId] && window._examState.answers[qId].answer) || '';
+                bodyHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                    ${(q.options || []).map((opt, oIdx) => {
+                        const isSel = selectedVal === opt;
+                        return `
+                        <button type="button" onclick="selectMcqOption('${esc(qId)}', ${oIdx})"
+                            class="text-right p-4 rounded-2xl border-2 transition-all flex items-center gap-3 font-bold text-sm ${isSel ? 'border-indigo-600 bg-indigo-50 text-indigo-950 shadow-sm' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'}">
+                            <span class="w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black flex-shrink-0 ${isSel ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-500'}">${oIdx + 1}</span>
+                            <span class="flex-1">${esc(opt)}</span>
+                        </button>`;
+                    }).join('')}
+                </div>`;
+            } else if (q.type === 'tf') {
+                const selectedVal = (window._examState.answers[qId] && window._examState.answers[qId].answer) || '';
+                bodyHtml = `<div class="grid grid-cols-2 gap-4 mt-3">
+                    <button type="button" onclick="selectTfOption('${esc(qId)}', 'صح')"
+                        class="p-4 rounded-2xl border-2 font-black text-base transition-all flex items-center justify-center gap-2 ${selectedVal === 'صح' ? 'border-emerald-600 bg-emerald-50 text-emerald-800 shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'}">
+                        <i class="fa-solid fa-circle-check text-xl ${selectedVal === 'صح' ? 'text-emerald-600' : 'text-slate-400'}"></i> العبارة صحيحة (صح)
+                    </button>
+                    <button type="button" onclick="selectTfOption('${esc(qId)}', 'خطأ')"
+                        class="p-4 rounded-2xl border-2 font-black text-base transition-all flex items-center justify-center gap-2 ${selectedVal === 'خطأ' ? 'border-rose-600 bg-rose-50 text-rose-800 shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'}">
+                        <i class="fa-solid fa-circle-xmark text-xl ${selectedVal === 'خطأ' ? 'text-rose-600' : 'text-slate-400'}"></i> العبارة خاطئة (خطأ)
+                    </button>
+                </div>`;
+            } else if (q.type === 'essay') {
+                const currentText = (window._examState.answers[qId] && window._examState.answers[qId].answer) || '';
+                bodyHtml = `<div class="mt-3">
+                    <textarea rows="4" oninput="updateEssayAnswer('${esc(qId)}', this.value)"
+                        placeholder="${esc(q.placeholder || 'اكتب إجابتك التفصيلية هنا بأسلوبك...')}"
+                        class="field-input bg-slate-50 focus:bg-white text-sm font-bold leading-relaxed">${esc(currentText)}</textarea>
+                </div>`;
+            } else if (q.type === 'correction') {
+                bodyHtml = renderCorrectionQuestionBody(q, qId);
+            }
+
+            return `
+            <div class="bg-white rounded-3xl p-6 shadow-md border-2 border-slate-100 space-y-3" id="exam-q-card-${esc(qId)}">
+                <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center">${qIdx + 1}</span>
+                        <span class="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">${typeLabels[q.type] || 'سؤال'}</span>
+                    </div>
+                    <span class="text-xs font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full">${pts} ${pts === 1 ? 'درجة' : 'درجات'}</span>
+                </div>
+                ${q.type === 'correction' && q.prompt ? `<p class="text-xs font-black text-indigo-600">${esc(q.prompt)}</p>` : ''}
+                ${q.type !== 'correction' ? `<div class="text-base sm:text-lg font-black text-slate-800 leading-relaxed whitespace-pre-line pt-1">${esc(q.text)}</div>` : ''}
+                ${bodyHtml}
+            </div>`;
+        }).join('');
+    }
+
+    function renderCorrectionQuestionBody(q, qId) {
+        const acceptedCount = parseInt(q.acceptedErrorsCount) || parseInt(q.errorsCount) || 1;
+        const ansObj = window._examState.answers[qId] || { corrections: [] };
+        const corrections = ansObj.corrections || [];
+
+        if (q.mode === 'standard') {
+            let rowsHtml = '';
+            for (let i = 0; i < acceptedCount; i++) {
+                const item = corrections[i] || { originalWord: '', correctedWord: '' };
+                rowsHtml += `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div>
+                        <label class="block text-[11px] font-black text-rose-600 mb-1">الخطأ رقم ${i + 1} في العبارة</label>
+                        <input type="text" value="${esc(item.originalWord || '')}"
+                            oninput="updateStandardCorrection('${esc(qId)}', ${i}, 'originalWord', this.value)"
+                            placeholder="اكتب الكلمة الخطأ كما وردت..."
+                            class="field-input text-xs font-bold bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-emerald-700 mb-1">التصويب الصحيح له</label>
+                        <input type="text" value="${esc(item.correctedWord || '')}"
+                            oninput="updateStandardCorrection('${esc(qId)}', ${i}, 'correctedWord', this.value)"
+                            placeholder="اكتب الكلمة بعد تصويبها..."
+                            class="field-input text-xs font-bold bg-white border-emerald-200 focus:border-emerald-600">
+                    </div>
+                </div>`;
+            }
+            return `
+            <div class="space-y-4 mt-2">
+                <div class="p-4 rounded-2xl bg-indigo-950 text-white font-black text-base sm:text-lg leading-loose text-center shadow-inner">
+                    « ${esc(q.text)} »
+                </div>
+                <div class="text-xs font-bold text-slate-500">المطلوب استخراج وتصويب <strong>(${acceptedCount})</strong> من الأخطاء الواردة في العبارة السابقة:</div>
+                <div class="space-y-2.5">${rowsHtml}</div>
+            </div>`;
+        }
+
+        const words = String(q.text || '').trim().split(/\s+/).filter(Boolean);
+        const activeEdit = window._examState.activeWordEdit;
+        const isEditingThisQ = activeEdit && activeEdit.qId === qId;
+
+        const wordsChipsHtml = words.map(function(word, wIdx) {
+            const existingCorr = corrections.find(c => c.wordIndex === wIdx);
+            const isBeingEdited = isEditingThisQ && activeEdit.wordIdx === wIdx;
+            if (existingCorr) {
+                return `
+                <button type="button" onclick="openInteractiveWordEditor('${esc(qId)}', ${wIdx})"
+                    class="corr-word-chip is-corrected ${isBeingEdited ? 'is-active-edit' : ''}" title="اضغط لتعديل التصويب أو استعادة الكلمة الأصلية">
+                    <span class="line-through text-rose-500 text-xs opacity-75">${esc(word)}</span>
+                    <i class="fa-solid fa-arrow-left text-[10px] text-emerald-600"></i>
+                    <span class="font-black text-emerald-800">${esc(existingCorr.correctedWord)}</span>
+                    <i class="fa-solid fa-pen text-[10px] text-emerald-600 mr-1"></i>
+                </button>`;
+            }
+            return `
+            <button type="button" onclick="openInteractiveWordEditor('${esc(qId)}', ${wIdx})"
+                class="corr-word-chip ${isBeingEdited ? 'is-active-edit' : ''}" title="اضغط لتصويب هذه الكلمة">
+                <span>${esc(word)}</span>
+            </button>`;
+        }).join(' ');
+
+        let editorBoxHtml = '';
+        if (isEditingThisQ) {
+            const targetWord = words[activeEdit.wordIdx] || '';
+            const existingCorr = corrections.find(c => c.wordIndex === activeEdit.wordIdx);
+            const currentVal = existingCorr ? existingCorr.correctedWord : '';
+            editorBoxHtml = `
+            <div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-md space-y-3 animate-fadeIn">
+                <div class="flex items-center justify-between">
+                    <div class="text-xs font-black text-amber-900">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-600 ml-1"></i>
+                        تصويب الكلمة المختارة: <span class="bg-white px-2.5 py-0.5 rounded-lg border border-amber-300 text-rose-600 font-black">${esc(targetWord)}</span>
+                    </div>
+                    <button type="button" onclick="closeInteractiveWordEditor()" class="text-slate-400 hover:text-slate-600 text-xs font-bold">إغلاق ✕</button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="interactive-corr-input-${esc(qId)}" value="${esc(currentVal)}"
+                        placeholder="اكتب الكلمة الصحيحة بدلاً من (${esc(targetWord)})..."
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();saveInteractiveWordCorrection('${esc(qId)}', ${activeEdit.wordIdx});}"
+                        class="field-input bg-white border-amber-400 focus:border-indigo-600 font-black text-sm flex-1">
+                    <button type="button" onclick="saveInteractiveWordCorrection('${esc(qId)}', ${activeEdit.wordIdx})"
+                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs shadow flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> حفظ التصويب
+                    </button>
+                    ${existingCorr ? `
+                    <button type="button" onclick="removeInteractiveWordCorrection('${esc(qId)}', ${activeEdit.wordIdx})"
+                        class="px-4 py-2.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl font-black text-xs flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> استعادة الأصل
+                    </button>` : ''}
+                </div>
+            </div>`;
+        }
+
+        return `
+        <div class="space-y-3 mt-2">
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-indigo-50/70 px-4 py-2.5 rounded-xl border border-indigo-100 text-xs font-bold text-indigo-900">
+                <span><i class="fa-solid fa-hand-pointer text-indigo-600 ml-1"></i> اضغط على الكلمة الخطأ في الجملة بالأسفل لكتابة تصويبها مكانها (ويمكنك الضغط عليها مجدداً لتعديلها).</span>
+                <span class="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 font-black text-indigo-700">
+                    تم تصويب: ${corrections.length} / ${acceptedCount}
+                </span>
+            </div>
+            <div class="p-5 rounded-2xl bg-white border-2 border-slate-200 leading-loose text-base sm:text-lg shadow-inner">
+                ${wordsChipsHtml}
+            </div>
+            ${editorBoxHtml}
+        </div>`;
+    }
+
+    function selectMcqOption(qId, optIdx) {
+        if (!window._activeExam) return;
+        const q = (window._activeExam.questions || []).find((item, idx) => (item.id || ('q_' + idx)) === qId);
+        if (!q || !q.options) return;
+        window._examState.answers[qId] = { answer: q.options[optIdx] };
+        renderActiveExamQuestions();
+    }
+
+    function selectTfOption(qId, val) {
+        window._examState.answers[qId] = { answer: val };
+        renderActiveExamQuestions();
+    }
+
+    function updateEssayAnswer(qId, val) {
+        window._examState.answers[qId] = { answer: val };
+    }
+
+    function updateStandardCorrection(qId, rowIdx, field, val) {
+        if (!window._examState.answers[qId]) window._examState.answers[qId] = { corrections: [] };
+        const arr = window._examState.answers[qId].corrections;
+        while (arr.length <= rowIdx) arr.push({ originalWord: '', correctedWord: '' });
+        arr[rowIdx][field] = val;
+    }
+
+    function openInteractiveWordEditor(qId, wordIdx) {
+        if (!window._activeExam) return;
+        const q = (window._activeExam.questions || []).find((item, idx) => (item.id || ('q_' + idx)) === qId);
+        if (!q) return;
+        const acceptedCount = parseInt(q.acceptedErrorsCount) || parseInt(q.errorsCount) || 1;
+        const currentCorrs = (window._examState.answers[qId] && window._examState.answers[qId].corrections) || [];
+        const alreadyCorrected = currentCorrs.some(c => c.wordIndex === wordIdx);
+
+        if (!alreadyCorrected && currentCorrs.length >= acceptedCount) {
+            showToast(`الحد الأقصى المسموح بتصويبه في هذا السؤال هو (${acceptedCount}) فقط. يمكنك الضغط على كلمة صوّبتها لتعديلها أو إلغائها.`, 'warn');
+            return;
+        }
+
+        window._examState.activeWordEdit = { qId: qId, wordIdx: wordIdx };
+        renderActiveExamQuestions();
+        setTimeout(function() {
+            const inp = document.getElementById('interactive-corr-input-' + qId);
+            if (inp) { inp.focus(); inp.select(); }
+        }, 40);
+    }
+
+    function closeInteractiveWordEditor() {
+        window._examState.activeWordEdit = null;
+        renderActiveExamQuestions();
+    }
+
+    function saveInteractiveWordCorrection(qId, wordIdx) {
+        if (!window._activeExam) return;
+        const q = (window._activeExam.questions || []).find((item, idx) => (item.id || ('q_' + idx)) === qId);
+        if (!q) return;
+        const words = String(q.text || '').trim().split(/\s+/).filter(Boolean);
+        const origWord = words[wordIdx] || '';
+        const inp = document.getElementById('interactive-corr-input-' + qId);
+        const newWord = inp ? inp.value.trim() : '';
+
+        if (!newWord) {
+            showToast('يرجى كتابة الكلمة المصححة أولاً', 'warn');
+            return;
+        }
+
+        if (!window._examState.answers[qId]) window._examState.answers[qId] = { corrections: [] };
+        const arr = window._examState.answers[qId].corrections;
+        const existingIdx = arr.findIndex(c => c.wordIndex === wordIdx);
+        if (existingIdx !== -1) {
+            arr[existingIdx].correctedWord = newWord;
+        } else {
+            arr.push({
+                wordIndex: wordIdx,
+                originalWord: origWord,
+                correctedWord: newWord
+            });
+        }
+        window._examState.activeWordEdit = null;
+        renderActiveExamQuestions();
+        showToast('تم حفظ تصويب الكلمة ✓');
+    }
+
+    function removeInteractiveWordCorrection(qId, wordIdx) {
+        if (!window._examState.answers[qId]) return;
+        window._examState.answers[qId].corrections = (window._examState.answers[qId].corrections || []).filter(c => c.wordIndex !== wordIdx);
+        window._examState.activeWordEdit = null;
+        renderActiveExamQuestions();
+    }
+
+    // ─── طبقات منع الغش (الطبقة 2: مغادرة التبويب + الطبقة 4: منع النسخ واللصق) ───
+    function triggerTabSwitchViolation() {
+        if (!window._examState.inProgress || !window._activeExam) return;
+        if (Date.now() < window._examState.gracePeriodUntil) return;
+        const ac = window._activeExam.antiCheat || {};
+        if (ac.layer2TabSwitchEnabled === false) return;
+
+        if (window._lastTabViolationTime && (Date.now() - window._lastTabViolationTime < 1500)) return;
+        window._lastTabViolationTime = Date.now();
+
+        window._examState.tabSwitches++;
+        const count = window._examState.tabSwitches;
+        const maxWarnings = parseInt(ac.maxTabWarnings) || 2;
+        const countEl = document.getElementById('exam-tab-switches-count');
+        if (countEl) countEl.textContent = String(count);
+
+        if (count > maxWarnings) {
+            document.getElementById('anti-cheat-warning-modal').classList.remove('active');
+            showToast('🚨 تم إغلاق الاختبار وتسليم النتيجة تلقائياً بسبب مغادرة التبويب للمرة الثالثة!', 'error');
+            submitApplicantExamNow('إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)');
+        } else {
+            const modal = document.getElementById('anti-cheat-warning-modal');
+            const titleEl = document.getElementById('ac-modal-title');
+            const msgEl = document.getElementById('ac-modal-msg');
+            const counterEl = document.getElementById('ac-modal-counter');
+            if (count === 1) {
+                titleEl.textContent = '⚠️ تحذير أول: مغادرة تبويب الاختبار!';
+                msgEl.textContent = 'تم رصد مغادرتك لشاشة الاختبار. يُمنع تماماً الانتقال إلى أي تبويب أو تطبيق آخر أثناء أداء الاختبار.';
+            } else {
+                titleEl.textContent = '🚨 تحذير أخير قبل إغلاق الاختبار!';
+                msgEl.textContent = 'هذه هي المرة الثانية التي تغادر فيها تبويب الاختبار! في حال مغادرة الصفحة مرة ثالثة سيتم إغلاق الاختبار فوراً وتسليم إجاباتك الحالية تلقائياً.';
+            }
+            counterEl.textContent = `تحذير رقم (${count}) من (${maxWarnings}) — المغادرة القادمة تُنهي الاختبار فوراً`;
+            modal.classList.add('active');
+        }
+    }
+
+    function acknowledgeAntiCheatWarning() {
+        document.getElementById('anti-cheat-warning-modal').classList.remove('active');
+    }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && window._examState.inProgress) {
+            triggerTabSwitchViolation();
+        }
+    });
+
+    window.addEventListener('blur', function() {
+        if (window._examState.inProgress) {
+            triggerTabSwitchViolation();
+        }
+    });
+
+    ['copy', 'cut', 'paste', 'drop', 'contextmenu'].forEach(function(evtName) {
+        document.addEventListener(evtName, function(e) {
+            if (!window._examState.inProgress || !window._activeExam) return;
+            const ac = window._activeExam.antiCheat || {};
+            if (ac.layer4NoCopyPasteEnabled === false) return;
+            e.preventDefault();
+            if (evtName !== 'contextmenu') {
+                showToast('🚫 النسخ واللصق مغلق نهائياً داخل بيئة الاختبار المحمية', 'warn');
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (!window._examState.inProgress || !window._activeExam) return;
+        const ac = window._activeExam.antiCheat || {};
+        if (ac.layer4NoCopyPasteEnabled === false) return;
+        const key = (e.key || '').toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'u', 's', 'p'].includes(key)) {
+            e.preventDefault();
+            showToast('🚫 اختصارات النسخ واللصق معطلة أثناء الاختبار', 'warn');
+        }
+        if (e.key === 'F12') {
+            e.preventDefault();
+        }
+    });
+
+    function confirmAndSubmitExam() {
+        if (!window._examState.inProgress) return;
+        submitApplicantExamNow('تسليم يدوي بواسطة المتقدم');
+    }
+
+    async function submitApplicantExamNow(triggerReason) {
+        if (!window._examState.inProgress || !window._activeExam) return;
+        window._examState.inProgress = false;
+        if (window._examState.timerInterval) {
+            clearInterval(window._examState.timerInterval);
+            window._examState.timerInterval = null;
+        }
+
+        const btn = document.getElementById('submit-exam-final-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري تسليم وحفظ إجاباتك...';
+        }
+
+        const timeSpent = Math.max(1, Math.round((Date.now() - window._examState.startedAt) / 1000));
+        const applicantCode = (window._portalData && window._portalData.applicant && window._portalData.applicant.code)
+            || sessionStorage.getItem('careers_applicant_code') || '';
+
+        const payload = {
+            action: 'submitJobExam',
+            applicantCode: applicantCode,
+            examId: window._activeExam.id,
+            applicationId: window._examState.applicationId || '',
+            answers: JSON.stringify(window._examState.answers),
+            tabSwitches: window._examState.tabSwitches,
+            timeSpentSeconds: timeSpent,
+            submitTrigger: triggerReason || 'تسليم يدوي'
+        };
+
+        const url = getScriptEndpointUrl();
+        try {
+            const body = new FormData();
+            Object.keys(payload).forEach(k => body.append(k, payload[k]));
+            const res = await fetch(url, { method: 'POST', body });
+            const data = await res.json();
+
+            if (data && data.result === 'success') {
+                showToast('تم تسليم الاختبار وحفظ إجاباتك بنجاح! 🎉', 'success');
+                await fetchAndRenderApplicantPortal(applicantCode);
+            } else {
+                showToast((data && data.error) || 'حدث خطأ أثناء تسليم الاختبار', 'error');
+                await fetchAndRenderApplicantPortal(applicantCode);
+            }
+        } catch(err) {
+            console.error('Submit exam error:', err);
+            showToast('تعذر الاتصال بالخادم أثناء التسليم', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> تسليم الاختبار وإرسال الإجابات';
+            }
+        }
+    }
+
+    function openExamCorrectionReview(examId) {
+        if (!window._portalData || !window._portalData.exams) return;
+        const exam = window._portalData.exams.find(x => x.id === examId);
+        if (!exam || !exam.canViewCorrection || !exam.latestSubmission) {
+            showToast('التصحيح التفصيلي غير متاح للعرض بعد حتى يتم اعتماده من الإدارة', 'warn');
+            return;
+        }
+
+        const sub = exam.latestSubmission;
+        const detailed = sub.answersDetailed || [];
+
+        document.getElementById('portal-dashboard-content').classList.add('hidden');
+        document.getElementById('portal-active-exam-view').classList.add('hidden');
+        document.getElementById('portal-exam-correction-view').classList.remove('hidden');
+
+        document.getElementById('corr-view-title').textContent = `تصحيح الاختبار: ${exam.title}`;
+        document.getElementById('corr-view-summary').innerHTML = `
+            <div class="p-5 rounded-2xl bg-gradient-to-l from-emerald-900 to-indigo-900 text-white flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <div class="text-xs text-emerald-300 font-bold">النتيجة النهائية المعتمدة</div>
+                    <div class="text-2xl font-black mt-0.5">${sub.totalScore} / ${sub.maxScore} (${sub.percentage}%) — ${esc(sub.level)}</div>
+                    ${sub.adminFeedback ? `<div class="mt-2 text-xs bg-white/10 p-3 rounded-xl text-yellow-200 font-bold"><i class="fa-solid fa-comment-dots ml-1"></i> ملاحظة المصحح: ${esc(sub.adminFeedback)}</div>` : ''}
+                </div>
+                <span class="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-xs shadow">معتمد نهائياً ✓</span>
+            </div>
+        `;
+
+        document.getElementById('corr-view-questions').innerHTML = detailed.map(function(item, idx) {
+            const isFull = item.earnedPoints >= item.maxPoints - 0.01;
+            const borderCls = isFull ? 'border-emerald-200 bg-emerald-50/20' : 'border-rose-200 bg-rose-50/20';
+
+            let detailsBody = '';
+            if (item.type === 'correction') {
+                const userCorrs = (item.applicantCorrections || []).map(c =>
+                    `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${c.isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                        ${esc(c.originalWord || '—')} ← ${esc(c.correctedWord || '—')} ${c.isCorrect ? '✓' : '✗'}
+                    </span>`
+                ).join(' ') || '<span class="text-xs text-slate-400">لم تقم بالتصويب</span>';
+
+                const modelCorrs = (item.modelErrorsList || []).map(m =>
+                    `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-xs font-bold border border-indigo-200">
+                        الخطأ: (${esc(m.wrong)}) ← الصواب: (${esc(m.correct)})
+                    </span>`
+                ).join(' ');
+
+                detailsBody = `
+                    <div class="space-y-2 text-xs mt-2">
+                        <div><strong class="text-slate-600">تصويباتك:</strong> <div class="flex flex-wrap gap-1.5 mt-1">${userCorrs}</div></div>
+                        <div><strong class="text-indigo-700">التصويب النموذجي:</strong> <div class="flex flex-wrap gap-1.5 mt-1">${modelCorrs}</div></div>
+                    </div>`;
+            } else if (item.type === 'essay') {
+                detailsBody = `
+                    <div class="space-y-2 text-xs mt-2">
+                        <div class="p-3 rounded-xl bg-white border border-slate-200"><strong>إجابتك المقالية:</strong> <p class="mt-1 text-slate-700 whitespace-pre-line">${esc(item.applicantAnswer || '—')}</p></div>
+                        ${item.modelAnswer ? `<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900"><strong>نموذج الإجابة الاسترشادي:</strong> <p class="mt-1 whitespace-pre-line">${esc(item.modelAnswer)}</p></div>` : ''}
+                        ${item.feedback ? `<div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900"><strong>تعليق المصحح على السؤال:</strong> ${esc(item.feedback)}</div>` : ''}
+                    </div>`;
+            } else {
+                detailsBody = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mt-2">
+                        <div class="p-2.5 rounded-xl bg-white border border-slate-200"><strong>إجابتك:</strong> <span class="${isFull ? 'text-emerald-700' : 'text-rose-600'} font-black">${esc(item.applicantAnswer || 'لم تجب')}</span></div>
+                        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900"><strong>الإجابة الصحيحة:</strong> <span class="font-black">${esc(item.correctAnswer || '—')}</span></div>
+                    </div>
+                    ${item.explanation ? `<div class="text-xs text-indigo-700 bg-indigo-50 p-2.5 rounded-xl mt-2 font-bold"><i class="fa-solid fa-lightbulb ml-1"></i> التوضيح: ${esc(item.explanation)}</div>` : ''}`;
+            }
+
+            return `
+            <div class="p-5 rounded-2xl border-2 ${borderCls} space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="font-black text-slate-800 text-sm sm:text-base">${idx + 1}. ${esc(item.questionText)}</div>
+                    <span class="px-3 py-1 rounded-full text-xs font-black ${isFull ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}" dir="ltr">
+                        ${item.earnedPoints} / ${item.maxPoints}
+                    </span>
+                </div>
+                ${detailsBody}
+            </div>`;
+        }).join('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function backToPortalDashboard() {
+        document.getElementById('portal-exam-correction-view').classList.add('hidden');
+        document.getElementById('portal-active-exam-view').classList.add('hidden');
+        document.getElementById('portal-dashboard-content').classList.remove('hidden');
+    }
+
     </script>
 </body>
 </html>
