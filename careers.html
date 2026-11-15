@@ -204,18 +204,7 @@
         #exam-screenshot-blackout.active {
             display: flex !important;
         }
-        /* حماية الموبايل ضد لقطات الشاشة بأزرار الباور والصوت (إخفاء فوري للأسئلة عند رفع الإصبع أو ثباته) */
-        #active-exam-questions-list.mobile-touch-veil .exam-question-protected-card > *:not(.exam-question-watermark) {
-            filter: blur(22px) !important;
-            opacity: 0.06 !important;
-            transition: none !important;
-            pointer-events: none !important;
-            -webkit-user-select: none !important;
-            user-select: none !important;
-        }
-        #mobile-touch-hold-hint {
-            transition: opacity 0.15s ease;
-        }
+
         /* شبكة حماية وعلامة مائية ديناميكية على بطاقات الأسئلة لمنع قراءة الذكاء الاصطناعي والـ OCR للصور */
         .exam-question-protected-card {
             position: relative;
@@ -550,12 +539,6 @@
 
                 <!-- صندوق تعليمات الاختبار المكتوبة في نموذج الاختبار (كل سطر نقطة) -->
                 <div id="active-exam-instructions-box" class="hidden bg-white rounded-2xl p-5 shadow-sm border-2 border-indigo-100"></div>
-
-                <!-- شريط إظهار الأسئلة باللمس على الموبايل (لمنع لقطات الشاشة بأزرار الباور والصوت) -->
-                <div id="mobile-touch-hold-hint" class="hidden sticky top-32 z-40 bg-indigo-950/95 text-yellow-300 border border-indigo-400/40 rounded-2xl px-4 py-3 text-xs font-black text-center shadow-lg flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-hand-pointer animate-bounce text-sm"></i>
-                    <span>المس الشاشة بإصبعك وحرّكه لقراءة الأسئلة والإجابة (تُحجب الأسئلة تلقائياً عند رفع الإصبع لمنع تصوير الشاشة)</span>
-                </div>
 
                 <!-- قائمة أسئلة الاختبار -->
                 <div id="active-exam-questions-list" class="space-y-5"></div>
@@ -1685,17 +1668,15 @@
         if (!exam) return false;
         try {
             const key = getExamCompletedLockKey(applicantCode, exam.id);
-            const raw = localStorage.getItem(key);
-            if (!raw) return false;
-            const parsed = JSON.parse(raw);
-            if (!parsed) return false;
-            const maxAllowed = parseInt(exam.maxAllowedAttempts) || 1;
             const serverAttempts = parseInt(exam.attemptsUsed) || 0;
-            if (serverAttempts >= maxAllowed) return true;
-            // إذا تم تسليمه منذ أقل من 5 دقائق ولم يتحدث الكاش بعد، نمنع فتحه مرة أخرى
-            if (Date.now() - (parsed.completedAt || 0) < 5 * 60 * 1000 && (parsed.attemptsUsed || 1) >= maxAllowed) {
-                return true;
+            const maxAllowed = parseInt(exam.maxAllowedAttempts) || 1;
+            // إذا كان عدد المحاولات في السيرفر أقل من الحد المسموح (مثلاً الأدمن حذف إجابة المتقدم أو منحه محاولة إضافية)، نمسح أي قفل محلي فوراً!
+            if (serverAttempts < maxAllowed && !exam.latestResult) {
+                localStorage.removeItem(key);
+                clearSavedExamProgressFromStorage(applicantCode, exam.id);
+                return false;
             }
+            if (serverAttempts >= maxAllowed) return true;
         } catch (e) {}
         return false;
     }
@@ -3170,48 +3151,8 @@
         if (blk) blk.classList.remove('active');
     }
 
-    window._mobileTouchIdleTimer = null;
-    window._lastMobileTypingTime = 0;
-
-    function isMobileOrTouchScreen() {
-        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 900;
-    }
-
-    function applyMobileTouchVeil(shouldVeil) {
-        const qList = document.getElementById('active-exam-questions-list');
-        const hint = document.getElementById('mobile-touch-hold-hint');
-        if (!qList) return;
-        if (!isScreenshotProtectionEnabled() || !isMobileOrTouchScreen()) {
-            qList.classList.remove('mobile-touch-veil');
-            if (hint) hint.classList.add('hidden');
-            return;
-        }
-        if (hint) hint.classList.remove('hidden');
-        if (shouldVeil) {
-            // إذا كان المتقدم يكتب حالياً داخل حقل مقالي أو تصويب، نمهله ثانيتين بعد آخر حرف قبل الحجب
-            if (Date.now() - (window._lastMobileTypingTime || 0) < 2200) return;
-            qList.classList.add('mobile-touch-veil');
-        } else {
-            qList.classList.remove('mobile-touch-veil');
-        }
-    }
-
-    function resetMobileTouchIdleTimer() {
-        if (window._mobileTouchIdleTimer) clearTimeout(window._mobileTouchIdleTimer);
-        applyMobileTouchVeil(false);
-        // إذا ثبت الإصبع بدون أي حركة لمدة 1.8 ثانية (مثلاً لمحاولة الضغط باليد الأخرى على الباور والصوت) تُحجب الأسئلة فوراً
-        window._mobileTouchIdleTimer = setTimeout(function() {
-            if (window._examState && window._examState.inProgress) {
-                applyMobileTouchVeil(true);
-            }
-        }, 1800);
-    }
-
     function startExamFocusGuard() {
         stopExamFocusGuard();
-        if (isScreenshotProtectionEnabled() && isMobileOrTouchScreen()) {
-            applyMobileTouchVeil(true);
-        }
         window._focusGuardInterval = setInterval(function() {
             if (!window._examState || !window._examState.inProgress) {
                 stopExamFocusGuard();
@@ -3229,14 +3170,6 @@
             clearInterval(window._focusGuardInterval);
             window._focusGuardInterval = null;
         }
-        if (window._mobileTouchIdleTimer) {
-            clearTimeout(window._mobileTouchIdleTimer);
-            window._mobileTouchIdleTimer = null;
-        }
-        const qList = document.getElementById('active-exam-questions-list');
-        if (qList) qList.classList.remove('mobile-touch-veil');
-        const hint = document.getElementById('mobile-touch-hold-hint');
-        if (hint) hint.classList.add('hidden');
     }
 
     function showAntiCheatWarningModal(count, maxWarnings, isResumedAfterExit) {
@@ -3351,62 +3284,20 @@
         }
     });
 
-    // حماية شاشات الموبايل ضد لقطات الشاشة (سواء بـ 3 أصابع أو بأزرار الباور + خفض الصوت)
+    // رصد السحب بإصبعين أو 3 أصابع فقط على الموبايل (دون أي تأثير على التمرير والضغط بإصبع واحد)
     window.addEventListener('touchstart', function(e) {
         if (!window._examState || !window._examState.inProgress || !isScreenshotProtectionEnabled()) return;
         if (e.touches && e.touches.length >= 2) {
-            applyMobileTouchVeil(true);
             activateScreenshotShield(true);
-            return;
-        }
-        if (e.touches && e.touches.length === 1) {
-            resetMobileTouchIdleTimer();
         }
     }, { capture: true, passive: true });
 
     window.addEventListener('touchmove', function(e) {
         if (!window._examState || !window._examState.inProgress || !isScreenshotProtectionEnabled()) return;
         if (e.touches && e.touches.length >= 2) {
-            applyMobileTouchVeil(true);
             activateScreenshotShield(true);
-            return;
-        }
-        if (e.touches && e.touches.length === 1) {
-            resetMobileTouchIdleTimer();
         }
     }, { capture: true, passive: true });
-
-    window.addEventListener('touchend', function(e) {
-        if (!window._examState || !window._examState.inProgress || !isScreenshotProtectionEnabled()) return;
-        if (!e.touches || e.touches.length === 0) {
-            if (window._mobileTouchIdleTimer) clearTimeout(window._mobileTouchIdleTimer);
-            // نُبقي السؤال ظاهراً لجزء بسيط من الثانية (180ms) فقط لتنفيذ النقرة على الاختيار ثم يُحجب فوراً
-            window._mobileTouchIdleTimer = setTimeout(function() {
-                applyMobileTouchVeil(true);
-            }, 180);
-        }
-    }, { capture: true, passive: true });
-
-    // عند الضغط على أزرار الباور + الصوت أثناء لمس الشاشة، يلغي النظام اللمس (touchcancel / pointercancel) فنفعل شاشة المنع السوداء فوراً!
-    window.addEventListener('touchcancel', function() {
-        if (!window._examState || !window._examState.inProgress || !isScreenshotProtectionEnabled()) return;
-        applyMobileTouchVeil(true);
-        activateScreenshotShield(true);
-    }, { capture: true, passive: true });
-
-    window.addEventListener('pointercancel', function() {
-        if (!window._examState || !window._examState.inProgress || !isScreenshotProtectionEnabled()) return;
-        applyMobileTouchVeil(true);
-        activateScreenshotShield(true);
-    }, { capture: true, passive: true });
-
-    document.addEventListener('input', function(e) {
-        if (!window._examState || !window._examState.inProgress) return;
-        if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
-            window._lastMobileTypingTime = Date.now();
-            resetMobileTouchIdleTimer();
-        }
-    }, true);
 
     window.addEventListener('pagehide', function() {
         if (window._examState.inProgress) {
@@ -3431,7 +3322,21 @@
 
     document.addEventListener('keyup', function(e) {
         if (!window._examState.inProgress || !window._activeExam) return;
-        if (e.key === 'PrintScreen' || e.keyCode === 44 || e.key === 'Meta' || e.key === 'OS') {
+        if (
+            e.key === 'PrintScreen' ||
+            e.keyCode === 44 ||
+            e.key === 'Meta' ||
+            e.key === 'OS' ||
+            e.key === 'AudioVolumeDown' ||
+            e.key === 'AudioVolumeUp' ||
+            e.key === 'VolumeDown' ||
+            e.key === 'VolumeUp' ||
+            e.key === 'Power' ||
+            e.keyCode === 24 ||
+            e.keyCode === 25 ||
+            e.keyCode === 174 ||
+            e.keyCode === 175
+        ) {
             e.preventDefault();
             activateScreenshotShield(true);
         }
@@ -3442,9 +3347,22 @@
         const ac = window._activeExam.antiCheat || {};
         const key = (e.key || '').toLowerCase();
 
-        // رصد فوري لمفاتيح لقطة الشاشة على الكمبيوتر والمتصفح (PrintScreen, Win/Meta key, Win+Shift+S, Cmd+Shift+3/4/5, Alt+PrtScn, Ctrl+P, F12)
+        // رصد فوري لمفاتيح لقطة الشاشة على الكمبيوتر وأزرار الصوت/الباور على الموبايل
         if (ac.layer5NoScreenshotEnabled !== false) {
+            const isHardwareBtn = (
+                e.key === 'AudioVolumeDown' ||
+                e.key === 'AudioVolumeUp' ||
+                e.key === 'VolumeDown' ||
+                e.key === 'VolumeUp' ||
+                e.key === 'Power' ||
+                e.keyCode === 24 ||
+                e.keyCode === 25 ||
+                e.keyCode === 26 ||
+                e.keyCode === 174 ||
+                e.keyCode === 175
+            );
             if (
+                isHardwareBtn ||
                 e.key === 'PrintScreen' ||
                 e.keyCode === 44 ||
                 e.key === 'Meta' ||
