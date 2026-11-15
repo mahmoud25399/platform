@@ -16312,21 +16312,37 @@ function copyJobLink(jobId) {
     });
 }
 
+
+// توحيد وتنظيف أرقام الواتساب (خاصة الأرقام المصرية الـ 10 أرقام بدون صفر أو بدون كود الدولة 20)
+function cleanPhoneForWa(phone) {
+    let cleaned = typeof normalizePhoneDigitsAscii === 'function' ? normalizePhoneDigitsAscii(phone) : String(phone || '').replace(/\D/g, '');
+    if (!cleaned) return '';
+    if (cleaned.startsWith('00')) cleaned = cleaned.slice(2);
+    if (/^2001[0125]\d{8}$/.test(cleaned)) cleaned = '+20' + cleaned.slice(3);
+    else if (/^201[0125]\d{8}$/.test(cleaned)) cleaned = '+' + cleaned;
+    else if (/^01[0125]\d{8}$/.test(cleaned)) cleaned = '+2' + cleaned;
+    else if (/^(10|11|12|15)\d{8}$/.test(cleaned)) cleaned = '+20' + cleaned;
+    else if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
+    return cleaned;
+}
+
+function isEgyptianPhone(phone) {
+    let clean = typeof normalizePhoneDigitsAscii === 'function' ? normalizePhoneDigitsAscii(phone) : String(phone || '').replace(/\D/g, '');
+    return isEgyptianDigitsPattern(clean);
+}
+
 function isStrictEgyptianApplicantPhone(phone, appObj, precomputedCountry) {
     const cInfo = precomputedCountry || (appObj && appObj._countryInfo) || (appObj && typeof detectApplicantCountry === 'function' ? detectApplicantCountry(appObj) : null);
     if (cInfo && cInfo.code && cInfo.code !== 'egypt' && cInfo.code !== 'unknown') {
         return false;
     }
-    const ar = '٠١٢٣٤٥٦٧٨٩', fa = '۰۱۲۳۴۵۶۷۸۹';
-    let s = String(phone || '');
-    for (let i = 0; i < 10; i++) {
-        s = s.replace(new RegExp(ar[i], 'g'), i).replace(new RegExp(fa[i], 'g'), i);
-    }
-    const digits = s.replace(/\D/g, '');
+    const digits = typeof normalizePhoneDigitsAscii === 'function' ? normalizePhoneDigitsAscii(phone) : String(phone || '').replace(/\D/g, '');
     if (!digits) return false;
     if (/^01[0125]\d{8}$/.test(digits)) return true;
     if (/^201[0125]\d{8}$/.test(digits)) return true;
+    if (/^2001[0125]\d{8}$/.test(digits)) return true;
     if (/^00201[0125]\d{8}$/.test(digits)) return true;
+    if (/^002001[0125]\d{8}$/.test(digits)) return true;
     if (/^1[0125]\d{8}$/.test(digits)) return true;
     return false;
 }
@@ -16933,10 +16949,34 @@ function parseApplicantAnswers(app) {
     return [];
 }
 
+function normalizePhoneDigitsAscii(raw) {
+    const ar = '٠١٢٣٤٥٦٧٨٩', fa = '۰۱۲۳۴۵۶۷۸۹';
+    let s = String(raw || '');
+    for (let i = 0; i < 10; i++) {
+        s = s.replace(new RegExp(ar[i], 'g'), i).replace(new RegExp(fa[i], 'g'), i);
+    }
+    return s.replace(/\D/g, '');
+}
+
+function isEgyptianDigitsPattern(digits) {
+    if (!digits) return false;
+    return (
+        (digits.startsWith('20') && digits.length === 12) ||
+        (digits.startsWith('2001') && digits.length === 13) ||
+        (digits.startsWith('0020') && digits.length === 14) ||
+        (digits.startsWith('002001') && digits.length === 15) ||
+        (digits.startsWith('01') && digits.length === 11) ||
+        (/^(10|11|12|15)\d{8}$/.test(digits))
+    );
+}
+
 function detectApplicantCountry(app, preParsedAnswers) {
     if (app && app._countryInfo) return app._countryInfo;
-    const rawPhone = String(app?.phone || '').replace(/\\s+/g, '');
-    const digits = rawPhone.replace(/\\D/g, '');
+    const digits = normalizePhoneDigitsAscii(app?.phone || '');
+    // فحص الرقم المصري أولاً حتى لا يُصنف خطأ كخارج مصر
+    if (isEgyptianDigitsPattern(digits)) {
+        return { code: 'egypt', label: 'مصر', isEgypt: true };
+    }
     const answers = preParsedAnswers || parseApplicantAnswers(app);
 
     for (let i = 0; i < answers.length; i++) {
@@ -16963,7 +17003,7 @@ function detectApplicantCountry(app, preParsedAnswers) {
         (digits.startsWith('20') && digits.length === 12) ||
         (digits.startsWith('0020') && digits.length === 14) ||
         (digits.startsWith('01') && digits.length === 11) ||
-        (/^(10|11|12|15)\\d{8}$/.test(digits))
+        (/^(10|11|12|15)\d{8}$/.test(digits))
     ) {
         return { code: 'egypt', label: 'مصر', isEgypt: true };
     }
@@ -17199,7 +17239,7 @@ function getFilteredAnalyticsApplications() {
             const hasCv = !!(app.cvUrl && String(app.cvUrl).trim());
             const hasExamScore = !!(app.examScore && String(app.examScore).trim());
             const examPct = app.examPercentage !== null && app.examPercentage !== undefined ? parseFloat(app.examPercentage) : (function() {
-                const m = String(app.examScore || '').match(/(\\d+(?:\\.\\d+)?)%/);
+                const m = String(app.examScore || '').match(/(\d+(?:\.\d+)?)%/);
                 return m ? parseFloat(m[1]) : -1;
             })();
             if (notesFilter === 'took_exam' && !hasExamScore) return false;
@@ -18671,7 +18711,7 @@ function renderExamBuilderQuestions() {
             </div>`;
         } else if (q.type === 'correction') {
             const errs = Array.isArray(q.errorsList) ? q.errorsList : [];
-            const wordsInSentence = String(q.text || '').trim().split(/\\s+/).filter(Boolean);
+            const wordsInSentence = String(q.text || '').trim().split(/\s+/).filter(Boolean);
             specificHtml = `
             <div class="space-y-3 bg-purple-50/50 p-3.5 rounded-xl border border-purple-200">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -19446,8 +19486,8 @@ function saveGradedExamSubmission() {
 }
 
 function aPhoneMatch(p1, p2) {
-    const d1 = String(p1 || '').replace(/\\D/g, '');
-    const d2 = String(p2 || '').replace(/\\D/g, '');
+    const d1 = String(p1 || '').replace(/\D/g, '');
+    const d2 = String(p2 || '').replace(/\D/g, '');
     return d1.length >= 9 && d2.length >= 9 && d1.slice(-9) === d2.slice(-9);
 }
 
