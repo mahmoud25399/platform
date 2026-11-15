@@ -169,16 +169,20 @@
             -ms-user-select: text !important;
             user-select: text !important;
         }
-        /* حماية الشاشة ضد التصوير ولقطات الشاشة والطباعة */
+        /* حماية الشاشة ضد التصوير ولقطات الشاشة والطباعة على الموبايل والمتصفح */
         @media print {
-            body, #portal-active-exam-view {
+            html, body, #portal-active-exam-view {
                 display: none !important;
                 visibility: hidden !important;
+                opacity: 0 !important;
             }
         }
-        .exam-screen-shield {
-            filter: blur(36px) brightness(0.08) !important;
-            opacity: 0.02 !important;
+        .exam-screen-shield,
+        .exam-screen-shield #active-exam-questions-list,
+        .exam-screen-shield #active-exam-instructions-box {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            filter: brightness(0) !important;
             pointer-events: none !important;
             transition: none !important;
         }
@@ -186,16 +190,46 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: #0f172a;
+            background: #020617;
             z-index: 999999;
             align-items: center;
             justify-content: center;
             color: #f8fafc;
             text-align: center;
             padding: 2rem;
+            transition: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
         #exam-screenshot-blackout.active {
             display: flex !important;
+        }
+        /* شبكة حماية وعلامة مائية ديناميكية على بطاقات الأسئلة لمنع قراءة الذكاء الاصطناعي والـ OCR للصور */
+        .exam-question-protected-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .exam-question-watermark {
+            position: absolute;
+            inset: 0;
+            pointer-events: none !important;
+            z-index: 2;
+            overflow: hidden;
+            opacity: 0.055;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: space-around;
+            justify-content: space-around;
+            transform: rotate(-14deg) scale(1.25);
+            font-family: monospace;
+            font-weight: 900;
+            font-size: 13px;
+            color: #1e1b4b;
+            line-height: 2.6;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
         .corr-word-inline {
             display: inline;
@@ -541,7 +575,7 @@
     </div>
 
     <!-- نافذة التنبيه عند مغادرة تبويب الاختبار -->
-    <div id="anti-cheat-warning-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-md z-[99998] items-center justify-center p-4">
+    <div id="anti-cheat-warning-modal" class="modal-overlay fixed inset-0 bg-slate-950 z-[99998] items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center border-4 border-amber-500 space-y-4">
             <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-3xl">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -1504,9 +1538,27 @@
             || 'https://script.google.com/macros/s/AKfycbyScdvPl8iMbxZltPiZA6nVm-2quNCzGF5-QT9Sp4RfOnq53eQrRM-qA-yoLmCD8m__zQ/exec';
 
         try {
-            const body = new FormData(); Object.keys(payload).forEach(k => body.append(k, payload[k]));
-            const res = await fetch(url, { method: 'POST', body });
-            const data = await res.json();
+            let data = null;
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const body = new FormData();
+                    Object.keys(payload).forEach(k => body.append(k, payload[k]));
+                    const res = await fetch(url, { method: 'POST', body });
+                    data = await res.json();
+                    if (data && data.result === 'error' && String(data.error || '').includes('مشغول') && attempt < 4) {
+                        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري تسجيل طلبك (${attempt}/3)...`;
+                        await new Promise(r => setTimeout(r, 1300 * attempt));
+                        continue;
+                    }
+                    break;
+                } catch (netErr) {
+                    if (attempt < 4) {
+                        await new Promise(r => setTimeout(r, 1300 * attempt));
+                        continue;
+                    }
+                    throw netErr;
+                }
+            }
 
             if (data.result === 'success') {
                 document.getElementById('jp-form-wrapper').classList.add('hidden');
@@ -1588,13 +1640,50 @@
         activeWordEdit: null
     };
 
+    window._isSubmittingExamNow = false;
+    window._focusGuardInterval = null;
+
     function getExamSessionStorageKey(applicantCode, examId) {
         const cleanCode = normalizeApplicantPhoneCode(applicantCode || (window._portalData && window._portalData.applicant && window._portalData.applicant.code) || sessionStorage.getItem('careers_applicant_code') || localStorage.getItem('careers_applicant_code') || '');
         return 'careers_exam_session_' + cleanCode + '_' + String(examId || '');
     }
 
+    function getExamCompletedLockKey(applicantCode, examId) {
+        const cleanCode = normalizeApplicantPhoneCode(applicantCode || (window._portalData && window._portalData.applicant && window._portalData.applicant.code) || sessionStorage.getItem('careers_applicant_code') || localStorage.getItem('careers_applicant_code') || '');
+        return 'careers_exam_done_' + cleanCode + '_' + String(examId || '');
+    }
+
+    function markExamCompletedLocally(applicantCode, examId, attemptsUsedCount) {
+        try {
+            const key = getExamCompletedLockKey(applicantCode, examId);
+            localStorage.setItem(key, JSON.stringify({
+                completedAt: Date.now(),
+                attemptsUsed: attemptsUsedCount || 1
+            }));
+        } catch (e) {}
+    }
+
+    function isExamLockedCompletedLocally(applicantCode, exam) {
+        if (!exam) return false;
+        try {
+            const key = getExamCompletedLockKey(applicantCode, exam.id);
+            const raw = localStorage.getItem(key);
+            if (!raw) return false;
+            const parsed = JSON.parse(raw);
+            if (!parsed) return false;
+            const maxAllowed = parseInt(exam.maxAllowedAttempts) || 1;
+            const serverAttempts = parseInt(exam.attemptsUsed) || 0;
+            if (serverAttempts >= maxAllowed) return true;
+            // إذا تم تسليمه منذ أقل من 5 دقائق ولم يتحدث الكاش بعد، نمنع فتحه مرة أخرى
+            if (Date.now() - (parsed.completedAt || 0) < 5 * 60 * 1000 && (parsed.attemptsUsed || 1) >= maxAllowed) {
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
     function saveActiveExamProgressToStorage(extraFlags) {
-        if (!window._examState || !window._examState.inProgress || !window._examState.examId) return;
+        if (!window._examState || !window._examState.examId) return;
         try {
             const key = getExamSessionStorageKey(window._examState.applicantCode, window._examState.examId);
             const payload = Object.assign({
@@ -1608,7 +1697,9 @@
                 maxTabWarnings: parseInt(window._examState.maxTabWarnings) || 2,
                 answers: window._examState.answers || {},
                 lastSavedAt: Date.now(),
-                exitedPage: false
+                exitedPage: false,
+                lockedForSubmission: !!window._examState.lockedForSubmission,
+                submitTrigger: window._examState.submitTrigger || ''
             }, extraFlags || {});
             localStorage.setItem(key, JSON.stringify(payload));
         } catch (e) {}
@@ -2060,10 +2151,19 @@
                     sessionStorage.setItem('careers_applicant_code', code);
                     localStorage.setItem('careers_applicant_code', code);
                 } catch(e) {}
+                const applicantCode = (data.applicant && data.applicant.code) || code;
+                (data.exams || []).forEach(function(ex) {
+                    if (isExamLockedCompletedLocally(applicantCode, ex)) {
+                        ex.canTakeExam = false;
+                        if (!ex.attemptsUsed || ex.attemptsUsed < 1) ex.attemptsUsed = 1;
+                    } else {
+                        // إذا كان الأدمن قد حذف إجابة المتقدم أو منح محاولة إضافية من لوحة التحكم، نمسح القفل المحلي القديم
+                        try { localStorage.removeItem(getExamCompletedLockKey(applicantCode, ex.id)); } catch(e) {}
+                    }
+                });
                 window._portalData = data;
                 renderApplicantPortalDashboard(data);
 
-                const applicantCode = (data.applicant && data.applicant.code) || code;
                 const resumableExam = (data.exams || []).find(function(x) {
                     if (!x.canTakeExam) return false;
                     const saved = loadSavedExamProgressFromStorage(applicantCode, x.id);
@@ -2610,9 +2710,10 @@
             }
         });
 
+        let forceImmediateSubmitReason = '';
         if (savedSession && savedSession.inProgress) {
             resumedFromExit = true;
-            if (typeof savedSession.remainingSeconds === 'number' && savedSession.remainingSeconds > 0) {
+            if (typeof savedSession.remainingSeconds === 'number') {
                 initialRemaining = savedSession.remainingSeconds;
             }
             initialElapsed = parseInt(savedSession.totalElapsedSeconds) || 0;
@@ -2626,6 +2727,13 @@
                 Object.keys(savedSession.answers).forEach(function(k) {
                     initialAnswers[k] = savedSession.answers[k];
                 });
+            }
+            if (savedSession.lockedForSubmission) {
+                forceImmediateSubmitReason = savedSession.submitTrigger || 'تسليم الاختبار المحفوظ';
+            } else if (ac.layer2TabSwitchEnabled !== false && initialTabSwitches > maxWarnings) {
+                forceImmediateSubmitReason = 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)';
+            } else if (ac.layer1TimerEnabled !== false && initialRemaining <= 0) {
+                forceImmediateSubmitReason = 'انتهاء الوقت المحدد للاختبار (تلقائي)';
             }
         }
 
@@ -2673,14 +2781,20 @@
             }
         }
 
-        renderActiveExamQuestions();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        if (ac.layer2TabSwitchEnabled !== false && window._examState.tabSwitches > maxWarnings) {
-            showToast('تم إغلاق الاختبار وتسليم إجاباتك تلقائياً لتجاوز حد مغادرة صفحة الاختبار (3 مرات)', 'error');
-            submitApplicantExamNow('إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)');
+        if (forceImmediateSubmitReason || (ac.layer2TabSwitchEnabled !== false && window._examState.tabSwitches > maxWarnings)) {
+            const reason = forceImmediateSubmitReason || 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)';
+            document.getElementById('active-exam-questions-list').innerHTML = `
+                <div class="bg-white rounded-3xl p-8 text-center shadow-md border-2 border-indigo-100 space-y-3">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-600"></i>
+                    <div class="font-black text-slate-800 text-base">جاري إغلاق الاختبار وتسليم إجاباتك المحفوظة...</div>
+                </div>`;
+            submitApplicantExamNow(reason);
             return;
         }
+
+        renderActiveExamQuestions();
+        startExamFocusGuard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         if (resumedFromExit && ac.layer2TabSwitchEnabled !== false && window._examState.tabSwitches > 0) {
             showAntiCheatWarningModal(window._examState.tabSwitches, maxWarnings, true);
@@ -2788,8 +2902,12 @@
                 bodyHtml = renderCorrectionQuestionBody(q, qId);
             }
 
+            const showWatermark = !(window._activeExam && window._activeExam.antiCheat && window._activeExam.antiCheat.layer5NoScreenshotEnabled === false);
+            const wmCode = esc((window._examState && window._examState.applicantCode) || '');
+            const wmHtml = showWatermark ? `<div class="exam-question-watermark" aria-hidden="true">${Array(12).fill(wmCode + ' • منصة الهليهي').join(' &nbsp;&nbsp; ')}</div>` : '';
             return `
-            <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border-2 ${isAnswered ? 'border-indigo-200/90' : 'border-slate-200/80'} space-y-3.5 transition-colors" id="exam-q-card-${esc(qId)}">
+            <div class="exam-question-protected-card bg-white rounded-3xl p-5 sm:p-6 shadow-sm border-2 ${isAnswered ? 'border-indigo-200/90' : 'border-slate-200/80'} space-y-3.5 transition-colors" id="exam-q-card-${esc(qId)}">
+                ${wmHtml}
                 <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-2.5">
                         <span class="px-3 py-1 rounded-xl bg-indigo-600 text-white font-black text-xs">السؤال ${qIdx + 1} من ${totalQ}</span>
@@ -3003,7 +3121,7 @@
         renderActiveExamQuestions();
     }
 
-    // ─── حماية الشاشة ضد لقطات الشاشة (Screenshot Blocker) ومغادرة التبويب ───
+    // ─── حماية الشاشة ضد لقطات الشاشة (على الموبايل والمتصفح) ومغادرة التبويب ───
     function isScreenshotProtectionEnabled() {
         if (!window._examState || !window._examState.inProgress || !window._activeExam) return false;
         const ac = window._activeExam.antiCheat || {};
@@ -3014,22 +3132,45 @@
         if (!isScreenshotProtectionEnabled()) return;
         const examView = document.getElementById('portal-active-exam-view');
         if (examView) examView.classList.add('exam-screen-shield');
-        if (showBlackoutOverlay) {
+        if (showBlackoutOverlay !== false) {
             const blk = document.getElementById('exam-screenshot-blackout');
             if (blk) blk.classList.add('active');
         }
         try {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText('');
+                navigator.clipboard.writeText('').catch(function(){});
             }
         } catch (e) {}
     }
 
     function restoreScreenFromScreenshotShield() {
+        const acModal = document.getElementById('anti-cheat-warning-modal');
+        if (acModal && acModal.classList.contains('active')) return;
         const examView = document.getElementById('portal-active-exam-view');
         if (examView) examView.classList.remove('exam-screen-shield');
         const blk = document.getElementById('exam-screenshot-blackout');
         if (blk) blk.classList.remove('active');
+    }
+
+    function startExamFocusGuard() {
+        stopExamFocusGuard();
+        window._focusGuardInterval = setInterval(function() {
+            if (!window._examState || !window._examState.inProgress) {
+                stopExamFocusGuard();
+                return;
+            }
+            if (Date.now() < window._examState.gracePeriodUntil) return;
+            if ((document.hidden || !document.hasFocus()) && isScreenshotProtectionEnabled()) {
+                activateScreenshotShield(true);
+            }
+        }, 80);
+    }
+
+    function stopExamFocusGuard() {
+        if (window._focusGuardInterval) {
+            clearInterval(window._focusGuardInterval);
+            window._focusGuardInterval = null;
+        }
     }
 
     function showAntiCheatWarningModal(count, maxWarnings, isResumedAfterExit) {
@@ -3037,6 +3178,8 @@
         const titleEl = document.getElementById('ac-modal-title');
         const msgEl = document.getElementById('ac-modal-msg');
         const counterEl = document.getElementById('ac-modal-counter');
+        const examView = document.getElementById('portal-active-exam-view');
+        if (examView) examView.classList.add('exam-screen-shield');
         if (!modal) return;
 
         if (count === 1) {
@@ -3055,7 +3198,7 @@
     }
 
     function triggerTabSwitchViolation() {
-        if (!window._examState.inProgress || !window._activeExam) return;
+        if (!window._examState.inProgress || !window._activeExam || window._isSubmittingExamNow) return;
         if (Date.now() < window._examState.gracePeriodUntil) return;
         const ac = window._activeExam.antiCheat || {};
         if (ac.layer2TabSwitchEnabled === false) {
@@ -3070,28 +3213,45 @@
         const count = window._examState.tabSwitches;
         const maxWarnings = parseInt(ac.maxTabWarnings) || 2;
 
-        saveActiveExamProgressToStorage({ exitedPage: false, violationCountedOnExit: true });
-
         if (count > maxWarnings) {
+            const triggerReason = 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)';
+            window._examState.lockedForSubmission = true;
+            window._examState.submitTrigger = triggerReason;
+            saveActiveExamProgressToStorage({
+                exitedPage: false,
+                violationCountedOnExit: true,
+                lockedForSubmission: true,
+                submitTrigger: triggerReason
+            });
             document.getElementById('anti-cheat-warning-modal').classList.remove('active');
+            document.getElementById('exam-screenshot-blackout').classList.remove('active');
             showToast('تم إغلاق الاختبار وتسليم الإجابات تلقائياً لتجاوز حد مغادرة الصفحة', 'error');
-            submitApplicantExamNow('إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)');
+            submitApplicantExamNow(triggerReason);
         } else {
+            saveActiveExamProgressToStorage({ exitedPage: false, violationCountedOnExit: true });
             showAntiCheatWarningModal(count, maxWarnings, false);
         }
     }
 
     function recordExitViolationAndSave() {
-        if (!window._examState || !window._examState.inProgress || !window._activeExam) return;
+        if (!window._examState || !window._examState.inProgress || !window._activeExam || window._isSubmittingExamNow) return;
         const ac = window._activeExam.antiCheat || {};
+        const maxWarnings = parseInt(ac.maxTabWarnings) || 2;
         const recentlyCounted = window._lastTabViolationTime && (Date.now() - window._lastTabViolationTime < 2000);
         if (!recentlyCounted && ac.layer2TabSwitchEnabled !== false && Date.now() >= window._examState.gracePeriodUntil) {
             window._examState.tabSwitches++;
             window._lastTabViolationTime = Date.now();
         }
+        const exceeded = (ac.layer2TabSwitchEnabled !== false) && (window._examState.tabSwitches > maxWarnings);
+        if (exceeded) {
+            window._examState.lockedForSubmission = true;
+            window._examState.submitTrigger = 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)';
+        }
         saveActiveExamProgressToStorage({
             exitedPage: true,
-            violationCountedOnExit: true
+            violationCountedOnExit: true,
+            lockedForSubmission: exceeded,
+            submitTrigger: exceeded ? 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)' : ''
         });
     }
 
@@ -3102,31 +3262,43 @@
 
     document.addEventListener('visibilitychange', function() {
         if (document.hidden && window._examState.inProgress) {
-            activateScreenshotShield(false);
+            activateScreenshotShield(true);
             triggerTabSwitchViolation();
-        } else if (!document.hidden && window._examState.inProgress) {
-            const blk = document.getElementById('exam-screenshot-blackout');
-            if (!blk || !blk.classList.contains('active')) {
-                restoreScreenFromScreenshotShield();
+        } else if (!document.hidden) {
+            // إذا عاد المتقدم للتبويب وكان قد وصل للمحاولة 3 أثناء الخروج وتوقف الطلب بالخلفية، نُكمل التسليم فوراً
+            if (window._examState && window._examState.lockedForSubmission && !window._isSubmittingExamNow) {
+                submitApplicantExamNow(window._examState.submitTrigger || 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)');
             }
         }
     });
 
     window.addEventListener('blur', function() {
         if (window._examState.inProgress) {
-            activateScreenshotShield(false);
+            activateScreenshotShield(true);
             triggerTabSwitchViolation();
         }
     });
 
     window.addEventListener('focus', function() {
-        if (window._examState.inProgress) {
-            const blk = document.getElementById('exam-screenshot-blackout');
-            if (!blk || !blk.classList.contains('active')) {
-                restoreScreenFromScreenshotShield();
-            }
+        if (window._examState && window._examState.lockedForSubmission && !window._isSubmittingExamNow) {
+            submitApplicantExamNow(window._examState.submitTrigger || 'إغلاق تلقائي لتجاوز حد مغادرة التبويب (3 مرات)');
         }
     });
+
+    // رصد السحب بثلاثة أصابع أو إصبعين على شاشات الموبايل (3-Finger Screenshot Gesture على أندرويد وآيفون)
+    window.addEventListener('touchstart', function(e) {
+        if (!window._examState || !window._examState.inProgress) return;
+        if (e.touches && e.touches.length >= 2 && isScreenshotProtectionEnabled()) {
+            activateScreenshotShield(true);
+        }
+    }, { capture: true, passive: true });
+
+    window.addEventListener('touchmove', function(e) {
+        if (!window._examState || !window._examState.inProgress) return;
+        if (e.touches && e.touches.length >= 2 && isScreenshotProtectionEnabled()) {
+            activateScreenshotShield(true);
+        }
+    }, { capture: true, passive: true });
 
     window.addEventListener('pagehide', function() {
         if (window._examState.inProgress) {
@@ -3151,24 +3323,28 @@
 
     document.addEventListener('keyup', function(e) {
         if (!window._examState.inProgress || !window._activeExam) return;
-        if (e.key === 'PrintScreen' || e.keyCode === 44) {
+        if (e.key === 'PrintScreen' || e.keyCode === 44 || e.key === 'Meta' || e.key === 'OS') {
             e.preventDefault();
             activateScreenshotShield(true);
         }
-    });
+    }, true);
 
     document.addEventListener('keydown', function(e) {
         if (!window._examState.inProgress || !window._activeExam) return;
         const ac = window._activeExam.antiCheat || {};
         const key = (e.key || '').toLowerCase();
 
-        // رصد اختصارات لقطات الشاشة (PrintScreen, Win+Shift+S, Cmd+Shift+3/4/5/S, Ctrl+P)
+        // رصد فوري لمفاتيح لقطة الشاشة على الكمبيوتر والمتصفح (PrintScreen, Win/Meta key, Win+Shift+S, Cmd+Shift+3/4/5, Alt+PrtScn, Ctrl+P, F12)
         if (ac.layer5NoScreenshotEnabled !== false) {
             if (
                 e.key === 'PrintScreen' ||
                 e.keyCode === 44 ||
-                ((e.metaKey || e.ctrlKey) && e.shiftKey && ['s', '3', '4', '5'].includes(key)) ||
-                ((e.ctrlKey || e.metaKey) && key === 'p')
+                e.key === 'Meta' ||
+                e.key === 'OS' ||
+                (e.ctrlKey && e.shiftKey) ||
+                (e.altKey && e.shiftKey) ||
+                ((e.metaKey || e.ctrlKey) && ['p', 's'].includes(key)) ||
+                e.key === 'F12'
             ) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3185,27 +3361,44 @@
                 e.preventDefault();
             }
         }
-    });
+    }, true);
 
     function confirmAndSubmitExam() {
-        if (!window._examState.inProgress) return;
+        if (!window._examState.inProgress || window._isSubmittingExamNow) return;
         submitApplicantExamNow('تسليم يدوي بواسطة المتقدم');
     }
 
     async function submitApplicantExamNow(triggerReason) {
-        if (!window._examState.inProgress || !window._activeExam) return;
+        if (window._isSubmittingExamNow) return;
+        if (!window._activeExam) return;
+
+        window._isSubmittingExamNow = true;
+        window._examState.inProgress = false;
+        window._examState.lockedForSubmission = true;
+        window._examState.submitTrigger = triggerReason || 'تسليم يدوي';
+        stopExamFocusGuard();
+
+        if (window._examState.timerInterval) {
+            clearInterval(window._examState.timerInterval);
+            window._examState.timerInterval = null;
+        }
+
         const examIdToClear = window._activeExam.id;
         const applicantCode = window._examState.applicantCode
             || (window._portalData && window._portalData.applicant && window._portalData.applicant.code)
             || sessionStorage.getItem('careers_applicant_code')
             || localStorage.getItem('careers_applicant_code') || '';
 
-        window._examState.inProgress = false;
-        restoreScreenFromScreenshotShield();
-        if (window._examState.timerInterval) {
-            clearInterval(window._examState.timerInterval);
-            window._examState.timerInterval = null;
-        }
+        // حفظ حالة القفل فوراً في localStorage حتى لا يُفتح الاختبار مرة أخرى أبداً حتى لو انقطع الإنترنت
+        saveActiveExamProgressToStorage({
+            lockedForSubmission: true,
+            submitTrigger: triggerReason || 'تسليم يدوي'
+        });
+
+        document.getElementById('anti-cheat-warning-modal')?.classList.remove('active');
+        document.getElementById('exam-screenshot-blackout')?.classList.remove('active');
+        const examView = document.getElementById('portal-active-exam-view');
+        if (examView) examView.classList.remove('exam-screen-shield');
 
         const btn = document.getElementById('submit-exam-final-btn');
         if (btn) {
@@ -3213,7 +3406,7 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري تسليم وحفظ إجاباتك...';
         }
 
-        const sessionSec = Math.max(1, Math.round((Date.now() - window._examState.startedAt) / 1000));
+        const sessionSec = Math.max(1, Math.round((Date.now() - (window._examState.startedAt || Date.now())) / 1000));
         const timeSpent = Math.max(sessionSec, parseInt(window._examState.totalElapsedSeconds) || sessionSec);
 
         const payload = {
@@ -3221,36 +3414,97 @@
             applicantCode: applicantCode,
             examId: examIdToClear,
             applicationId: window._examState.applicationId || '',
-            answers: JSON.stringify(window._examState.answers),
-            tabSwitches: window._examState.tabSwitches,
+            answers: JSON.stringify(window._examState.answers || {}),
+            tabSwitches: window._examState.tabSwitches || 0,
             timeSpentSeconds: timeSpent,
             submitTrigger: triggerReason || 'تسليم يدوي'
         };
 
         const url = getScriptEndpointUrl();
+        let data = null;
+
         try {
-            const body = new FormData();
-            Object.keys(payload).forEach(k => body.append(k, payload[k]));
-            const res = await fetch(url, { method: 'POST', body });
-            const data = await res.json();
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const body = new FormData();
+                    Object.keys(payload).forEach(k => body.append(k, payload[k]));
+                    const res = await fetch(url, { method: 'POST', body: body, keepalive: true });
+                    data = await res.json();
+                    if (data && data.result === 'error' && String(data.error || '').includes('مشغول') && attempt < 4) {
+                        await new Promise(r => setTimeout(r, 1200 * attempt));
+                        continue;
+                    }
+                    break;
+                } catch (postErr) {
+                    if (attempt < 3) {
+                        await new Promise(r => setTimeout(r, 1200 * attempt));
+                        continue;
+                    }
+                    // في المحاولة الأخيرة نستخدم JSONP كبديل مضمون لو كان المتصفح في الخلفية على الموبايل
+                    try {
+                        data = await fetchJSONP(url, payload);
+                        break;
+                    } catch (jsonpErr) {
+                        throw postErr;
+                    }
+                }
+            }
 
-            clearSavedExamProgressFromStorage(applicantCode, examIdToClear);
+            if (data && (data.result === 'success' || data.alreadySubmitted)) {
+                window._examState.lockedForSubmission = false;
+                clearSavedExamProgressFromStorage(applicantCode, examIdToClear);
+                markExamCompletedLocally(applicantCode, examIdToClear, (window._activeExam.attemptsUsed || 0) + 1);
 
-            if (data && data.result === 'success') {
+                // تحديث البيانات محلياً فوراً وإغلاق شاشة الاختبار والعودة لصفحة متابعة التوظيف دون تعليق
+                if (window._portalData) {
+                    const exInPortal = (window._portalData.exams || []).find(x => x.id === examIdToClear);
+                    if (exInPortal) {
+                        exInPortal.canTakeExam = false;
+                        exInPortal.attemptsUsed = (exInPortal.attemptsUsed || 0) + 1;
+                        exInPortal.latestResult = {
+                            resultId: data.resultId || '',
+                            totalScore: data.totalScore !== undefined ? data.totalScore : 0,
+                            maxScore: data.maxScore !== undefined ? data.maxScore : 0,
+                            percentage: data.percentage !== undefined ? data.percentage : 0,
+                            level: data.level || '',
+                            gradingStatus: data.gradingStatus || 'بانتظار اعتماد النتيجة',
+                            resultSummary: data.resultSummary || ''
+                        };
+                    }
+                    if (data.newApplicationStatus && Array.isArray(window._portalData.applications)) {
+                        window._portalData.applications.forEach(function(a) {
+                            if (!payload.applicationId || a.applicationId === payload.applicationId) {
+                                a.status = data.newApplicationStatus;
+                            }
+                        });
+                    }
+                    renderApplicantPortalDashboard(window._portalData);
+                }
+
                 if (data.autoStatusChanged && data.newApplicationStatus === 'انترفيو') {
                     showToast('تم تسليم الاختبار بنجاح وتأهلك لمرحلة المقابلة الشخصية!', 'success');
                 } else {
                     showToast('تم تسليم الاختبار وحفظ إجاباتك بنجاح!', 'success');
                 }
-                await fetchAndRenderApplicantPortal(applicantCode);
+
+                // جلب أحدث نسخة من السيرفر في الخلفية
+                fetchAndRenderApplicantPortal(applicantCode).catch(function(){});
             } else {
-                showToast((data && data.error) || 'حدث خطأ أثناء تسليم الاختبار', 'error');
-                await fetchAndRenderApplicantPortal(applicantCode);
+                const errMsg = (data && data.error) || 'تعذر تسليم الاختبار حالياً، جاري إعادة المحاولة...';
+                showToast(errMsg, 'error');
+                // إذا كان الخطأ أن المتقدم استنفد المحاولات بالفعل، نعتبره مسلماً ونعود للوحة المتابعة
+                if (String(errMsg).includes('استنفدت')) {
+                    window._examState.lockedForSubmission = false;
+                    clearSavedExamProgressFromStorage(applicantCode, examIdToClear);
+                    markExamCompletedLocally(applicantCode, examIdToClear, 99);
+                    await fetchAndRenderApplicantPortal(applicantCode);
+                }
             }
         } catch(err) {
             console.error('Submit exam error:', err);
-            showToast('تعذر الاتصال بالخادم أثناء التسليم', 'error');
+            showToast('انقطع الاتصال أثناء التسليم — إجاباتك محفوظة وسيتم تسليمها فور عودة الاتصال', 'warn');
         } finally {
+            window._isSubmittingExamNow = false;
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> تسليم الاختبار وإرسال الإجابات';
