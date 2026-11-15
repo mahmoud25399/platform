@@ -19276,14 +19276,48 @@ function aPhoneMatch(p1, p2) {
 }
 
 function deleteJobExamSubmission(subIdx) {
-    const sub = (window._jobExamSubmissionsCache || [])[subIdx];
+    const subs = getCombinedExamSubmissionsList();
+    const sub = subs[subIdx];
     if (!sub) return;
     showConfirm('حذف إجابة المتقدم', `هل تريد حذف إجابة "${sub.name}"؟ سيسمح ذلك للمتقدم بدخول الاختبار مرة أخرى.`, function() {
-        const subId = sub.submissionId;
-        const resId = sub.resultId;
-        window._jobExamSubmissionsCache.splice(subIdx, 1);
+        const subId = sub.submissionId || '';
+        const resId = sub.resultId || '';
+        const exId = sub.examId || '';
+        const appCode = sub.phone || sub.applicantCode || '';
+        const appId = sub.applicationId || '';
+
+        // 1) حذف الإجابة من كاش الإجابات وكاش النتائج معاً حتى لا يعيد getCombinedExamSubmissionsList إظهارها!
+        window._jobExamSubmissionsCache = (window._jobExamSubmissionsCache || []).filter(function(s) {
+            if (subId && s.submissionId === subId) return false;
+            if (resId && s.resultId === resId) return false;
+            if (exId && s.examId === exId && aPhoneMatch(s.phone || s.applicantCode, appCode)) return false;
+            return true;
+        });
+
+        window._jobExamResultsCache = (window._jobExamResultsCache || []).filter(function(r) {
+            if (resId && r.resultId === resId) return false;
+            if (exId && r.examId === exId && aPhoneMatch(r.phone || r.applicantCode, appCode)) return false;
+            return true;
+        });
+
+        // 2) تصفير نتيجة الاختبار في كاش طلبات التوظيف وإعادة حالة المتقدم إلى "اختبار" ليتمكن من الحل مجدداً
+        (window._applicationsCache || []).forEach(function(app) {
+            if ((appId && app.id === appId) || aPhoneMatch(app.phone, appCode)) {
+                app.examScore = '';
+                app.examSummary = '';
+                app.examStatus = 'لم يختبر';
+                app.examPercentage = null;
+                if (app.status === 'رفض' || app.status === 'انترفيو') {
+                    app.status = 'اختبار';
+                }
+                delete app._searchHaystack;
+            }
+        });
+
         renderJobExamSubmissionsList();
         renderJobExamsAdminList();
+        renderJobsAnalytics();
+        renderPortalAccessControlTable();
 
         const url = (config.booking && config.booking.scriptURL) || '';
         const fd = new FormData();
@@ -19291,8 +19325,19 @@ function deleteJobExamSubmission(subIdx) {
         fd.append('adminKey', getAuthKey());
         fd.append('submissionId', subId);
         fd.append('resultId', resId);
+        fd.append('examId', exId);
+        fd.append('applicantCode', appCode);
+        fd.append('applicationId', appId);
         sendInBackground(url, fd, {
-            successMsg: 'تم حذف الإجابة وإتاحة إعادة الاختبار للمتقدم ✓'
+            successMsg: 'تم حذف الإجابة وإعادة فتح الاختبار للمتقدم ✓',
+            onSuccess: function() {
+                Promise.all([loadJobExamsFromServer(), loadApplicationsFromServer()]).then(function() {
+                    renderJobExamSubmissionsList();
+                    renderJobExamsAdminList();
+                    renderJobsAnalytics();
+                    renderPortalAccessControlTable();
+                });
+            }
         });
     }, true);
 }
