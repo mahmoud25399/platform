@@ -18199,12 +18199,12 @@ function openJobExamModal(idx) {
     const acc = Object.assign({
         allowedPhones: [],
         blockedPhones: [],
-        autoShowResultForObjective: false,
-        autoStatusChangeEnabled: false,
+        autoShowResultForObjective: true,
+        autoStatusChangeEnabled: true,
         passType: 'points',
         passingValue: 10,
         passingPercentage: 60,
-        failAction: 'stay'
+        failAction: 'رفض'
     }, (exam && exam.accessControl) ? exam.accessControl : {});
 
     const overlay = document.getElementById('modal-overlay');
@@ -18258,32 +18258,32 @@ function openJobExamModal(idx) {
             </div>
         </div>
 
-        <!-- التحكم في تغيير الحالة تلقائياً بناءً على نتيجة الاختبار -->
+        <!-- التحكم في تغيير الحالة تلقائياً بناءً على نتيجة الاختبار (انترفيو للناجح / رفض للراسب) -->
         <div class="bg-emerald-50/70 p-4 rounded-2xl border-2 border-emerald-200 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
                 <label class="flex items-center gap-2 cursor-pointer font-black text-emerald-950 text-xs sm:text-sm">
-                    <input type="checkbox" id="m-je-auto-status-enabled" ${acc.autoStatusChangeEnabled ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600">
+                    <input type="checkbox" id="m-je-auto-status-enabled" ${acc.autoStatusChangeEnabled !== false ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600">
                     <span>تفعيل تغيير حالة المتقدم تلقائياً بناءً على نتيجة الاختبار</span>
                 </label>
-                <span class="text-[11px] font-bold text-emerald-700 bg-white px-2.5 py-0.5 rounded-full border border-emerald-200">تحويل تلقائي للمقابلة الشخصية</span>
+                <span class="text-[11px] font-bold text-emerald-800 bg-white px-2.5 py-0.5 rounded-full border border-emerald-200">اجتياز ← مقابلة شخصية | أقل من المطلوب ← رفض</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3.5 rounded-xl border border-emerald-200">
                 <div class="field-group">
-                    <label class="text-[11px] font-black text-slate-700">النتيجة المقبولة للتأهل للمقابلة</label>
+                    <label class="text-[11px] font-black text-slate-700">الدرجة أو النسبة المطلوبة للاجتياز</label>
                     <input type="number" id="m-je-pass-value" min="0" step="0.5" value="${acc.passingValue !== undefined ? acc.passingValue : (acc.passingPercentage || 10)}" class="field-input text-xs font-black text-center text-emerald-800 border-emerald-300">
                 </div>
                 <div class="field-group">
-                    <label class="text-[11px] font-black text-slate-700">نوع حساب النتيجة المقبولة</label>
+                    <label class="text-[11px] font-black text-slate-700">نوع حساب النتيجة المطلوبة</label>
                     <select id="m-je-pass-type" class="field-input text-xs font-bold">
                         <option value="points" ${acc.passType !== 'percentage' ? 'selected' : ''}>بالدرجات (درجة فأكثر)</option>
                         <option value="percentage" ${acc.passType === 'percentage' ? 'selected' : ''}>بالنسبة المئوية (% فأكثر)</option>
                     </select>
                 </div>
                 <div class="field-group">
-                    <label class="text-[11px] font-black text-slate-700">إذا لم يحقق النتيجة المقبولة</label>
+                    <label class="text-[11px] font-black text-slate-700">إذا حصل على أقل من المطلوب</label>
                     <select id="m-je-fail-action" class="field-input text-xs font-bold">
-                        <option value="stay" ${acc.failAction !== 'رفض' ? 'selected' : ''}>إبقاء الحالة كما هي</option>
-                        <option value="رفض" ${acc.failAction === 'رفض' ? 'selected' : ''}>تحويل الحالة تلقائياً إلى رفض</option>
+                        <option value="رفض" ${acc.failAction !== 'keep_manual' ? 'selected' : ''}>تحويل تلقائي إلى: رفض</option>
+                        <option value="keep_manual" ${acc.failAction === 'keep_manual' ? 'selected' : ''}>إبقاء الحالة بدون رفض تلقائي</option>
                     </select>
                 </div>
             </div>
@@ -19189,8 +19189,23 @@ function saveGradedExamSubmission() {
     const confirmFinal = !!document.getElementById('m-grade-confirm-final')?.checked;
     const showCorrection = !!document.getElementById('m-grade-show-correction')?.checked;
     const adminFeedback = document.getElementById('m-grade-admin-feedback')?.value.trim() || '';
-    const newAppStatus = document.getElementById('m-grade-app-status')?.value || '';
+    let newAppStatus = document.getElementById('m-grade-app-status')?.value || '';
     const statusReason = document.getElementById('m-grade-status-reason')?.value.trim() || '';
+
+    if (!newAppStatus && confirmFinal) {
+        const matchedExam = (window._jobExamsCache || []).find(ex => ex.id === sub.examId) || (window._jobExamsCache || [])[0];
+        const acc = (matchedExam && matchedExam.accessControl) ? matchedExam.accessControl : { autoStatusChangeEnabled: true, passType: 'points', passingValue: 10 };
+        if (acc.autoStatusChangeEnabled !== false) {
+            const pType = acc.passType === 'percentage' ? 'percentage' : 'points';
+            const thresh = parseFloat(acc.passingValue !== undefined ? acc.passingValue : acc.passingPercentage) || (pType === 'percentage' ? 60 : 10);
+            const curVal = pType === 'points' ? (parseFloat(sub.totalScore) || 0) : (parseFloat(sub.percentage) || 0);
+            if (curVal >= thresh - 0.001) {
+                newAppStatus = 'انترفيو';
+            } else if (acc.failAction !== 'keep_manual') {
+                newAppStatus = 'رفض';
+            }
+        }
+    }
 
     const p = parseFloat(sub.percentage) || 0;
     sub.level = p >= 90 ? 'ممتاز' : (p >= 80 ? 'جيد جداً' : (p >= 65 ? 'جيد' : (p >= 50 ? 'مقبول' : 'دون المستوى المطلوب')));
