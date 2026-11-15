@@ -2521,8 +2521,8 @@
                             <input type="text" id="int-cfg-default-link" dir="ltr" placeholder="https://meet.google.com/..." class="field-input text-xs font-mono">
                         </div>
                         <div class="field-group">
-                            <label class="text-xs font-bold text-slate-700">تعليمات المقابلة الشخصية</label>
-                            <input type="text" id="int-cfg-default-notes" placeholder="تعليمات تظهر للمتقدم بعد حجز الموعد..." class="field-input text-xs font-bold">
+                            <label class="text-xs font-bold text-slate-700">تعليمات المقابلة الشخصية (كل سطر يظهر كنقطة)</label>
+                            <textarea id="int-cfg-default-notes" rows="3" placeholder="اكتب كل تعليمة في سطر مستقل (Enter) لتظهر كنقاط للمتقدم..." class="field-input text-xs font-bold leading-relaxed resize-none"></textarea>
                         </div>
                         <label class="flex items-center gap-2 cursor-pointer bg-purple-50/70 p-2.5 rounded-xl border border-purple-200 text-xs font-bold text-purple-900">
                             <input type="checkbox" id="int-cfg-allow-change" checked class="w-4 h-4 rounded text-purple-600">
@@ -16345,11 +16345,186 @@ function getApplicantPortalTrackingUrl() {
     return cleanBase + '?portal=1';
 }
 
-function buildFixedApplicantStatusWhatsAppMessage(app) {
+function resolveApplicantWhatsAppVariables(templateStr, app) {
+    const raw = String(templateStr || '');
+    if (!raw) return '';
+    const appName = (app && app.name) ? String(app.name).trim() : 'أستاذ/ة';
     const jobTitle = (app && app.jobName) ? String(app.jobName).trim() : 'الوظيفة';
-    const portalLink = getApplicantPortalTrackingUrl();
     const regPhone = (app && app.phone) ? String(app.phone).trim() : '';
-    return `تم وضع تصنيف جديد لك لوظيفة ( ${jobTitle} ) رجاء الدخول لمتابعة حالة طلبك من خلال الرابط ( ${portalLink} ) وكود الدخول هو رقم الواتساب الذي سجلت به وهو ( ${regPhone} )`;
+    const portalLink = getApplicantPortalTrackingUrl();
+    const statusText = normalizeJobStatusAdmin((app && app.status) || 'معلق');
+    const intDate = (app && app.interviewDate) ? String(app.interviewDate).trim() : '';
+    const intTime = (app && app.interviewTime) ? String(app.interviewTime).trim() : '';
+    const intFull = (intDate || intTime) ? `${intDate}${intTime ? ' (' + intTime + ')' : ''}` : 'غير محدد بعد';
+
+    return raw
+        .replace(/\{الاسم\}/g, appName)
+        .replace(/\{اسم_المتقدم\}/g, appName)
+        .replace(/\{الوظيفة\}/g, jobTitle)
+        .replace(/\{اسم_الوظيفة\}/g, jobTitle)
+        .replace(/\{الرقم\}/g, regPhone)
+        .replace(/\{رقم_الواتساب\}/g, regPhone)
+        .replace(/\{كود_الدخول\}/g, regPhone)
+        .replace(/\{الرابط\}/g, portalLink)
+        .replace(/\{رابط_المتابعة\}/g, portalLink)
+        .replace(/\{الحالة\}/g, statusText)
+        .replace(/\{موعد_المقابلة\}/g, intFull);
+}
+
+function formatWhatsAppPreviewHtml(rawText) {
+    if (!rawText || !String(rawText).trim()) {
+        return '<span class="text-slate-400 italic text-xs">اكتب رسالتك في المربع أعلاه لتظهر معاينتها هنا بشكل واتساب...</span>';
+    }
+    let html = esc(String(rawText));
+    // تحويل تنسيقات واتساب (*عريض* ، _مائل_ ، ~مشطوب~ ، ```كود```)
+    html = html.replace(/```([\s\S]+?)```/g, '<code class="bg-black/10 px-1.5 py-0.5 rounded font-mono text-xs">$1</code>');
+    html = html.replace(/\*([^\*\n]+)\*/g, '<strong class="font-black text-slate-950">$1</strong>');
+    html = html.replace(/_([^_\n]+)_/g, '<em class="italic">$1</em>');
+    html = html.replace(/~([^~\n]+)~/g, '<del class="line-through opacity-75">$1</del>');
+    // تمييز الروابط بلون أزرق
+    html = html.replace(/(https?:\/\/[^\s<]+)/g, '<span class="text-sky-600 underline break-all" dir="ltr">$1</span>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function insertWaComposerVariable(textareaId, varToken, previewUpdaterFnName) {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return;
+    ta.focus();
+    const start = ta.selectionStart !== undefined ? ta.selectionStart : ta.value.length;
+    const end = ta.selectionEnd !== undefined ? ta.selectionEnd : ta.value.length;
+    const before = ta.value.substring(0, start);
+    const after = ta.value.substring(end);
+    ta.value = before + varToken + after;
+    const newPos = start + varToken.length;
+    ta.setSelectionRange(newPos, newPos);
+    if (previewUpdaterFnName && typeof window[previewUpdaterFnName] === 'function') {
+        window[previewUpdaterFnName]();
+    }
+}
+
+function applyWaComposerFormat(textareaId, formatType, previewUpdaterFnName) {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return;
+    ta.focus();
+    const start = ta.selectionStart || 0;
+    const end = ta.selectionEnd || 0;
+    const selected = ta.value.substring(start, end);
+    const before = ta.value.substring(0, start);
+    const after = ta.value.substring(end);
+
+    let replacement = '';
+    let cursorOffset = 0;
+
+    if (formatType === 'bold') {
+        replacement = selected ? `*${selected}*` : `*نص عريض*`;
+        cursorOffset = replacement.length;
+    } else if (formatType === 'italic') {
+        replacement = selected ? `_${selected}_` : `_نص مائل_`;
+        cursorOffset = replacement.length;
+    } else if (formatType === 'strike') {
+        replacement = selected ? `~${selected}~` : `~نص مشطوب~`;
+        cursorOffset = replacement.length;
+    } else if (formatType === 'mono') {
+        replacement = selected ? '```' + selected + '```' : '```كود```';
+        cursorOffset = replacement.length;
+    } else if (formatType === 'bullet') {
+        if (selected) {
+            replacement = selected.split('\n').map(l => '• ' + l).join('\n');
+        } else {
+            const needNewline = before.length > 0 && !before.endsWith('\n');
+            replacement = (needNewline ? '\n' : '') + '• ';
+        }
+        cursorOffset = replacement.length;
+    } else if (formatType === 'newline') {
+        replacement = '\n';
+        cursorOffset = 1;
+    }
+
+    ta.value = before + replacement + after;
+    const nextPos = start + cursorOffset;
+    ta.setSelectionRange(nextPos, nextPos);
+    if (previewUpdaterFnName && typeof window[previewUpdaterFnName] === 'function') {
+        window[previewUpdaterFnName]();
+    }
+}
+
+function renderWaComposerToolbarAndBox(textareaId, previewBoxId, previewUpdaterFnName) {
+    return `
+        <div class="space-y-3">
+            <!-- شريط المتغيرات الجاهزة للضغط والإدراج -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                <div class="text-[11px] font-black text-slate-600 flex items-center gap-1.5">
+                    <i class="fa-solid fa-tags text-indigo-600"></i>
+                    <span>اضغط لإدراج متغير في الرسالة:</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="insertWaComposerVariable('${textareaId}', '{الاسم}', '${previewUpdaterFnName}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 font-black text-xs transition-colors shadow-sm cursor-pointer">
+                        + اسم المتقدم <span class="text-[10px] text-slate-400">{الاسم}</span>
+                    </button>
+                    <button type="button" onclick="insertWaComposerVariable('${textareaId}', '{الوظيفة}', '${previewUpdaterFnName}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 font-black text-xs transition-colors shadow-sm cursor-pointer">
+                        + اسم الوظيفة <span class="text-[10px] text-slate-400">{الوظيفة}</span>
+                    </button>
+                    <button type="button" onclick="insertWaComposerVariable('${textareaId}', '{الرقم}', '${previewUpdaterFnName}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-black text-xs transition-colors shadow-sm cursor-pointer">
+                        + رقم الواتساب (كود الدخول) <span class="text-[10px] text-slate-400">{الرقم}</span>
+                    </button>
+                    <button type="button" onclick="insertWaComposerVariable('${textareaId}', '{الرابط}', '${previewUpdaterFnName}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 font-black text-xs transition-colors shadow-sm cursor-pointer">
+                        + رابط متابعة التوظيف <span class="text-[10px] text-slate-400">{الرابط}</span>
+                    </button>
+                    <button type="button" onclick="insertWaComposerVariable('${textareaId}', '{موعد_المقابلة}', '${previewUpdaterFnName}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 font-black text-xs transition-colors shadow-sm cursor-pointer">
+                        + موعد المقابلة <span class="text-[10px] text-slate-400">{موعد_المقابلة}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط أدوات تنسيق واتساب + مربع كتابة الرسالة -->
+            <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white focus-within:border-green-600 transition-colors">
+                <div class="bg-slate-100 px-3 py-2 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-1 flex-wrap">
+                        <span class="text-[11px] font-black text-slate-500 ml-1">تنسيق النص:</span>
+                        <button type="button" onclick="applyWaComposerFormat('${textareaId}', 'bold', '${previewUpdaterFnName}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-black cursor-pointer" title="تضخيم الخط (عريض)">
+                            <i class="fa-solid fa-bold"></i> عريض
+                        </button>
+                        <button type="button" onclick="applyWaComposerFormat('${textareaId}', 'italic', '${previewUpdaterFnName}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold cursor-pointer" title="خط مائل">
+                            <i class="fa-solid fa-italic"></i> مائل
+                        </button>
+                        <button type="button" onclick="applyWaComposerFormat('${textareaId}', 'strike', '${previewUpdaterFnName}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold cursor-pointer" title="يتوسطه خط">
+                            <i class="fa-solid fa-strikethrough"></i> شطب
+                        </button>
+                        <button type="button" onclick="applyWaComposerFormat('${textareaId}', 'bullet', '${previewUpdaterFnName}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold cursor-pointer" title="نقطة قائمة">
+                            <i class="fa-solid fa-list-ul"></i> نقطة
+                        </button>
+                        <button type="button" onclick="applyWaComposerFormat('${textareaId}', 'newline', '${previewUpdaterFnName}')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold cursor-pointer" title="نزول سطر جديد">
+                            <i class="fa-solid fa-turn-down"></i> سطر جديد
+                        </button>
+                    </div>
+                    <button type="button" onclick="document.getElementById('${textareaId}').value=''; if(window['${previewUpdaterFnName}']) window['${previewUpdaterFnName}']();" class="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer">
+                        مسح النص
+                    </button>
+                </div>
+                <textarea id="${textareaId}" rows="5" oninput="if(window['${previewUpdaterFnName}']) window['${previewUpdaterFnName}']();"
+                    placeholder="اكتب رسالتك هنا بحرية... (يمكنك تحديد أي كلمة والضغط على عريض أو مائل، أو الضغط على المتغيرات بالأعلى لإضافتها)"
+                    class="w-full p-3.5 text-sm font-bold text-slate-800 leading-relaxed outline-none resize-y bg-white"></textarea>
+            </div>
+
+            <!-- معاينة شكل الرسالة كما ستظهر في واتساب -->
+            <div class="rounded-2xl overflow-hidden border border-slate-200">
+                <div class="bg-[#075e54] text-white px-4 py-2 text-xs font-black flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fa-brands fa-whatsapp text-sm"></i> معاينة شكل الرسالة في واتساب</span>
+                    <span class="text-[10px] text-emerald-200 font-bold">معاينة حية</span>
+                </div>
+                <div class="p-4 bg-[#efeae2]" style="background-image: radial-gradient(rgba(0,0,0,0.04) 1px, transparent 0); background-size: 16px 16px;">
+                    <div class="max-w-md mr-0 ml-auto bg-[#dcf8c6] text-slate-800 rounded-2xl rounded-tr-none p-3.5 shadow-sm border border-[#c5e8ac] relative">
+                        <div id="${previewBoxId}" class="text-xs sm:text-sm font-medium leading-relaxed break-words"></div>
+                        <div class="flex items-center justify-end gap-1 mt-1.5 text-[10px] text-slate-500 font-mono" dir="ltr">
+                            <span>${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <i class="fa-solid fa-check-double text-sky-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function sendCustomWhatsAppToApplicant(idx) {
@@ -16361,41 +16536,47 @@ function sendCustomWhatsAppToApplicant(idx) {
         return;
     }
 
+    window._currentSingleWaApp = app;
     const overlay = document.getElementById('modal-overlay');
     const title = document.getElementById('modal-title');
     const body = document.getElementById('modal-body');
     const saveBtn = document.getElementById('modal-save-btn');
 
     const status = normalizeJobStatusAdmin(app.status || 'معلق');
-    const fixedMsg = buildFixedApplicantStatusWhatsAppMessage(app);
 
-    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-green-500"></i> إرسال إشعار واتساب: ${esc(app.name)}</span>`;
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-green-500"></i> إرسال رسالة واتساب: ${esc(app.name)}</span>`;
 
     saveBtn.classList.remove('hidden');
     saveBtn.style.display = 'flex';
     saveBtn.disabled = false;
-    saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال الرسالة';
+    saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال الرسالة الآن';
 
     body.innerHTML = `
         <div class="space-y-4">
             <div class="p-3 bg-green-50 border border-green-200 rounded-xl text-xs font-bold text-green-800 flex justify-between items-center flex-wrap gap-2">
-                <span>رقم الواتساب (مصري):</span>
+                <span>المتقدم: <strong>${esc(app.name)}</strong> (${esc(status)})</span>
                 <span dir="ltr" class="font-mono bg-white px-2.5 py-1 rounded shadow-sm font-black">${esc(app.phone)}</span>
             </div>
-            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 flex justify-between items-center">
-                <span>التصنيف الحالي:</span>
-                <span class="px-3 py-0.5 rounded-full bg-indigo-600 text-white font-black">${esc(status)}</span>
-            </div>
-            <div class="field-group">
-                <label>نص الرسالة</label>
-                <textarea id="m-app-msg" class="field-input text-sm font-bold leading-relaxed" rows="5">${esc(fixedMsg)}</textarea>
-            </div>
+            ${renderWaComposerToolbarAndBox('m-app-msg', 'm-app-wa-preview', 'updateSingleApplicantWaPreview')}
         </div>
     `;
 
+    window.updateSingleApplicantWaPreview = function() {
+        const raw = document.getElementById('m-app-msg')?.value || '';
+        const prev = document.getElementById('m-app-wa-preview');
+        if (!prev) return;
+        const resolved = resolveApplicantWhatsAppVariables(raw, window._currentSingleWaApp);
+        prev.innerHTML = formatWhatsAppPreviewHtml(resolved);
+    };
+    window.updateSingleApplicantWaPreview();
+
     saveBtn.onclick = async function() {
-        let msg = document.getElementById('m-app-msg').value.trim();
-        if (!msg) return;
+        const rawTemplate = document.getElementById('m-app-msg')?.value.trim() || '';
+        if (!rawTemplate) {
+            showToast('يرجى كتابة نص الرسالة أولاً', 'warn');
+            return;
+        }
+        const msg = resolveApplicantWhatsAppVariables(rawTemplate, app);
 
         if (!isStrictEgyptianApplicantPhone(app.phone, app)) {
             showToast('الرقم غير مصري — تم إيقاف الإرسال', 'error');
@@ -16434,7 +16615,7 @@ function sendCustomWhatsAppToApplicant(idx) {
             showToast('خطأ: ' + e.message, 'error');
         } finally {
             saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال الرسالة';
+            saveBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال الرسالة الآن';
         }
     };
 
@@ -16754,8 +16935,8 @@ function parseApplicantAnswers(app) {
 
 function detectApplicantCountry(app, preParsedAnswers) {
     if (app && app._countryInfo) return app._countryInfo;
-    const rawPhone = String(app?.phone || '').replace(/\s+/g, '');
-    const digits = rawPhone.replace(/\D/g, '');
+    const rawPhone = String(app?.phone || '').replace(/\\s+/g, '');
+    const digits = rawPhone.replace(/\\D/g, '');
     const answers = preParsedAnswers || parseApplicantAnswers(app);
 
     for (let i = 0; i < answers.length; i++) {
@@ -16782,7 +16963,7 @@ function detectApplicantCountry(app, preParsedAnswers) {
         (digits.startsWith('20') && digits.length === 12) ||
         (digits.startsWith('0020') && digits.length === 14) ||
         (digits.startsWith('01') && digits.length === 11) ||
-        (/^(10|11|12|15)\d{8}$/.test(digits))
+        (/^(10|11|12|15)\\d{8}$/.test(digits))
     ) {
         return { code: 'egypt', label: 'مصر', isEgypt: true };
     }
@@ -17018,7 +17199,7 @@ function getFilteredAnalyticsApplications() {
             const hasCv = !!(app.cvUrl && String(app.cvUrl).trim());
             const hasExamScore = !!(app.examScore && String(app.examScore).trim());
             const examPct = app.examPercentage !== null && app.examPercentage !== undefined ? parseFloat(app.examPercentage) : (function() {
-                const m = String(app.examScore || '').match(/(\d+(?:\.\d+)?)%/);
+                const m = String(app.examScore || '').match(/(\\d+(?:\\.\\d+)?)%/);
                 return m ? parseFloat(m[1]) : -1;
             })();
             if (notesFilter === 'took_exam' && !hasExamScore) return false;
@@ -17673,6 +17854,11 @@ function syncInterviewInputsToConfig() {
     intCfg.defaultLink = document.getElementById('int-cfg-default-link')?.value.trim() || '';
     intCfg.defaultNotes = document.getElementById('int-cfg-default-notes')?.value.trim() || '';
     intCfg.allowChangeSlot = !!document.getElementById('int-cfg-allow-change')?.checked;
+    if (Array.isArray(intCfg.slots)) {
+        intCfg.slots.forEach(function(s) {
+            s.maxCapacity = intCfg.maxPerSlot;
+        });
+    }
     return intCfg;
 }
 
@@ -17814,8 +18000,17 @@ function saveInterviewSettingsAndSlots(silent = false) {
     });
 }
 
-// ─── إرسال رسائل الواتساب اليدوي حسب التصنيف (للأرقام المصرية فقط) ───
-function openBulkStatusWhatsAppModal(preselectedStatus) {
+// ─── إرسال رسائل الواتساب اليدوي المخصص بالمتغيرات والتنسيق والمعاينة (للأرقام المصرية فقط) ───
+window._customSelectedWaApps = null;
+
+function openBulkStatusWhatsAppModal(preselectedStatus, useSelectedFromTable) {
+    window._customSelectedWaApps = null;
+    if (useSelectedFromTable) {
+        const selectedKeys = Array.from(window._selectedAnalyticsApps || []);
+        const allApps = window._applicationsCache || [];
+        window._customSelectedWaApps = allApps.filter(a => selectedKeys.includes(getApplicantKey(a)));
+    }
+
     const initStatus = (preselectedStatus && preselectedStatus !== 'all') ? normalizeJobStatusAdmin(preselectedStatus) : 'اختبار';
     modalType = 'bulk_status_wa';
 
@@ -17824,7 +18019,7 @@ function openBulkStatusWhatsAppModal(preselectedStatus) {
     const body = document.getElementById('modal-body');
     const saveBtn = document.getElementById('modal-save-btn');
 
-    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-green-600"></i> إرسال واتساب حسب التصنيف</span>`;
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-green-600"></i> ${useSelectedFromTable ? 'إرسال رسالة واتساب للمحددين' : 'إرسال رسالة واتساب للمتقدمين'}</span>`;
     saveBtn.classList.remove('hidden');
     saveBtn.style.display = 'flex';
     saveBtn.disabled = false;
@@ -17836,16 +18031,18 @@ function openBulkStatusWhatsAppModal(preselectedStatus) {
 
     body.innerHTML = `
     <div class="space-y-4">
+        ${useSelectedFromTable ? '' : `
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="field-group">
-                <label class="text-xs">التصنيف *</label>
+                <label class="text-xs">التصنيف المستهدف *</label>
                 <select id="m-bwa-status" onchange="updateBulkWaPreviewStats()" class="field-input text-xs font-black">
                     <option value="اختبار" ${initStatus === 'اختبار' ? 'selected' : ''}>اختبار</option>
-                    <option value="انترفيو" ${initStatus === 'انترفيو' ? 'selected' : ''}>انترفيو</option>
+                    <option value="انترفيو" ${initStatus === 'انترفيو' ? 'selected' : ''}>المقابلة الشخصية (انترفيو)</option>
                     <option value="قبول" ${initStatus === 'قبول' ? 'selected' : ''}>قبول</option>
                     <option value="رفض" ${initStatus === 'رفض' ? 'selected' : ''}>رفض</option>
                     <option value="معلق" ${initStatus === 'معلق' ? 'selected' : ''}>معلق</option>
                     <option value="all_active">كل التصنيفات (ما عدا معلق)</option>
+                    <option value="all">جميع المتقدمين</option>
                 </select>
             </div>
             <div class="field-group">
@@ -17855,18 +18052,15 @@ function openBulkStatusWhatsAppModal(preselectedStatus) {
             <div class="field-group">
                 <label class="text-xs">نطاق الإرسال</label>
                 <select id="m-bwa-scope" onchange="updateBulkWaPreviewStats()" class="field-input text-xs font-bold">
-                    <option value="unnotified">الذين لم يُرسل لهم هذا التصنيف بعد</option>
-                    <option value="all_in_status">جميع الأرقام المصرية في هذا التصنيف</option>
+                    <option value="all_in_status" selected>جميع الأرقام المصرية في هذا التصنيف</option>
+                    <option value="unnotified">الذين لم يُرسل لهم إشعار في هذا التصنيف بعد</option>
                 </select>
             </div>
-        </div>
+        </div>`}
 
-        <div id="m-bwa-stats-box" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2"></div>
+        <div id="m-bwa-stats-box" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5"></div>
 
-        <div class="field-group">
-            <label class="text-xs">صيغة الرسالة:</label>
-            <div class="p-3.5 rounded-xl bg-white border-2 border-slate-200 text-xs font-bold text-slate-700 leading-relaxed" id="m-bwa-sample-msg"></div>
-        </div>
+        ${renderWaComposerToolbarAndBox('m-bwa-custom-msg', 'm-bwa-wa-preview', 'updateBulkWaPreviewStats')}
 
         <div id="m-bwa-progress" class="hidden p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-black text-center"></div>
     </div>`;
@@ -17877,14 +18071,26 @@ function openBulkStatusWhatsAppModal(preselectedStatus) {
 }
 
 function getBulkWaTargetApplicants() {
+    if (Array.isArray(window._customSelectedWaApps)) {
+        const egyptianTargets = [];
+        const nonEgyptianSkipped = [];
+        window._customSelectedWaApps.forEach(function(a) {
+            if (isStrictEgyptianApplicantPhone(a.phone, a)) egyptianTargets.push(a);
+            else nonEgyptianSkipped.push(a);
+        });
+        return { egyptianTargets: egyptianTargets, nonEgyptianSkipped: nonEgyptianSkipped };
+    }
+
     const apps = window._applicationsCache || [];
     const stFilter = document.getElementById('m-bwa-status')?.value || 'اختبار';
     const jobFilter = document.getElementById('m-bwa-job')?.value || 'all';
-    const scope = document.getElementById('m-bwa-scope')?.value || 'unnotified';
+    const scope = document.getElementById('m-bwa-scope')?.value || 'all_in_status';
 
     const matchedStatusApps = apps.filter(function(a) {
         const st = normalizeJobStatusAdmin(a.status || 'معلق');
-        if (stFilter === 'all_active') {
+        if (stFilter === 'all') {
+            // الكل
+        } else if (stFilter === 'all_active') {
             if (st === 'معلق') return false;
         } else if (st !== stFilter) {
             return false;
@@ -17906,22 +18112,32 @@ function getBulkWaTargetApplicants() {
 
 function updateBulkWaPreviewStats() {
     const box = document.getElementById('m-bwa-stats-box');
-    const sampleEl = document.getElementById('m-bwa-sample-msg');
-    if (!box) return;
+    const previewEl = document.getElementById('m-bwa-wa-preview');
+    const rawMsg = document.getElementById('m-bwa-custom-msg')?.value || '';
 
     const { egyptianTargets, nonEgyptianSkipped } = getBulkWaTargetApplicants();
-    const sampleApp = egyptianTargets[0] || { jobName: 'معلم لغة عربية', phone: '01012345678' };
-    if (sampleEl) {
-        sampleEl.textContent = buildFixedApplicantStatusWhatsAppMessage(sampleApp);
+    const sampleApp = egyptianTargets[0] || {
+        name: 'أحمد محمد',
+        jobName: 'مساعد تعليمي',
+        phone: '01012345678',
+        status: document.getElementById('m-bwa-status')?.value || 'اختبار',
+        interviewDate: '2026-11-18',
+        interviewTime: '08:00 م'
+    };
+
+    if (previewEl) {
+        const resolved = resolveApplicantWhatsAppVariables(rawMsg, sampleApp);
+        previewEl.innerHTML = formatWhatsAppPreviewHtml(resolved);
     }
 
+    if (!box) return;
     box.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
             <span class="text-emerald-700 font-black">أرقام مصرية جاهزة للإرسال: <strong>${egyptianTargets.length}</strong></span>
             <span class="text-rose-600">غير مصريين مستبعدين: <strong>${nonEgyptianSkipped.length}</strong></span>
         </div>
         ${egyptianTargets.length > 0 ? `
-        <div class="text-[11px] text-slate-500 font-bold pt-1 max-h-24 overflow-y-auto">
+        <div class="text-[11px] text-slate-500 font-bold pt-1 max-h-20 overflow-y-auto">
             المستهدفون: ${egyptianTargets.map(a => `${esc(a.name)} (${esc(a.phone)})`).join(' ، ')}
         </div>` : '<div class="text-xs text-amber-700 font-bold pt-1">لا يوجد متقدمون بأرقام مصرية مطابقون لهذا الاختيار حالياً.</div>'}
     `;
@@ -17930,6 +18146,12 @@ function updateBulkWaPreviewStats() {
 async function executeBulkStatusWhatsAppSend() {
     if (!config.waEndpoint) {
         showToast('يرجى إعداد رابط الـ API من قسم رسائل الواتساب أولاً', 'error');
+        return;
+    }
+
+    const rawTemplate = document.getElementById('m-bwa-custom-msg')?.value.trim() || '';
+    if (!rawTemplate) {
+        showToast('يرجى كتابة نص الرسالة أولاً قبل الإرسال', 'warn');
         return;
     }
 
@@ -17955,7 +18177,7 @@ async function executeBulkStatusWhatsAppSend() {
         if (!isStrictEgyptianApplicantPhone(app.phone, app)) continue;
 
         const st = normalizeJobStatusAdmin(app.status || 'معلق');
-        const msg = buildFixedApplicantStatusWhatsAppMessage(app);
+        const msg = resolveApplicantWhatsAppVariables(rawTemplate, app);
         if (progEl) {
             progEl.textContent = `جاري الإرسال (${i + 1} من ${egyptianTargets.length}): ${app.name} (${app.phone})...`;
         }
@@ -17991,59 +18213,13 @@ async function executeBulkStatusWhatsAppSend() {
     renderPortalAccessControlTable();
 }
 
-async function sendStatusWhatsAppToSelectedApplicants() {
-    if (!config.waEndpoint) {
-        showToast('يرجى إعداد رابط الـ API من قسم رسائل الواتساب أولاً', 'error');
-        return;
-    }
+function sendStatusWhatsAppToSelectedApplicants() {
     const selectedKeys = Array.from(window._selectedAnalyticsApps || []);
     if (selectedKeys.length === 0) {
         showToast('يرجى تحديد متقدم واحد على الأقل من الجدول أولاً', 'warn');
         return;
     }
-    const allApps = window._applicationsCache || [];
-    const selectedApps = allApps.filter(a => selectedKeys.includes(getApplicantKey(a)));
-    const egyptianApps = selectedApps.filter(a => isStrictEgyptianApplicantPhone(a.phone, a));
-    const skippedNonEg = selectedApps.length - egyptianApps.length;
-
-    if (egyptianApps.length === 0) {
-        showToast('جميع المتقدمين المحددين أرقامهم غير مصرية — لا يتم الإرسال لغير الأرقام المصرية', 'error');
-        return;
-    }
-
-    showConfirm(
-        'إرسال رسالة التصنيف عبر واتساب',
-        `سيتم إرسال الرسالة إلى (${egyptianApps.length}) متقدم مصري` + (skippedNonEg > 0 ? `، وتم استبعاد (${skippedNonEg}) رقم غير مصري.` : '.'),
-        async function() {
-            let sent = 0, failed = 0;
-            const url = (config.booking && config.booking.scriptURL) || '';
-            showToast(`جاري إرسال ${egyptianApps.length} رسالة واتساب...`);
-            for (let i = 0; i < egyptianApps.length; i++) {
-                const app = egyptianApps[i];
-                const st = normalizeJobStatusAdmin(app.status || 'معلق');
-                const msg = buildFixedApplicantStatusWhatsAppMessage(app);
-                try {
-                    const ok = await sendWhatsAppDirectFromBrowser(app.phone, msg, '');
-                    if (ok) {
-                        sent++;
-                        app.lastWaNotifiedStatus = st;
-                        if (url && app.__rowIndex) {
-                            const fd = new FormData();
-                            fd.append('action', 'updateApplicationMeta');
-                            fd.append('adminKey', getAuthKey());
-                            fd.append('rowIndex', app.__rowIndex);
-                            fd.append('lastWaNotifiedStatus', st);
-                            fetch(url, { method: 'POST', body: fd }).catch(() => {});
-                        }
-                    } else failed++;
-                } catch(e) { failed++; }
-                if (i < egyptianApps.length - 1) await new Promise(r => setTimeout(r, 1400));
-            }
-            showToast(`تم إرسال ${sent} رسالة بنجاح ✓` + (failed > 0 ? ` (فشل ${failed})` : ''));
-            renderJobsAnalytics();
-        },
-        false
-    );
+    openBulkStatusWhatsAppModal('all', true);
 }
 
 function renderJobExamsAdminList() {
@@ -18495,7 +18671,7 @@ function renderExamBuilderQuestions() {
             </div>`;
         } else if (q.type === 'correction') {
             const errs = Array.isArray(q.errorsList) ? q.errorsList : [];
-            const wordsInSentence = String(q.text || '').trim().split(/\s+/).filter(Boolean);
+            const wordsInSentence = String(q.text || '').trim().split(/\\s+/).filter(Boolean);
             specificHtml = `
             <div class="space-y-3 bg-purple-50/50 p-3.5 rounded-xl border border-purple-200">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -19270,8 +19446,8 @@ function saveGradedExamSubmission() {
 }
 
 function aPhoneMatch(p1, p2) {
-    const d1 = String(p1 || '').replace(/\D/g, '');
-    const d2 = String(p2 || '').replace(/\D/g, '');
+    const d1 = String(p1 || '').replace(/\\D/g, '');
+    const d2 = String(p2 || '').replace(/\\D/g, '');
     return d1.length >= 9 && d2.length >= 9 && d1.slice(-9) === d2.slice(-9);
 }
 
@@ -19637,8 +19813,8 @@ function openApplicantPortalSettingsModal(origIdx) {
                 <input type="text" id="m-apc-ilink" dir="ltr" value="${esc(app.interviewLink || '')}" placeholder="https://meet.google.com/..." class="field-input text-xs font-mono bg-white">
             </div>
             <div class="field-group">
-                <label class="text-[11px]">تعليمات إضافية</label>
-                <input type="text" id="m-apc-inotes" value="${esc(app.interviewNotes || '')}" class="field-input text-xs font-bold bg-white">
+                <label class="text-[11px]">تعليمات المقابلة (كل سطر يظهر كنقطة)</label>
+                <textarea id="m-apc-inotes" rows="3" placeholder="اكتب كل تعليمة في سطر مستقل..." class="field-input text-xs font-bold bg-white leading-relaxed resize-none">${esc(app.interviewNotes || '')}</textarea>
             </div>
         </div>
     </div>`;
