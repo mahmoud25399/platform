@@ -1973,6 +1973,41 @@
         return (targetEpoch - nowEpoch) / (1000 * 60);
     }
 
+    function isInterviewTimeExpiredCairo(dateStr, timeRangeStr, durationMin) {
+        if (!dateStr || !timeRangeStr) return false;
+        const minsUntilStart = getMinutesUntilInterviewCairo(dateStr, timeRangeStr);
+        if (minsUntilStart === null) return false;
+        const dur = Math.max(5, parseInt(durationMin) || 15);
+        // ينتهي الموعد بعد وقت البداية + مدة المقابلة
+        const minsUntilEnd = minsUntilStart + dur;
+        return minsUntilEnd < 0;
+    }
+
+    function renderInterviewNotesBulletsHtml(rawNotes) {
+        if (!rawNotes || !String(rawNotes).trim()) return '';
+        const lines = String(rawNotes)
+            .split(/\r?\n/)
+            .map(function(line) { return line.replace(/^[\s•\-\*✦▪]+/, '').trim(); })
+            .filter(Boolean);
+        if (lines.length === 0) return '';
+        return `
+            <div class="p-4 rounded-2xl bg-white/10 border border-white/15 space-y-2 text-right">
+                <div class="text-xs font-black text-yellow-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>تعليمات المقابلة الشخصية:</span>
+                </div>
+                <ul class="space-y-1.5 text-xs sm:text-sm text-indigo-100 font-bold leading-relaxed">
+                    ${lines.map(function(line) {
+                        return `<li class="flex items-start gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-2 flex-shrink-0"></span>
+                            <span class="flex-1">${esc(line)}</span>
+                        </li>`;
+                    }).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
     function canApplicantChangeInterviewSlot(app, intSettings) {
         const cfg = intSettings || {};
         if (app && app.allowSlotEditOverride) {
@@ -2218,71 +2253,67 @@
         return jobExams.map(function(ex) {
             const ac = ex.antiCheat || {};
             const res = ex.latestResult;
-            const isGradedAndConfirmed = res && res.gradingStatus === 'معتمد';
+            const isCompleted = !ex.canTakeExam && (!!res || (ex.attemptsUsed || 0) > 0);
+
+            // بعد إتمام الاختبار: يظهر فقط اسم الاختبار + الدرجة + زر مشاهدة التصحيح (تختفي التعليمات وبيانات الأسئلة والوقت)
+            if (isCompleted) {
+                return `
+                <div class="rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1.5">
+                        <h4 class="text-base sm:text-lg font-black text-slate-800">${esc(ex.title)}</h4>
+                        ${res ? `
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="text-sm font-black text-slate-700">
+                                درجة الاختبار: <strong class="text-indigo-700" dir="ltr">${res.totalScore} / ${res.maxScore} (${res.percentage}%)</strong>
+                            </span>
+                            ${res.level ? `<span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-black">${esc(res.level)}</span>` : ''}
+                        </div>` : `
+                        <div class="text-xs font-bold text-slate-500">تم تسليم الاختبار</div>`}
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        ${ex.canViewCorrection ? `
+                        <button type="button" onclick="openExamCorrectionReview('${esc(ex.id)}')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-magnifying-glass-check"></i> مشاهدة التصحيح
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            }
+
             const savedSession = ex.canTakeExam ? loadSavedExamProgressFromStorage(applicantCode, ex.id) : null;
             const savedSec = savedSession ? Math.max(0, parseInt(savedSession.remainingSeconds) || 0) : 0;
             const savedMinStr = savedSession ? `${String(Math.floor(savedSec / 60)).padStart(2, '0')}:${String(savedSec % 60).padStart(2, '0')}` : '';
             const instructionsBulletsHtml = renderExamInstructionsBullets(ex.description, 'تعليمات الاختبار:');
 
             return `
-            <div class="rounded-2xl border ${res ? 'border-emerald-200' : 'border-slate-200'} p-4 sm:p-5 space-y-4">
+            <div class="rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-black">الاختبار التقييمي</span>
+                            <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black">الاختبار التقييمي</span>
                             <h4 class="text-lg sm:text-xl font-black text-slate-800">${esc(ex.title)}</h4>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap text-xs font-black">
-                        <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200"><i class="fa-solid fa-list-ol text-indigo-600 ml-1"></i> ${ex.questionsCount} سؤال</span>
-                        ${ac.layer1TimerEnabled ? `<span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200"><i class="fa-regular fa-clock text-amber-600 ml-1"></i> ${ac.durationMinutes || 20} دقيقة</span>` : ''}
-                        <span class="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200">المحاولات: ${ex.attemptsUsed} / ${ex.maxAllowedAttempts}</span>
+                        <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700"><i class="fa-solid fa-list-ol text-indigo-600 ml-1"></i> ${ex.questionsCount} سؤال</span>
+                        ${ac.layer1TimerEnabled ? `<span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900"><i class="fa-regular fa-clock text-amber-600 ml-1"></i> ${ac.durationMinutes || 20} دقيقة</span>` : ''}
                     </div>
                 </div>
 
                 ${instructionsBulletsHtml ? `
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/90">
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                     ${instructionsBulletsHtml}
                 </div>` : ''}
 
                 ${savedSession ? `
-                <div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 text-xs font-bold flex flex-wrap items-center justify-between gap-2">
-                    <div><i class="fa-solid fa-clock-rotate-left text-amber-600 ml-1"></i> لديك جلسة اختبار محفوظة تلقائياً — الوقت المتبقي: <strong dir="ltr">${savedMinStr}</strong></div>
-                </div>` : ''}
-
-                ${res ? `
-                <div class="p-4 rounded-2xl bg-slate-50 border-2 ${isGradedAndConfirmed ? 'border-emerald-300' : 'border-amber-200'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs font-black ${isGradedAndConfirmed ? 'text-emerald-700' : 'text-amber-700'}">
-                                <i class="fa-solid ${isGradedAndConfirmed ? 'fa-circle-check' : 'fa-hourglass-half'} ml-1"></i>
-                                حالة التصحيح: ${esc(res.gradingStatus)}
-                            </span>
-                            <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-black">التقدير: ${esc(res.level)}</span>
-                        </div>
-                        <div class="text-sm font-black text-slate-800">
-                            الدرجة: <span class="text-indigo-700" dir="ltr">${res.totalScore} / ${res.maxScore} (${res.percentage}%)</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        ${ex.canViewCorrection ? `
-                        <button type="button" onclick="openExamCorrectionReview('${esc(ex.id)}')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs shadow transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-magnifying-glass-check"></i> عرض نموذج التصحيح
-                        </button>` : `
-                        <span class="text-[11px] font-bold text-slate-600 bg-white px-3 py-2 rounded-xl border border-slate-200">
-                            <i class="fa-solid fa-clock ml-1 text-indigo-500"></i> تم تسجيل نتيجتك لدى الإدارة
-                        </span>`}
-                    </div>
+                <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex flex-wrap items-center justify-between gap-2">
+                    <div><i class="fa-solid fa-clock-rotate-left text-amber-600 ml-1"></i> لديك جلسة اختبار جارية — الوقت المتبقي: <strong dir="ltr">${savedMinStr}</strong></div>
                 </div>` : ''}
 
                 <div class="flex items-center justify-end gap-3 pt-1">
                     ${ex.canTakeExam ? `
-                    <button type="button" onclick="startApplicantExam('${esc(ex.id)}', ${savedSession ? 'true' : 'false'})" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-2">
+                    <button type="button" onclick="startApplicantExam('${esc(ex.id)}', ${savedSession ? 'true' : 'false'})" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-play"></i> ${savedSession ? `استكمال الاختبار (${savedMinStr})` : (ex.attemptsUsed > 0 ? 'إعادة أداء الاختبار' : 'بدء الاختبار الآن')}
-                    </button>` : `
-                    <span class="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl">
-                        <i class="fa-solid fa-check-circle text-emerald-600 ml-1"></i> ${ex.attemptsUsed > 0 ? 'تم تسليم الاختبار بنجاح' : 'الاختبار غير متاح حالياً'}
-                    </span>`}
+                    </button>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -2292,8 +2323,18 @@
         const cfg = intSettings || {};
         const durationMin = parseInt(app.interviewDuration) || parseInt(cfg.durationMinutes) || 15;
         const allSlots = Array.isArray(cfg.slots) ? cfg.slots : [];
+
+        // المواعيد المتاحة للحجز: فقط المواعيد التي لم تكتمل سعتها (isAvailable === true) ولم ينتهِ وقتها بعد
         const jobSlots = allSlots.filter(function(s) {
-            return (!s.jobId || s.jobId === 'all' || s.jobId === app.jobId) && s.isAvailable;
+            const jobMatch = !s.jobId || s.jobId === 'all' || s.jobId === app.jobId;
+            if (!jobMatch) return false;
+            if (!s.isAvailable) return false;
+            const sCap = parseInt(s.maxCapacity) || parseInt(cfg.maxPerSlot) || 1;
+            const sBooked = parseInt(s.bookedCount) || 0;
+            if (sBooked >= sCap) return false;
+            const sRange = s.endTime ? (s.time + ' - ' + s.endTime) : s.time;
+            if (isInterviewTimeExpiredCairo(s.date, sRange, s.durationMinutes || durationMin)) return false;
+            return true;
         });
 
         const bookedSlot = allSlots.find(function(s) { return s.isBookedByMe; });
@@ -2305,21 +2346,28 @@
         const displayLink = app.interviewLink || cfg.defaultLink || '';
         const displayNotes = app.interviewNotes || (bookedSlot && bookedSlot.notes) || cfg.defaultNotes || '';
 
+        // إذا كان المتقدم قد حجز موعداً وانتهى وقت المقابلة بالفعل، يُزال الموعد المنتهي من صفحته
+        if (hasBookedOrAssigned && isInterviewTimeExpiredCairo(displayDate, displayTime, displayDuration)) {
+            return '';
+        }
+
         const editCheck = canApplicantChangeInterviewSlot({
             interviewDate: displayDate,
             interviewTime: displayTime,
             allowSlotEditOverride: !!app.allowSlotEditOverride
         }, cfg);
 
-        const canShowChangeBtn = editCheck.allowed && jobSlots.length > 1;
+        const otherOpenSlots = jobSlots.filter(function(s) { return !s.isBookedByMe; });
+        const canShowChangeBtn = editCheck.allowed && otherOpenSlots.length > 0;
         const showPicker = !hasBookedOrAssigned || (!!window._forceShowSlotPickerForApp[app.applicationId] && editCheck.allowed);
 
         if (!showPicker && hasBookedOrAssigned) {
             const dateObj = formatArabicDateWithWeekday(displayDate);
             const cleanTimeStr = formatArabicTimeRangeClean(displayTime);
+            const notesBulletsHtml = renderInterviewNotesBulletsHtml(displayNotes);
 
             return `
-            <div class="rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-900 text-white shadow-xl border border-indigo-800/60 overflow-hidden">
+            <div class="rounded-3xl bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-900 text-white shadow-lg border border-indigo-800/60 overflow-hidden">
                 <!-- رأس بطاقة المقابلة الشخصية -->
                 <div class="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between flex-wrap gap-3">
                     <div class="flex items-center gap-3.5">
@@ -2342,7 +2390,7 @@
                     </span>
                 </div>
 
-                <!-- تفاصيل اليوم والتاريخ والوقت بتوقيت القاهرة (محاذاة عربية صحيحة 100%) -->
+                <!-- تفاصيل اليوم والتاريخ والوقت بتوقيت القاهرة -->
                 <div class="p-5 sm:p-6 space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-white/10 rounded-2xl p-4 border border-white/15 flex items-center gap-3.5 text-right">
@@ -2368,11 +2416,7 @@
                         </div>
                     </div>
 
-                    ${displayNotes ? `
-                    <div class="p-4 rounded-2xl bg-white/10 border border-white/15 text-xs sm:text-sm text-indigo-100 font-bold leading-relaxed flex items-start gap-2.5">
-                        <i class="fa-solid fa-circle-info text-yellow-400 mt-1"></i>
-                        <div class="flex-1">${esc(displayNotes)}</div>
-                    </div>` : ''}
+                    ${notesBulletsHtml}
 
                     <!-- أزرار الدخول للمقابلة وتغيير الموعد -->
                     <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
@@ -2384,7 +2428,7 @@
 
                         ${canShowChangeBtn ? `
                         <button type="button" onclick="toggleChangeInterviewSlot('${esc(app.applicationId)}', true)"
-                            class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs border border-white/20 transition-all inline-flex items-center gap-1.5">
+                            class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs border border-white/20 transition-all inline-flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-calendar-day"></i>
                             <span>تغيير الموعد</span>
                         </button>` : (!editCheck.allowed && editCheck.reason ? `
@@ -2553,19 +2597,7 @@
         }
 
         const overallBox = document.getElementById('ap-overall-score-box');
-        const overallEl = document.getElementById('ap-overall-score');
-        const primaryStatus = apps[0] ? normalizePortalStatus(apps[0].status) : 'معلق';
-        if (results.length > 0 && ['اختبار', 'انترفيو', 'قبول'].includes(primaryStatus)) {
-            overallBox.classList.remove('hidden');
-            const latest = results[0];
-            if (latest.gradingStatus === 'معتمد' || portalCfg.showScoresImmediately !== false) {
-                overallEl.innerHTML = `<span dir="ltr">${latest.totalScore} / ${latest.maxScore} (${latest.percentage}%)</span> • ${esc(latest.level)}`;
-            } else {
-                overallEl.innerHTML = `<span class="text-xs text-amber-700">قيد المراجعة</span>`;
-            }
-        } else {
-            overallBox.classList.add('hidden');
-        }
+        if (overallBox) overallBox.classList.add('hidden');
 
         const appsContainer = document.getElementById('ap-applications-list');
         appsContainer.innerHTML = apps.map(function(app) {
@@ -2601,13 +2633,19 @@
                     </div>
                 </div>`;
             } else if (status === 'رفض') {
+                const completedExamsForRejected = (exams && exams.some(e => e.latestResult || (e.attemptsUsed || 0) > 0))
+                    ? `<div class="pt-3">${renderExamsListForApp(app, exams.filter(e => e.latestResult || (e.attemptsUsed || 0) > 0))}</div>`
+                    : '';
                 statusInteractiveBody = `
-                <div class="flex items-start gap-3 text-rose-900 pt-2">
-                    <i class="fa-solid fa-circle-xmark text-rose-600 text-lg mt-0.5"></i>
-                    <div>
-                        <div class="font-black text-sm sm:text-base">نعتذر، لم يتم قبول طلبك في هذه الوظيفة</div>
-                        <p class="text-xs text-slate-600 font-bold leading-relaxed whitespace-pre-line mt-1">${esc(app.statusReason || 'شكراً لاهتمامك بالتقديم لدينا، ونتمنى لك كل التوفيق في الفرص القادمة.')}</p>
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-start gap-3 text-rose-900">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-lg mt-0.5"></i>
+                        <div>
+                            <div class="font-black text-sm sm:text-base">نعتذر، لم يتم قبول طلبك في هذه الوظيفة</div>
+                            <p class="text-xs text-slate-600 font-bold leading-relaxed whitespace-pre-line mt-1">${esc(app.statusReason || 'شكراً لاهتمامك بالتقديم لدينا، ونتمنى لك كل التوفيق في الفرص القادمة.')}</p>
+                        </div>
                     </div>
+                    ${completedExamsForRejected}
                 </div>`;
             } else if (status === 'اختبار') {
                 statusInteractiveBody = `
