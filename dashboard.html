@@ -2333,6 +2333,12 @@
                             <option value="exam_passed">اجتاز الاختبار (70%+)</option>
                             <option value="exam_needs_grading">بانتظار التصحيح</option>
                             <option value="booked_interview">حجز موعد انترفيو</option>
+                            <option value="interview_evaluated">تم تقييم المقابلة</option>
+                            <option value="interview_attended">حضر المقابلة الشخصية</option>
+                            <option value="interview_absent">لم يحضر المقابلة الشخصية</option>
+                            <option value="interview_accepted">القرار النهائي: مقبولة</option>
+                            <option value="interview_waitlist">القرار النهائي: احتياطي</option>
+                            <option value="interview_rejected">القرار النهائي: مرفوضة</option>
                             <option value="has_notes">لديه ملاحظة</option>
                             <option value="no_notes">بدون ملاحظات</option>
                             <option value="has_cv">مرفق CV</option>
@@ -2435,6 +2441,9 @@
                     </button>
                     <button type="button" onclick="switchJobExamsSubView('interview_slots')" id="je-subbtn-interview_slots" class="px-4 py-2 rounded-xl font-black text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors flex items-center gap-1.5">
                         <i class="fa-regular fa-calendar-check"></i> مواعيد الانترفيو (<span id="je-count-slots">0</span>)
+                    </button>
+                    <button type="button" onclick="switchJobExamsSubView('interview_eval')" id="je-subbtn-interview_eval" class="px-4 py-2 rounded-xl font-black text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-check"></i> تقييم الانترفيو (<span id="je-count-interviews">0</span>)
                     </button>
                     <button type="button" onclick="switchJobExamsSubView('submissions_grading')" id="je-subbtn-submissions_grading" class="px-4 py-2 rounded-xl font-black text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors flex items-center gap-1.5">
                         <i class="fa-solid fa-marker"></i> تصحيح الإجابات (<span id="je-count-subs">0</span>)
@@ -2635,6 +2644,90 @@
                                 </tr>
                             </thead>
                             <tbody id="job-exam-submissions-tbody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-view 3.5: تقييم المقابلات الشخصية (شيت التقييم للمقابِل) -->
+            <div id="je-subview-interview_eval" class="hidden space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-purple-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-base"><i class="fa-solid fa-video"></i></div>
+                        <div><div class="text-xl font-black text-purple-800" id="ie-kpi-total">0</div><div class="text-[10px] text-slate-500 font-bold">مرشحو الانترفيو</div></div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-sky-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-base"><i class="fa-solid fa-user-check"></i></div>
+                        <div><div class="text-xl font-black text-sky-800" id="ie-kpi-attended">0</div><div class="text-[10px] text-slate-500 font-bold">حضروا المقابلة</div></div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-slate-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-base"><i class="fa-solid fa-user-slash"></i></div>
+                        <div><div class="text-xl font-black text-slate-700" id="ie-kpi-absent">0</div><div class="text-[10px] text-slate-500 font-bold">لم يحضروا</div></div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-emerald-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base"><i class="fa-solid fa-circle-check"></i></div>
+                        <div><div class="text-xl font-black text-emerald-700" id="ie-kpi-accepted">0</div><div class="text-[10px] text-slate-500 font-bold">مقبولة</div></div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-amber-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div><div class="text-xl font-black text-amber-700" id="ie-kpi-waitlist">0</div><div class="text-[10px] text-slate-500 font-bold">احتياطي</div></div>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border-2 border-rose-200 flex items-center gap-3 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-base"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div><div class="text-xl font-black text-rose-700" id="ie-kpi-rejected">0</div><div class="text-[10px] text-slate-500 font-bold">مرفوضة</div></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border-2 border-slate-100 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h4 class="font-black text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-list text-purple-600"></i> شيت تقييم المتقدمين في المقابلة الشخصية
+                        </h4>
+                        <button type="button" onclick="openInterviewEvalQuestionsBuilderModal()" class="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-black transition-colors flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check"></i> تعديل أسئلة ودرجات التقييم
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <select id="ie-filter-attendance" onchange="renderInterviewEvaluationsTab()" class="field-input text-xs font-bold w-40">
+                            <option value="all">كل حالات الحضور</option>
+                            <option value="pending">لم يتم التقييم بعد</option>
+                            <option value="attended">حضر المقابلة</option>
+                            <option value="absent">لم يحضر المقابلة</option>
+                        </select>
+                        <select id="ie-filter-decision" onchange="renderInterviewEvaluationsTab()" class="field-input text-xs font-bold w-40">
+                            <option value="all">كل القرارات النهائية</option>
+                            <option value="accepted">مقبولة</option>
+                            <option value="waitlist">احتياطي</option>
+                            <option value="rejected">مرفوضة</option>
+                        </select>
+                        <select id="ie-sort-by" onchange="renderInterviewEvaluationsTab()" class="field-input text-xs font-bold w-44">
+                            <option value="score_desc">الأعلى في تقييم المقابلة</option>
+                            <option value="slot_asc">حسب موعد المقابلة</option>
+                            <option value="exam_desc">الأعلى في درجة الاختبار</option>
+                        </select>
+                        <div class="relative w-48">
+                            <input type="text" id="ie-search-input" oninput="renderInterviewEvaluationsTab()" placeholder="بحث بالاسم أو الرقم..." class="field-input text-xs font-bold pl-7">
+                            <i class="fa-solid fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800 text-white text-xs font-black">
+                                    <th class="px-3 py-3 text-center w-10">#</th>
+                                    <th class="px-3 py-3">المتقدم</th>
+                                    <th class="px-3 py-3 text-center">موعد المقابلة</th>
+                                    <th class="px-3 py-3 text-center">درجة الاختبار</th>
+                                    <th class="px-3 py-3 text-center">الحضور</th>
+                                    <th class="px-3 py-3 text-center">درجة المقابلة والتفاصيل</th>
+                                    <th class="px-3 py-3 text-center">القرار النهائي</th>
+                                    <th class="px-3 py-3 text-center">إجراء التقييم</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ie-candidates-tbody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -17247,6 +17340,13 @@ function getFilteredAnalyticsApplications() {
             if (notesFilter === 'exam_passed' && (!hasExamScore || examPct < 70)) return false;
             if (notesFilter === 'exam_needs_grading' && (!hasExamScore || app.examStatus === 'معتمد')) return false;
             if (notesFilter === 'booked_interview' && !app.interviewDate) return false;
+            const iEval = app.interviewEval || meta.interviewEval || null;
+            if (notesFilter === 'interview_evaluated' && !iEval) return false;
+            if (notesFilter === 'interview_attended' && (!iEval || iEval.attendance !== 'attended')) return false;
+            if (notesFilter === 'interview_absent' && (!iEval || iEval.attendance !== 'absent')) return false;
+            if (notesFilter === 'interview_accepted' && (!iEval || iEval.finalDecision !== 'accepted')) return false;
+            if (notesFilter === 'interview_waitlist' && (!iEval || iEval.finalDecision !== 'waitlist')) return false;
+            if (notesFilter === 'interview_rejected' && (!iEval || iEval.finalDecision !== 'rejected')) return false;
             if (notesFilter === 'has_notes' && !hasNote) return false;
             if (notesFilter === 'no_notes' && hasNote) return false;
             if (notesFilter === 'has_cv' && !hasCv) return false;
@@ -17369,6 +17469,7 @@ function renderJobsAnalytics() {
                     </span>
                     ${app.examScore ? `<button type="button" onclick="openApplicantExamGrading(${origIdx})" class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 cursor-pointer" dir="ltr" title="اضغط لمراجعة وتصحيح إجابات الاختبار">${esc(app.examScore)}</button>` : ''}
                     ${app.interviewDate ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-300" dir="ltr">${esc(app.interviewDate)} ${esc(app.interviewTime || '')}</span>` : ''}
+                    ${renderApplicantInterviewEvalInlineBadge(app, origIdx)}
                 </div>
                 ${snippetAnswers.length > 0 ? `<div class="space-y-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100">
                     ${snippetAnswers.map(a => `<div class="truncate" title="${esc(a.question + ': ' + a.answer)}"><span class="font-bold text-slate-400">${esc(a.question)}:</span> <span class="font-bold text-slate-700">${esc(a.answer)}</span></div>`).join('')}
@@ -17401,6 +17502,7 @@ function renderJobsAnalytics() {
             <td class="px-3 py-3 text-center align-top">
                 <div class="flex items-center justify-center gap-1">
                     <button type="button" onclick="openJobApplicationDetail(${origIdx})" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center text-xs" title="عرض التفاصيل"><i class="fa-solid fa-eye"></i></button>
+                    <button type="button" onclick="openApplicantInterviewEvaluationModal(${origIdx})" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 flex items-center justify-center text-xs" title="شيت تقييم المقابلة الشخصية"><i class="fa-solid fa-clipboard-check"></i></button>
                     <button type="button" onclick="openApplicantPortalSettingsModal(${origIdx})" class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center justify-center text-xs" title="إعدادات المتقدم"><i class="fa-solid fa-sliders"></i></button>
                     ${isEg ? `<button type="button" onclick="sendCustomWhatsAppToApplicant(${origIdx})" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center text-xs" title="إرسال واتساب"><i class="fa-brands fa-whatsapp"></i></button>` : `<button type="button" onclick="showToast('الرقم غير مصري — لا يُرسل له واتساب', 'warn')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-300 flex items-center justify-center text-xs cursor-not-allowed" title="غير مصري"><i class="fa-brands fa-whatsapp"></i></button>`}
                     <button type="button" onclick="deleteApplication(${origIdx})" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 flex items-center justify-center text-xs" title="حذف"><i class="fa-solid fa-trash"></i></button>
@@ -17714,7 +17816,7 @@ window._gradingSubmissionObj = null;
 
 function switchJobExamsSubView(subView) {
     window._activeJobExamsSubView = subView;
-    ['exams_builder', 'interview_slots', 'submissions_grading', 'portal_access'].forEach(function(sv) {
+    ['exams_builder', 'interview_slots', 'interview_eval', 'submissions_grading', 'portal_access'].forEach(function(sv) {
         const btn = document.getElementById('je-subbtn-' + sv);
         const panel = document.getElementById('je-subview-' + sv);
         if (btn) {
@@ -17730,6 +17832,7 @@ function switchJobExamsSubView(subView) {
         renderJobExamSubmissionsList();
         loadJobExamsFromServer().then(renderJobExamSubmissionsList);
     }
+    if (subView === 'interview_eval') renderInterviewEvaluationsTab();
     if (subView === 'portal_access') renderPortalAccessControlTable();
 }
 
@@ -17755,11 +17858,13 @@ async function loadJobExamsFromServer() {
 function renderJobExamsSection() {
     renderJobExamsAdminList();
     renderInterviewSlotsManager();
+    renderInterviewEvaluationsTab();
     renderJobExamSubmissionsList();
     renderPortalAccessControlTable();
     loadJobExamsFromServer().then(function() {
         renderJobExamsAdminList();
         renderInterviewSlotsManager();
+        renderInterviewEvaluationsTab();
         renderJobExamSubmissionsList();
         renderPortalAccessControlTable();
     });
@@ -17860,7 +17965,10 @@ function renderInterviewSlotsManager() {
                             <span class="font-black text-slate-800">${esc(b.name || 'متقدم')}</span>
                             <span class="font-mono text-[11px] text-emerald-700 block" dir="ltr">${esc(b.phone || '')}</span>
                         </div>
-                        <button type="button" onclick="cancelApplicantSlotBooking(${sIdx}, '${esc(b.phone || '')}')" class="text-[10px] font-black text-rose-600 hover:underline">إلغاء الحجز</button>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="openInterviewEvalByPhone('${esc(b.phone || '')}')" class="px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black cursor-pointer" title="فتح شيت تقييم المقابلة"><i class="fa-solid fa-clipboard-check"></i> تقييم</button>
+                            <button type="button" onclick="cancelApplicantSlotBooking(${sIdx}, '${esc(b.phone || '')}')" class="text-[10px] font-black text-rose-600 hover:underline">إلغاء</button>
+                        </div>
                     </div>
                 `).join('') : '<span class="text-xs text-slate-400 font-bold">—</span>'}
             </td>
@@ -18260,6 +18368,726 @@ function sendStatusWhatsAppToSelectedApplicants() {
         return;
     }
     openBulkStatusWhatsAppModal('all', true);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  📋 INTERVIEW EVALUATION SHEET (شيت تقييم المقابلة الشخصية للمقابِل)
+// ═══════════════════════════════════════════════════════════════════
+function getDefaultInterviewEvalQuestions() {
+    return [
+        {
+            id: 'ie_q1',
+            title: '1. جودة التقنيات (الإنترنت، الصوت، إضاءة الكاميرا):',
+            options: [
+                { id: 'opt_1', label: 'ممتازة', desc: '(الصورة واضحة، الصوت نقي، والنت مستقر).', points: 4, tone: 'emerald' },
+                { id: 'opt_2', label: 'مقبولة', desc: '(فيها تقطيع أو لغوشة بسيطة بس الشغل يمشي).', points: 2, tone: 'amber' },
+                { id: 'opt_3', label: 'ضعيفة', desc: '(النت بيقطع كتير، أو الإضاءة والصوت سيئين ومش هينفعوا مع الطلاب).', points: 0, tone: 'rose' }
+            ]
+        },
+        {
+            id: 'ie_q2',
+            title: '2. الحضور البصري والسيطرة (أثناء فتح الكاميرا):',
+            options: [
+                { id: 'opt_1', label: 'كاريزما قوية', desc: '(واثقة من نفسها، عينها في الكاميرا، وتقدر تسيطر على طالب إعدادي وتلقطه لو غش).', points: 4, tone: 'emerald' },
+                { id: 'opt_2', label: 'هادية بزيادة', desc: '(كويسة بس ممكن طالب شقي يضحك عليها أو يتوهها).', points: 2, tone: 'amber' },
+                { id: 'opt_3', label: 'مهزوزة', desc: '(لغة جسدها ضعيفة ومش هتعرف تدير جلسة التسميع).', points: 0, tone: 'rose' }
+            ]
+        },
+        {
+            id: 'ie_q3',
+            title: '3. الوعي التقني واستخدام الذكاء الاصطناعي (AI):',
+            options: [
+                { id: 'opt_1', label: 'ممتازة', desc: '(استخدمت AI قبل كدا، وهتاخد الـ Prompts بتاعتك وتنفذها وتراجعها بذكاء).', points: 4, tone: 'emerald' },
+                { id: 'opt_2', label: 'قابلة للتعلم', desc: '(معندهاش خبرة كبيرة في الـ AI بس سريعة البديهة وهتلقط النظام بسرعة).', points: 2, tone: 'amber' },
+                { id: 'opt_3', label: 'ضعيفة تقنياً', desc: '(هتتعبك جداً في تدريبها على المنصة والـ AI).', points: 0, tone: 'rose' }
+            ]
+        },
+        {
+            id: 'ie_q4',
+            title: '4. المرونة وتقبل دور "المساعدة" (دون التدخل في الشرح):',
+            options: [
+                { id: 'opt_1', label: 'مرنة جداً', desc: '(متقبلة إن دورها تصحيح وتسميع وتدقيق فقط بدون ما تنظّر عليك).', points: 4, tone: 'emerald' },
+                { id: 'opt_2', label: 'نص نص', desc: '(متقبلة بس حاسة إنها مدرسة أساسية وممكن تتدخل في طريقك).', points: 2, tone: 'amber' },
+                { id: 'opt_3', label: 'غير مناسبة', desc: '(هتتعبك وعاوزة تشرح وتفرض طريقتها).', points: 0, tone: 'rose' }
+            ]
+        },
+        {
+            id: 'ie_q5',
+            title: '5. إدارة الوقت والتفرغ اليومي:',
+            options: [
+                { id: 'opt_1', label: 'متفرغة تماماً', desc: '(مواعيدها مناسبة لأوقات فراغ طلابك وتقدر تصحح الواجبات أولاً بأول).', points: 4, tone: 'emerald' },
+                { id: 'opt_2', label: 'وقتها ضيق', desc: '(عندها شغل تاني وبتقول هتحاول توفق أمورها.. "دي تقلق شوية").', points: 2, tone: 'amber' },
+                { id: 'opt_3', label: 'غير متفرغة', desc: '(مواعيدها متعارضة تماماً مع سيستم المنصة).', points: 0, tone: 'rose' }
+            ]
+        }
+    ];
+}
+
+function getInterviewEvalQuestions() {
+    const intCfg = getInterviewSettingsObj();
+    if (!Array.isArray(intCfg.evalQuestions) || intCfg.evalQuestions.length === 0) {
+        intCfg.evalQuestions = getDefaultInterviewEvalQuestions();
+    }
+    return intCfg.evalQuestions;
+}
+
+function getApplicantInterviewEvalObj(app) {
+    if (!app) return null;
+    if (app.interviewEval && typeof app.interviewEval === 'object') return app.interviewEval;
+    const meta = getApplicantMeta(app);
+    if (meta && meta.interviewEval && typeof meta.interviewEval === 'object') {
+        app.interviewEval = meta.interviewEval;
+        return meta.interviewEval;
+    }
+    return null;
+}
+
+function getFinalDecisionMeta(decisionCode) {
+    if (decisionCode === 'accepted') {
+        return { code: 'accepted', label: 'مقبولة', fullLabel: 'مقبولة (هتتوكل على الله وتبدأ معاها)', badgeCls: 'bg-emerald-100 text-emerald-800 border-emerald-300', dotCls: 'bg-emerald-500' };
+    }
+    if (decisionCode === 'waitlist') {
+        return { code: 'waitlist', label: 'احتياطي', fullLabel: 'احتياطي (لو مفيش حد أحسن منها في الـ 18)', badgeCls: 'bg-amber-100 text-amber-800 border-amber-300', dotCls: 'bg-amber-500' };
+    }
+    if (decisionCode === 'rejected') {
+        return { code: 'rejected', label: 'مرفوضة', fullLabel: 'مرفوضة', badgeCls: 'bg-rose-100 text-rose-800 border-rose-300', dotCls: 'bg-rose-500' };
+    }
+    return { code: '', label: 'لم يُحدد', fullLabel: 'لم يُحدد بعد', badgeCls: 'bg-slate-100 text-slate-600 border-slate-200', dotCls: 'bg-slate-400' };
+}
+
+function renderApplicantInterviewEvalInlineBadge(app, origIdx) {
+    const ev = getApplicantInterviewEvalObj(app);
+    const st = normalizeJobStatusAdmin(app.status || 'معلق');
+    if (!ev) {
+        if (st === 'انترفيو' || app.interviewDate) {
+            return `<button type="button" onclick="openApplicantInterviewEvaluationModal(${origIdx})" class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 cursor-pointer flex items-center gap-1" title="اضغط لفتح شيت تقييم المقابلة الشخصية"><i class="fa-solid fa-clipboard-check"></i> تقييم الانترفيو</button>`;
+        }
+        return '';
+    }
+    if (ev.attendance === 'absent') {
+        return `<button type="button" onclick="openApplicantInterviewEvaluationModal(${origIdx})" class="px-2 py-0.5 rounded-lg text-[10px] font-black bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 cursor-pointer" title="اضغط لتعديل تقييم المقابلة">الانترفيو: لم يحضر</button>`;
+    }
+    const dec = getFinalDecisionMeta(ev.finalDecision);
+    const scoreTxt = (ev.totalScore !== undefined && ev.maxScore) ? `${ev.totalScore}/${ev.maxScore}` : '';
+    return `<button type="button" onclick="openApplicantInterviewEvaluationModal(${origIdx})" class="px-2 py-0.5 rounded-lg text-[10px] font-black ${dec.badgeCls} border cursor-pointer flex items-center gap-1" title="اضغط لعرض أو تعديل شيت تقييم المقابلة">
+        <i class="fa-solid fa-clipboard-check"></i>
+        <span>الانترفيو: ${scoreTxt}</span>
+        <span>• ${esc(dec.label)}</span>
+    </button>`;
+}
+
+function openInterviewEvalByPhone(phone) {
+    const allApps = window._applicationsCache || [];
+    const idx = allApps.findIndex(a => aPhoneMatch(a.phone, phone));
+    if (idx === -1) {
+        showToast('لم يتم العثور على طلب المتقدم المرتبط بهذا الرقم', 'warn');
+        return;
+    }
+    openApplicantInterviewEvaluationModal(idx);
+}
+
+function getInterviewCandidatesList() {
+    const allApps = window._applicationsCache || [];
+    return allApps.filter(function(app) {
+        const st = normalizeJobStatusAdmin(app.status || 'معلق');
+        const ev = getApplicantInterviewEvalObj(app);
+        return st === 'انترفيو' || !!(app.interviewDate && String(app.interviewDate).trim()) || !!ev;
+    });
+}
+
+function renderInterviewEvaluationsTab() {
+    const allApps = window._applicationsCache || [];
+    const candidates = getInterviewCandidatesList();
+
+    const tabCountEl = document.getElementById('je-count-interviews');
+    if (tabCountEl) tabCountEl.textContent = candidates.length;
+
+    let cntAttended = 0, cntAbsent = 0, cntAccepted = 0, cntWaitlist = 0, cntRejected = 0;
+    candidates.forEach(function(app) {
+        const ev = getApplicantInterviewEvalObj(app);
+        if (!ev) return;
+        if (ev.attendance === 'attended') cntAttended++;
+        else if (ev.attendance === 'absent') cntAbsent++;
+        if (ev.finalDecision === 'accepted') cntAccepted++;
+        else if (ev.finalDecision === 'waitlist') cntWaitlist++;
+        else if (ev.finalDecision === 'rejected') cntRejected++;
+    });
+
+    const setTxt = function(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('ie-kpi-total', candidates.length);
+    setTxt('ie-kpi-attended', cntAttended);
+    setTxt('ie-kpi-absent', cntAbsent);
+    setTxt('ie-kpi-accepted', cntAccepted);
+    setTxt('ie-kpi-waitlist', cntWaitlist);
+    setTxt('ie-kpi-rejected', cntRejected);
+
+    const tbody = document.getElementById('ie-candidates-tbody');
+    if (!tbody) return;
+
+    const attFilter = document.getElementById('ie-filter-attendance')?.value || 'all';
+    const decFilter = document.getElementById('ie-filter-decision')?.value || 'all';
+    const sortBy = document.getElementById('ie-sort-by')?.value || 'score_desc';
+    const q = normJobSearchText(document.getElementById('ie-search-input')?.value || '');
+
+    let filtered = candidates.filter(function(app) {
+        ensureApplicantFastCache(app);
+        const ev = getApplicantInterviewEvalObj(app);
+        if (attFilter === 'pending' && ev) return false;
+        if (attFilter === 'attended' && (!ev || ev.attendance !== 'attended')) return false;
+        if (attFilter === 'absent' && (!ev || ev.attendance !== 'absent')) return false;
+
+        if (decFilter !== 'all') {
+            if (!ev || ev.finalDecision !== decFilter) return false;
+        }
+
+        if (q && !(app._searchHaystack || '').includes(q)) return false;
+        return true;
+    });
+
+    filtered.sort(function(a, b) {
+        const evA = getApplicantInterviewEvalObj(a);
+        const evB = getApplicantInterviewEvalObj(b);
+        if (sortBy === 'score_desc') {
+            const sA = evA && evA.attendance === 'attended' ? (parseFloat(evA.totalScore) || 0) : -1;
+            const sB = evB && evB.attendance === 'attended' ? (parseFloat(evB.totalScore) || 0) : -1;
+            if (sB !== sA) return sB - sA;
+        } else if (sortBy === 'slot_asc') {
+            const dA = (a.interviewDate || '9999-99-99') + ' ' + (a.interviewTime || '99:99');
+            const dB = (b.interviewDate || '9999-99-99') + ' ' + (b.interviewTime || '99:99');
+            if (dA !== dB) return dA.localeCompare(dB);
+        } else if (sortBy === 'exam_desc') {
+            const pA = parseFloat(a.examPercentage) || 0;
+            const pB = parseFloat(b.examPercentage) || 0;
+            if (pB !== pA) return pB - pA;
+        }
+        return 0;
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400 font-bold text-xs">
+            <i class="fa-solid fa-clipboard-question text-3xl mb-2 opacity-30 block"></i>
+            لا يوجد مرشحون مطابقون للفلترة الحالية
+        </td></tr>`;
+        return;
+    }
+
+    const questions = getInterviewEvalQuestions();
+
+    tbody.innerHTML = filtered.map(function(app, idx) {
+        const origIdx = allApps.indexOf(app);
+        const ev = getApplicantInterviewEvalObj(app);
+        const dec = getFinalDecisionMeta(ev ? ev.finalDecision : '');
+        const isAttended = ev && ev.attendance === 'attended';
+        const isAbsent = ev && ev.attendance === 'absent';
+
+        let breakdownPills = '';
+        if (isAttended && ev.answers) {
+            breakdownPills = `<div class="flex flex-wrap items-center justify-center gap-1 mt-1">` +
+                questions.map(function(qObj, qIdx) {
+                    const chosenOptId = ev.answers[qObj.id];
+                    const opt = (qObj.options || []).find(o => o.id === chosenOptId);
+                    if (!opt) return '';
+                    const pillTone = opt.tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                     (opt.tone === 'amber' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-rose-50 text-rose-700 border-rose-200');
+                    return `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${pillTone}" title="${esc(qObj.title)}">${qIdx + 1}: ${esc(opt.label)} (${opt.points})</span>`;
+                }).join('') +
+            `</div>`;
+        }
+
+        return `<tr class="hover:bg-slate-50/80 ${ev && ev.finalDecision === 'accepted' ? 'bg-emerald-50/20' : (ev && ev.finalDecision === 'waitlist' ? 'bg-amber-50/20' : '')}">
+            <td class="px-3 py-3 text-center font-black text-xs text-slate-400">${idx + 1}</td>
+            <td class="px-3 py-3">
+                <div class="font-black text-slate-800 text-xs">${esc(app.name || 'بدون اسم')}</div>
+                <div class="font-mono text-[11px] text-indigo-600 font-bold mt-0.5" dir="ltr">${esc(app.phone || '—')}</div>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="text-[10px] text-slate-400 font-bold">${esc(app.jobName || '')}</span>
+                    ${app.cvUrl ? `<a href="${esc(app.cvUrl)}" target="_blank" class="text-[10px] font-black text-emerald-600 hover:underline"><i class="fa-solid fa-file-pdf"></i> الـ CV</a>` : ''}
+                </div>
+            </td>
+            <td class="px-3 py-3 text-center">
+                ${app.interviewDate ? `
+                    <div class="font-black text-purple-800 text-xs" dir="ltr">${esc(app.interviewDate)}</div>
+                    <div class="text-[11px] font-bold text-slate-600 mt-0.5" dir="ltr">${esc(app.interviewTime || '')}</div>
+                ` : '<span class="text-xs text-slate-400 font-bold">لم يحجز بعد</span>'}
+            </td>
+            <td class="px-3 py-3 text-center">
+                ${app.examScore ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-black text-xs" dir="ltr">${esc(app.examScore)}</span>` : '<span class="text-xs text-slate-400 font-bold">—</span>'}
+            </td>
+            <td class="px-3 py-3 text-center">
+                <div class="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button type="button" onclick="quickSetInterviewAttendance(${origIdx}, 'attended')" class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-colors cursor-pointer ${isAttended ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white'}">
+                        حضر
+                    </button>
+                    <button type="button" onclick="quickSetInterviewAttendance(${origIdx}, 'absent')" class="px-2.5 py-1 rounded-lg text-[11px] font-black transition-colors cursor-pointer ${isAbsent ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white'}">
+                        لم يحضر
+                    </button>
+                </div>
+            </td>
+            <td class="px-3 py-3 text-center">
+                ${isAttended ? `
+                    <div class="font-black text-sm text-indigo-900" dir="ltr">${ev.totalScore} / ${ev.maxScore} <span class="text-xs text-indigo-600">(${ev.percentage}%)</span></div>
+                    ${breakdownPills}
+                ` : (isAbsent ? '<span class="text-xs font-black text-rose-600">غائب عن المقابلة (0)</span>' : '<span class="text-xs text-slate-400 font-bold">لم يُقيّم بعد</span>')}
+            </td>
+            <td class="px-3 py-3 text-center">
+                ${ev && ev.finalDecision ? `
+                    <span class="px-3 py-1 rounded-full text-xs font-black border ${dec.badgeCls}">
+                        ${esc(dec.label)}
+                    </span>
+                ` : '<span class="text-xs text-slate-400 font-bold">—</span>'}
+            </td>
+            <td class="px-3 py-3 text-center">
+                <button type="button" onclick="openApplicantInterviewEvaluationModal(${origIdx})" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-sm transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>${ev ? 'تعديل التقييم' : 'تقييم الآن'}</span>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function quickSetInterviewAttendance(origIdx, attendanceState) {
+    const app = (window._applicationsCache || [])[origIdx];
+    if (!app) return;
+    if (attendanceState === 'attended') {
+        openApplicantInterviewEvaluationModal(origIdx, 'attended');
+        return;
+    }
+    // لو ضغط على "لم يحضر" يسجلها فوراً بدون تعب
+    const existing = getApplicantInterviewEvalObj(app) || {};
+    const evalObj = {
+        attendance: 'absent',
+        answers: existing.answers || {},
+        totalScore: 0,
+        maxScore: getInterviewEvalMaxScore(),
+        percentage: 0,
+        finalDecision: existing.finalDecision || 'rejected',
+        evaluatedAt: new Date().toISOString()
+    };
+    saveApplicantInterviewEvaluationData(origIdx, evalObj, false);
+}
+
+function getInterviewEvalMaxScore() {
+    const questions = getInterviewEvalQuestions();
+    let maxTotal = 0;
+    questions.forEach(function(q) {
+        let qMax = 0;
+        (q.options || []).forEach(function(o) {
+            const pts = parseFloat(o.points) || 0;
+            if (pts > qMax) qMax = pts;
+        });
+        maxTotal += qMax;
+    });
+    return maxTotal || 20;
+}
+
+window._currentEvalModalState = null;
+
+function openApplicantInterviewEvaluationModal(origIdx, forceAttendance) {
+    const app = (window._applicationsCache || [])[origIdx];
+    if (!app) return;
+
+    const questions = getInterviewEvalQuestions();
+    const existing = getApplicantInterviewEvalObj(app);
+
+    window._currentEvalModalState = {
+        origIdx: origIdx,
+        attendance: forceAttendance || (existing && existing.attendance ? existing.attendance : 'attended'),
+        answers: (existing && existing.answers) ? Object.assign({}, existing.answers) : {},
+        finalDecision: (existing && existing.finalDecision) ? existing.finalDecision : '',
+        autoUpdateAppStatus: true
+    };
+
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    const saveBtn = document.getElementById('modal-save-btn');
+
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-purple-600"></i> شيت تقييم المقابلة الشخصية: ${esc(app.name)}</span>`;
+
+    saveBtn.classList.remove('hidden');
+    saveBtn.style.display = 'flex';
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> حفظ التقييم والقرار النهائي';
+
+    renderApplicantInterviewEvaluationModalBody();
+
+    saveBtn.onclick = function() {
+        const st = window._currentEvalModalState;
+        if (!st) return;
+
+        let totalScore = 0;
+        let maxScore = 0;
+        questions.forEach(function(q) {
+            let qMax = 0;
+            (q.options || []).forEach(function(o) {
+                const p = parseFloat(o.points) || 0;
+                if (p > qMax) qMax = p;
+            });
+            maxScore += qMax;
+            if (st.attendance === 'attended') {
+                const chosenId = st.answers[q.id];
+                const chosenOpt = (q.options || []).find(o => o.id === chosenId);
+                if (chosenOpt) totalScore += (parseFloat(chosenOpt.points) || 0);
+            }
+        });
+
+        if (st.attendance === 'attended' && !st.finalDecision) {
+            showToast('يرجى اختيار القرار النهائي في أسفل الشيت (مقبولة / احتياطي / مرفوضة)', 'warn');
+            return;
+        }
+
+        const finalDec = st.finalDecision || (st.attendance === 'absent' ? 'rejected' : '');
+        const pct = maxScore > 0 && st.attendance === 'attended' ? Math.round((totalScore / maxScore) * 100) : 0;
+
+        const evalObj = {
+            attendance: st.attendance,
+            answers: st.answers,
+            totalScore: st.attendance === 'attended' ? totalScore : 0,
+            maxScore: maxScore,
+            percentage: pct,
+            finalDecision: finalDec,
+            evaluatedAt: new Date().toISOString()
+        };
+
+        const autoSyncStatus = !!document.getElementById('ie-modal-auto-status')?.checked;
+        saveApplicantInterviewEvaluationData(st.origIdx, evalObj, autoSyncStatus);
+        closeModal();
+    };
+
+    overlay.classList.add('active');
+}
+
+function selectEvalModalAttendance(att) {
+    if (!window._currentEvalModalState) return;
+    window._currentEvalModalState.attendance = att;
+    if (att === 'absent' && !window._currentEvalModalState.finalDecision) {
+        window._currentEvalModalState.finalDecision = 'rejected';
+    }
+    renderApplicantInterviewEvaluationModalBody();
+}
+
+function selectEvalModalOption(qId, optId) {
+    if (!window._currentEvalModalState) return;
+    window._currentEvalModalState.answers[qId] = optId;
+    renderApplicantInterviewEvaluationModalBody();
+}
+
+function selectEvalModalFinalDecision(decCode) {
+    if (!window._currentEvalModalState) return;
+    window._currentEvalModalState.finalDecision = decCode;
+    renderApplicantInterviewEvaluationModalBody();
+}
+
+function renderApplicantInterviewEvaluationModalBody() {
+    const st = window._currentEvalModalState;
+    if (!st) return;
+    const app = (window._applicationsCache || [])[st.origIdx];
+    const body = document.getElementById('modal-body');
+    if (!app || !body) return;
+
+    const questions = getInterviewEvalQuestions();
+    let totalScore = 0;
+    let maxScore = 0;
+    let answeredCount = 0;
+
+    questions.forEach(function(q) {
+        let qMax = 0;
+        (q.options || []).forEach(function(o) {
+            const p = parseFloat(o.points) || 0;
+            if (p > qMax) qMax = p;
+        });
+        maxScore += qMax;
+        const chosenId = st.answers[q.id];
+        if (chosenId) {
+            answeredCount++;
+            const chosenOpt = (q.options || []).find(o => o.id === chosenId);
+            if (chosenOpt) totalScore += (parseFloat(chosenOpt.points) || 0);
+        }
+    });
+
+    const pct = maxScore > 0 && st.attendance === 'attended' ? Math.round((totalScore / maxScore) * 100) : 0;
+
+    const questionsHtml = questions.map(function(q) {
+        const chosenId = st.answers[q.id] || '';
+        const optsHtml = (q.options || []).map(function(opt) {
+            const isSelected = chosenId === opt.id;
+            let cardCls = 'border-slate-200 bg-white hover:border-purple-300 text-slate-700';
+            let badgeCls = 'bg-slate-100 text-slate-600';
+            let checkIcon = '<i class="fa-regular fa-circle text-slate-300 text-base"></i>';
+
+            if (isSelected) {
+                if (opt.tone === 'emerald') {
+                    cardCls = 'border-emerald-500 bg-emerald-50/80 text-emerald-950 ring-2 ring-emerald-200';
+                    badgeCls = 'bg-emerald-600 text-white';
+                    checkIcon = '<i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>';
+                } else if (opt.tone === 'amber') {
+                    cardCls = 'border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-200';
+                    badgeCls = 'bg-amber-500 text-white';
+                    checkIcon = '<i class="fa-solid fa-circle-check text-amber-600 text-base"></i>';
+                } else {
+                    cardCls = 'border-rose-500 bg-rose-50/80 text-rose-950 ring-2 ring-rose-200';
+                    badgeCls = 'bg-rose-600 text-white';
+                    checkIcon = '<i class="fa-solid fa-circle-check text-rose-600 text-base"></i>';
+                }
+            }
+
+            return `<div onclick="selectEvalModalOption('${esc(q.id)}', '${esc(opt.id)}')" class="p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-start justify-between gap-3 ${cardCls}">
+                <div class="flex items-start gap-2.5">
+                    <div class="mt-0.5">${checkIcon}</div>
+                    <div>
+                        <div class="font-black text-xs sm:text-sm">${esc(opt.label)}:</div>
+                        <div class="text-xs font-bold opacity-85 mt-0.5 leading-relaxed">${esc(opt.desc || '')}</div>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-xl text-[11px] font-black flex-shrink-0 ${badgeCls}">${opt.points} د</span>
+            </div>`;
+        }).join('');
+
+        return `<div class="bg-slate-50/80 rounded-2xl border border-slate-200 p-4 space-y-2.5">
+            <div class="font-black text-slate-800 text-xs sm:text-sm">${esc(q.title)}</div>
+            <div class="space-y-2">${optsHtml}</div>
+        </div>`;
+    }).join('');
+
+    const decisions = [
+        { code: 'accepted', label: 'مقبولة', sub: '(هتتوكل على الله وتبدأ معاها)', activeCls: 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-200', icon: 'fa-circle-check text-emerald-600' },
+        { code: 'waitlist', label: 'احتياطي', sub: '(لو مفيش حد أحسن منها في الـ 18)', activeCls: 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-200', icon: 'fa-clock-rotate-left text-amber-600' },
+        { code: 'rejected', label: 'مرفوضة', sub: '(غير مناسبة للعمل في المنصة)', activeCls: 'border-rose-600 bg-rose-50 text-rose-950 ring-2 ring-rose-200', icon: 'fa-circle-xmark text-rose-600' }
+    ];
+
+    const decisionsHtml = decisions.map(function(d) {
+        const isSel = st.finalDecision === d.code;
+        return `<div onclick="selectEvalModalFinalDecision('${d.code}')" class="p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-3 ${isSel ? d.activeCls : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'}">
+            <i class="fa-solid ${d.icon} text-lg"></i>
+            <div>
+                <div class="font-black text-sm">${d.label}</div>
+                <div class="text-[11px] font-bold opacity-80">${d.sub}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+        <div class="space-y-4">
+            <!-- شريط بيانات المتقدم السريع -->
+            <div class="p-3.5 bg-slate-900 text-white rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="font-black text-sm">${esc(app.name)}</div>
+                    <div class="text-xs text-slate-300 font-mono mt-0.5" dir="ltr">${esc(app.phone)} • ${esc(app.jobName || '')}</div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    ${app.examScore ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-black" dir="ltr">الاختبار: ${esc(app.examScore)}</span>` : ''}
+                    ${app.interviewDate ? `<span class="px-2.5 py-1 rounded-xl bg-purple-500/20 text-purple-200 border border-purple-400/30 text-xs font-black" dir="ltr">${esc(app.interviewDate)} ${esc(app.interviewTime || '')}</span>` : ''}
+                    ${app.cvUrl ? `<a href="${esc(app.cvUrl)}" target="_blank" class="px-3 py-1 rounded-xl bg-white text-slate-900 text-xs font-black hover:bg-slate-100"><i class="fa-solid fa-file-pdf text-rose-600"></i> فتح الـ CV</a>` : ''}
+                </div>
+            </div>
+
+            <!-- 1. تحديد الحضور والغياب -->
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" onclick="selectEvalModalAttendance('attended')" class="p-3 rounded-2xl border-2 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${st.attendance === 'attended' ? 'border-emerald-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}">
+                    <i class="fa-solid fa-user-check text-base ${st.attendance === 'attended' ? 'text-emerald-600' : 'text-slate-400'}"></i>
+                    <span>حضر المقابلة الشخصية</span>
+                </button>
+                <button type="button" onclick="selectEvalModalAttendance('absent')" class="p-3 rounded-2xl border-2 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${st.attendance === 'absent' ? 'border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-200' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}">
+                    <i class="fa-solid fa-user-slash text-base ${st.attendance === 'absent' ? 'text-rose-600' : 'text-slate-400'}"></i>
+                    <span>لم يحضر المقابلة</span>
+                </button>
+            </div>
+
+            ${st.attendance === 'attended' ? `
+                <!-- شريط مجموع درجات المقابلة اللحظي -->
+                <div class="p-3 bg-indigo-50 border-2 border-indigo-200 rounded-2xl flex items-center justify-between">
+                    <div class="text-xs font-black text-indigo-900">
+                        <i class="fa-solid fa-calculator text-indigo-600 ml-1"></i>
+                        مجموع درجات تقييم المقابلة (${answeredCount} من ${questions.length} أسئلة):
+                    </div>
+                    <div class="text-base font-black text-indigo-700" dir="ltr">
+                        ${totalScore} / ${maxScore} <span class="text-xs">(${pct}%)</span>
+                    </div>
+                </div>
+
+                <!-- 2. أسئلة التقييم (اختيار من متعدد بضغطة واحدة) -->
+                <div class="space-y-3">
+                    ${questionsHtml}
+                </div>
+            ` : `
+                <div class="p-4 bg-rose-50 border-2 border-rose-200 rounded-2xl text-center space-y-1">
+                    <i class="fa-solid fa-user-xmark text-2xl text-rose-500"></i>
+                    <div class="font-black text-rose-900 text-sm">تم تحديد أن المتقدم لم يحضر المقابلة الشخصية</div>
+                    <div class="text-xs font-bold text-rose-700">يمكنك تحديد القرار النهائي بالأسفل ثم الضغط على حفظ مباشرة.</div>
+                </div>
+            `}
+
+            <!-- 3. القرار النهائي -->
+            <div class="bg-slate-900/5 rounded-2xl border-2 border-slate-300 p-4 space-y-3">
+                <div class="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-gavel text-purple-700"></i>
+                    <span>القرار النهائي (الخلاصة بعد انتهاء المقابلة):</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    ${decisionsHtml}
+                </div>
+                <label class="flex items-center gap-2 pt-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input type="checkbox" id="ie-modal-auto-status" checked class="w-4 h-4 rounded text-indigo-600">
+                    <span>تحديث تصنيف المتقدم تلقائياً عند الحفظ (مقبولة ← قبول | مرفوضة ← رفض | احتياطي ← يبقى في انترفيو)</span>
+                </label>
+            </div>
+        </div>
+    `;
+}
+
+function saveApplicantInterviewEvaluationData(origIdx, evalObj, autoSyncStatus) {
+    const app = (window._applicationsCache || [])[origIdx];
+    if (!app) return;
+
+    app.interviewEval = evalObj;
+    const meta = getApplicantMeta(app);
+    meta.interviewEval = evalObj;
+
+    let newStatus = normalizeJobStatusAdmin(app.status || 'معلق');
+    if (autoSyncStatus) {
+        if (evalObj.finalDecision === 'accepted') newStatus = 'قبول';
+        else if (evalObj.finalDecision === 'rejected') newStatus = 'رفض';
+        else if (evalObj.finalDecision === 'waitlist') newStatus = 'انترفيو';
+        app.status = newStatus;
+    }
+
+    saveApplicantMeta(app);
+    invalidateApplicationsFastCache();
+    renderInterviewEvaluationsTab();
+    renderJobsAnalytics();
+    renderPortalAccessControlTable();
+
+    const url = (config.booking && config.booking.scriptURL) || '';
+    if (url && app.__rowIndex) {
+        const fd = new FormData();
+        fd.append('action', 'updateApplicationMeta');
+        fd.append('adminKey', getAuthKey());
+        fd.append('rowIndex', app.__rowIndex);
+        fd.append('status', newStatus);
+        fd.append('interviewEval', JSON.stringify(evalObj));
+        fetch(url, { method: 'POST', body: fd })
+            .then(() => showToast('تم حفظ تقييم المقابلة الشخصية بنجاح ✓'))
+            .catch(() => showToast('تم الحفظ محلياً وتعذر التزامن مع الشيت', 'warn'));
+    } else {
+        showToast('تم حفظ تقييم المقابلة محلياً ✓');
+    }
+}
+
+// ─── نافذة تعديل وإدارة أسئلة ودرجات شيت تقييم المقابلة ───
+function openInterviewEvalQuestionsBuilderModal() {
+    const questions = JSON.parse(JSON.stringify(getInterviewEvalQuestions()));
+    window._tempInterviewEvalQuestions = questions;
+
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const saveBtn = document.getElementById('modal-save-btn');
+
+    title.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-purple-600"></i> إعداد أسئلة ودرجات تقييم المقابلة الشخصية</span>`;
+    saveBtn.classList.remove('hidden');
+    saveBtn.style.display = 'flex';
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> حفظ أسئلة التقييم';
+
+    renderInterviewEvalQuestionsBuilderBody();
+
+    saveBtn.onclick = function() {
+        syncTempInterviewEvalQuestionsFromInputs();
+        const intCfg = getInterviewSettingsObj();
+        intCfg.evalQuestions = window._tempInterviewEvalQuestions;
+        saveInterviewSettings();
+        closeModal();
+        renderInterviewEvaluationsTab();
+    };
+
+    overlay.classList.add('active');
+}
+
+function syncTempInterviewEvalQuestionsFromInputs() {
+    const list = window._tempInterviewEvalQuestions || [];
+    list.forEach(function(q, qIdx) {
+        const tEl = document.getElementById(`ieq-title-${qIdx}`);
+        if (tEl) q.title = tEl.value.trim();
+        (q.options || []).forEach(function(opt, oIdx) {
+            const lEl = document.getElementById(`ieq-opt-label-${qIdx}-${oIdx}`);
+            const dEl = document.getElementById(`ieq-opt-desc-${qIdx}-${oIdx}`);
+            const pEl = document.getElementById(`ieq-opt-pts-${qIdx}-${oIdx}`);
+            if (lEl) opt.label = lEl.value.trim();
+            if (dEl) opt.desc = dEl.value.trim();
+            if (pEl) opt.points = parseFloat(pEl.value) || 0;
+        });
+    });
+}
+
+function addNewInterviewEvalQuestion() {
+    syncTempInterviewEvalQuestionsFromInputs();
+    const list = window._tempInterviewEvalQuestions || [];
+    const nextNum = list.length + 1;
+    list.push({
+        id: 'ie_q_' + Date.now(),
+        title: `${nextNum}. سؤال تقييم جديد:`,
+        options: [
+            { id: 'opt_1', label: 'ممتازة', desc: '', points: 4, tone: 'emerald' },
+            { id: 'opt_2', label: 'مقبولة', desc: '', points: 2, tone: 'amber' },
+            { id: 'opt_3', label: 'ضعيفة', desc: '', points: 0, tone: 'rose' }
+        ]
+    });
+    renderInterviewEvalQuestionsBuilderBody();
+}
+
+function removeInterviewEvalQuestion(qIdx) {
+    syncTempInterviewEvalQuestionsFromInputs();
+    window._tempInterviewEvalQuestions.splice(qIdx, 1);
+    renderInterviewEvalQuestionsBuilderBody();
+}
+
+function resetInterviewEvalQuestionsToDefault() {
+    window._tempInterviewEvalQuestions = JSON.parse(JSON.stringify(getDefaultInterviewEvalQuestions()));
+    renderInterviewEvalQuestionsBuilderBody();
+}
+
+function renderInterviewEvalQuestionsBuilderBody() {
+    const body = document.getElementById('modal-body');
+    if (!body) return;
+    const list = window._tempInterviewEvalQuestions || [];
+
+    body.innerHTML = `
+        <div class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-purple-50 p-3 rounded-2xl border border-purple-200">
+                <div class="text-xs font-bold text-purple-900">يمكنك تعديل نص أي سؤال أو اختياراته أو الدرجة المخصصة لكل اختيار:</div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="resetInterviewEvalQuestionsToDefault()" class="px-2.5 py-1.5 rounded-xl bg-white text-slate-700 border border-slate-300 text-xs font-black hover:bg-slate-100 cursor-pointer">استعادة الافتراضي</button>
+                    <button type="button" onclick="addNewInterviewEvalQuestion()" class="px-3 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-black hover:bg-purple-700 cursor-pointer">+ إضافة سؤال</button>
+                </div>
+            </div>
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                ${list.map(function(q, qIdx) {
+                    return `<div class="p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <input type="text" id="ieq-title-${qIdx}" value="${esc(q.title)}" class="field-input text-xs font-black flex-1" placeholder="عنوان السؤال">
+                            <button type="button" onclick="removeInterviewEvalQuestion(${qIdx})" class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="space-y-2">
+                            ${(q.options || []).map(function(opt, oIdx) {
+                                return `<div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-xl border border-slate-200">
+                                    <div class="col-span-3">
+                                        <input type="text" id="ieq-opt-label-${qIdx}-${oIdx}" value="${esc(opt.label)}" class="field-input text-xs font-black" placeholder="الاختيار">
+                                    </div>
+                                    <div class="col-span-7">
+                                        <input type="text" id="ieq-opt-desc-${qIdx}-${oIdx}" value="${esc(opt.desc || '')}" class="field-input text-xs font-bold" placeholder="التوضيح بين قوسين">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <input type="number" id="ieq-opt-pts-${qIdx}-${oIdx}" value="${opt.points}" class="field-input text-xs font-black text-center text-indigo-700" placeholder="الدرجة">
+                                    </div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function renderJobExamsAdminList() {
