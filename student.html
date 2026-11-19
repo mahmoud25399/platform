@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -18,7 +17,7 @@
       var isWebView = /(WebView|wv|Android.*Version\/[0-9].[0-9])/i.test(navigator.userAgent) && !/Chrome\/[0-9]+/i.test(navigator.userAgent);
       var isAppParam = window.location.search.includes('app=apk');
       if (isStandalone || isWebView || isAppParam) {
-        window.location.replace('تطبيق قديم/index.html');
+        window.location.replace('app.html');
       }
     })();
   
@@ -740,11 +739,11 @@
 <!-- Premium Design Overlay v2.0 - Matching Admin Platform -->
 <style>
 :root {
-  --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
-  --primary-glow: rgba(99, 102, 241, 0.3);
-  --secondary-glow: rgba(6, 182, 212, 0.3);
-  --secondary: #06b6d4;
-  --bg-body: #f0f2f5; --surface: #ffffff; --surface-hover: #f8fafc;
+  --primary: #2563eb; --primary-dark: #1e40af; --primary-light: #60a5fa;
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --secondary-glow: rgba(16, 185, 129, 0.25);
+  --secondary: #10b981;
+  --bg-body: #f8fafc; --surface: #ffffff; --surface-hover: #f1f5f9;
   --text-muted: #94a3b8;
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
   --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -758,7 +757,7 @@
   --shadow-glow: 0 0 40px rgba(99,102,241,0.2);
 }
 body {
-  font-family: 'Tajawal', sans-serif !important;
+  font-family: 'Cairo', 'Tajawal', sans-serif !important;
   background: var(--bg-body) !important;
   position: relative; overflow-x: hidden;
   transition: background 0.4s, color 0.4s;
@@ -997,6 +996,125 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 .social-fab.youtube { background: #ff0000; }
 .social-fab.whatsapp { background: #25d366; }
 .social-fab.default { background: var(--primary); }
+
+/* === FULL HIGH-CONTRAST DARK MODE FIX FOR STUDENT PLATFORM === */
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .dashboard-layout {
+    background: #0f172a !important;
+    color: #f1f5f9 !important;
+}
+[data-theme="dark"] .welcome-section,
+[data-theme="dark"] .content-area,
+[data-theme="dark"] .leaderboard-section,
+[data-theme="dark"] .rank-card,
+[data-theme="dark"] .my-rank-display,
+[data-theme="dark"] .task-card,
+[data-theme="dark"] .library-card,
+[data-theme="dark"] .lesson-item,
+[data-theme="dark"] .archive-card,
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .stats-strip,
+[data-theme="dark"] .stats-container,
+[data-theme="dark"] .faq-section,
+[data-theme="dark"] .landing-page {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+[data-theme="dark"] .task-meta,
+[data-theme="dark"] .lib-icon,
+[data-theme="dark"] .task-icon,
+[data-theme="dark"] .notification-header,
+[data-theme="dark"] .step-item,
+[data-theme="dark"] .rank-badge-large,
+[data-theme="dark"] .features-section {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+[data-theme="dark"] .nav-link {
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] .nav-link:hover {
+    background: rgba(59, 130, 246, 0.14) !important;
+    color: #93c5fd !important;
+}
+[data-theme="dark"] .nav-link.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .logo h1,
+[data-theme="dark"] .welcome-title,
+[data-theme="dark"] .content-title,
+[data-theme="dark"] .leaderboard-title,
+[data-theme="dark"] .task-title,
+[data-theme="dark"] .lib-title,
+[data-theme="dark"] .rank-name,
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] .faq-question,
+[data-theme="dark"] .hero-title,
+[data-theme="dark"] .section-header h2,
+[data-theme="dark"] .feature-card h3 {
+    color: #f8fafc !important;
+}
+[data-theme="dark"] .motivational-message,
+[data-theme="dark"] .task-meta,
+[data-theme="dark"] .stat-title,
+[data-theme="dark"] .rank-score,
+[data-theme="dark"] .faq-answer,
+[data-theme="dark"] .hero-subtitle {
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .content-header {
+    border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .notification-item {
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+[data-theme="dark"] .notification-item:hover {
+    background: #334155 !important;
+}
+[data-theme="dark"] .unread-notification {
+    background: rgba(16, 185, 129, 0.12) !important;
+}
+[data-theme="dark"] #customJsonExamModal .modal-content,
+[data-theme="dark"] #customExamBody,
+[data-theme="dark"] #customExamReviewScreen,
+[data-theme="dark"] #customExamFooter {
+    background: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] #customExamContextArea,
+[data-theme="dark"] #customExamQuestionArea {
+    background: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] #customExamSectionTitle,
+[data-theme="dark"] #customExamQuestionText {
+    color: #93c5fd !important;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] div[style*="background:#fff"],
+[data-theme="dark"] div[style*="background: #fff"],
+[data-theme="dark"] div[style*="background: white"],
+[data-theme="dark"] div[style*="background:white"],
+[data-theme="dark"] div[style*="background:#f8fafc"],
+[data-theme="dark"] div[style*="background: #f8fafc"] {
+    background: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+[data-theme="dark"] input[readonly] {
+    background: #0f172a !important;
+    color: #cbd5e1 !important;
+}
+
 </style>
 <script>
     // ==========================================================
@@ -1043,7 +1161,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             } catch(e){}
 
             const sendPayload = (loc) => {
-                const payload = { deviceType, platform, browser: browserInfo, location: loc || locationStr };
+                const payload = { deviceType, platform, browser: browserInfo, location: loc || locationStr, deviceId: typeof getDeviceId === 'function' ? getDeviceId() : '', deviceName: browserInfo };
                 if (window.google && google.script && google.script.run) {
                     google.script.run.recordStudentSessionGS(studentCode, payload);
                 } else if (typeof runGS === 'function') {
@@ -1084,7 +1202,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       </div>
 
       <div class="nav-buttons">
-        <button class="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع الليلي"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" data-no-lock="true" title="تبديل الوضع الليلي"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
         <button id="installAppBtn" class="btn">
           <i class="fas fa-download"></i> <span>تثبيت التطبيق</span>
         </button>
@@ -1260,6 +1378,12 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             <button class="nav-link" data-section="recitations">
               <i class="fas fa-microphone-alt"></i>
               <span>التسميع</span>
+            </button>
+          </div>
+          <div class="nav-item">
+            <button class="nav-link" data-section="games">
+              <i class="fas fa-gamepad"></i>
+              <span>العب وتعلّم</span>
             </button>
           </div>
           <div class="nav-item">
@@ -1738,7 +1862,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
     // ═══════ GLOBAL ERROR DIAGNOSTICS ═══════
     window.onerror = function(message, source, lineno, colno, error) {
         if (message.indexOf('Script error') > -1 && lineno === 0) return true; // تجاهل أخطاء يوتيوب الخارجية
-        const errText = `خطأ برميجي: ${message}\nالملف: ${source}\nالسطر: ${lineno}:${colno}`;
+        const errText = `خطأ برمجي: ${message}\nالملف: ${source}\nالسطر: ${lineno}:${colno}`;
         console.error(errText, error);
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -1782,7 +1906,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 btn.id === 'socialToggle' || 
                 btn.id === 'mobileMenuToggle' || 
                 btn.classList.contains('mobileMenuToggle') ||
-                btn.getAttribute('data-no-lock') === 'true') {
+                btn.classList.contains('theme-toggle-btn') || btn.getAttribute('data-no-lock') === 'true') {
                 return;
             }
             if (btn.dataset.busy === '1') {
@@ -1799,7 +1923,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 btn.id === 'socialToggle' || 
                 btn.id === 'mobileMenuToggle' || 
                 btn.classList.contains('mobileMenuToggle') ||
-                btn.getAttribute('data-no-lock') === 'true') {
+                btn.classList.contains('theme-toggle-btn') || btn.getAttribute('data-no-lock') === 'true') {
                 return;
             }
             const count = (parseInt(btn.dataset.busyCount || '0', 10)) + 1;
@@ -2123,7 +2247,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       
       document.body.classList.add('dashboard-mode');
       document.getElementById('welcomeName').textContent = currentUser.name;
-      document.getElementById('motivationalMessage').textContent = getRandomMotivation();
+      document.getElementById('motivationalMessage').textContent = (typeof getRandomMotivation === 'function' ? getRandomMotivation() : 'بالتوفيق يا بطل!');
       
       applyPlatformSettings();
       
@@ -2311,6 +2435,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
              };
              localStorage.setItem('studentSession', JSON.stringify(currentUser));
              saveAccountToList(currentUser);
+             collectAndSendStudentSession(pwd);
              loginModal.style.display = 'none';
              document.getElementById('passwordInput').value = '';
              if (window.pendingRedirect) {
@@ -2322,7 +2447,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                   window.location.hash = '/dashboard';
                   handleHashRouting();
               }
-             showNotify('success', `مرحباً بك يا بطل: ${res.name}`);
+             showNotify('success', `مرحباً بك يا بطل: ${String(res.name || '').replace(/\s*[\(（]\s*\d+\s*[\)）]\s*/g, '').trim()}`);
            } else { showNotify('error', res.message); }
         })
         .withFailureHandler((err) => {
@@ -2345,6 +2470,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         'homework': 'assignments',
         'recitation': 'recitations',
         'exams': 'exams',
+               'games': 'games',
         'library': 'library',
         'profile': 'dashboard'
       };
@@ -2388,6 +2514,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                'assignments': 'homework',
                'recitations': 'recitation',
                'exams': 'exams',
+               'games': 'games',
                'lessons': 'playlist',
                'champions': 'champions',
                'library': 'library',
@@ -2403,15 +2530,17 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
        const titles = {
           schedule: 'جدول الحصص الأسبوعي',
          dashboard: 'لوحة التحكم', library: 'المكتبة (بنك الملفات)', assignments: 'الواجبات',
-         recitations: 'التسميع', exams: 'الاختبارات والامتحانات', lessons: 'الحصص المسجلة', reports: 'الالتقارير الأسبوعية',
-         champions: 'دوري الأبطال'
+         recitations: 'التسميع', exams: 'الاختبارات والامتحانات', lessons: 'الحصص المسجلة', reports: 'التقارير الأسبوعية',
+         champions: 'دوري الأبطال',
+         games: 'العب وتعلّم'
        };
        document.getElementById('contentTitle').textContent = titles[section] || section;
        
        // إضاءة أيقونة شريط التطبيق السفلي المتوافقة
        const bottomKeyMap = {
          'dashboard': 'dashboard-home', 'assignments': 'homework', 'recitations': 'recitation',
-         'exams': 'exams', 'library': 'library'
+         'exams': 'exams',
+               'games': 'games', 'library': 'library'
        };
        const bKey = bottomKeyMap[section] || 'dashboard-home';
        
@@ -2421,7 +2550,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
          mainContentArea.style.display = 'none';
          setTimeout(() => {
              const motiWeb = document.getElementById('motivationalMessage');
-             if (motiWeb) motiWeb.textContent = getRandomMotivation();
+             if (motiWeb) motiWeb.textContent = (typeof getRandomMotivation === 'function' ? getRandomMotivation() : 'بالتوفيق يا بطل!');
          }, 50);
          const motiWeb = document.getElementById('motivationalMessage');
          loadDashboardStats();
@@ -2448,6 +2577,17 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
           
          else if(section === 'library') loadLibrary();
          else if(section === 'reports') loadReports();
+         else if(section === 'games') {
+             if(window.ElheliheyGames) {
+                 window.ElheliheyGames.mount('contentBody', function(act, pl) {
+                     return fetch(window.GAS_API_URL, {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                         body: JSON.stringify(Object.assign({ action: act, password: currentUser.password }, pl || {}))
+                     }).then(function(r) { return r.json(); });
+                 });
+             }
+         }
          else if(section === 'champions') loadChampionsLeague();
          else if(section === 'schedule') loadSchedule();
          else {
@@ -2460,7 +2600,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                displayTable(data);
                // حفظ في الكاش الفوري
                window.studentDataCache[section] = contentBody.innerHTML;
-             }).getStudentSpecificData(currentUser.password, type);
+             }).withFailureHandler(function(err){ if(contentBody) contentBody.innerHTML = "<div style=\x27text-align:center;padding:2rem;color:#ef4444;font-weight:bold;\x27>تعذر تحميل البيانات: " + (err && err.message ? err.message : err) + "</div>"; }).getStudentSpecificData(currentUser.password, type);
          }
        }
     }
@@ -2472,7 +2612,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       }
       
       const targetSection = hash.replace(/^#\/?/, '');
-      const validSections = ['dashboard', 'assignments', 'recitations', 'exams', 'lessons', 'champions', 'library', 'reports', 'schedule'];
+      const validSections = ['dashboard', 'assignments', 'recitations', 'exams', 'games', 'lessons', 'champions', 'library', 'reports', 'schedule'];
       if (!validSections.includes(targetSection)) {
         window.location.hash = '#/dashboard';
         return;
@@ -2494,7 +2634,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         if (menuBtn) menuBtn.style.removeProperty('display');
         document.body.classList.add('dashboard-mode');
         document.getElementById('welcomeName').textContent = currentUser.name;
-        document.getElementById('motivationalMessage').textContent = getRandomMotivation();
+        document.getElementById('motivationalMessage').textContent = (typeof getRandomMotivation === 'function' ? getRandomMotivation() : 'بالتوفيق يا بطل!');
         
         applyPlatformSettings();
         checkNewNotifications(); 
@@ -2575,6 +2715,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       };
 
       setDisplay('button[data-section="assignments"]', sec.homework !== false);
+      setDisplay('button[data-section="games"]', sec.games !== false);
       setDisplay('#assignmentStatCard', sec.homework !== false);
 
       setDisplay('button[data-section="recitations"]', sec.recitation !== false);
@@ -2597,17 +2738,24 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
           if (navContainer) {
               const secToData = {
                   'playlist': 'lessons', 'homework': 'assignments', 'recitation': 'recitations',
-                  'exams': 'exams', 'champions': 'champions', 'library': 'library',
+                  'exams': 'exams',
+               'games': 'games', 'champions': 'champions', 'library': 'library',
                   'reports': 'reports', 'leaderboard': 'leaderboard',
                   'schedule': 'schedule', 'accounts': 'accounts'
               };
-              sec.sectionOrder.forEach(key => {
+              const fullOrder = sec.sectionOrder.slice();
+              ['playlist', 'homework', 'recitation', 'exams', 'games', 'champions', 'library', 'reports', 'leaderboard', 'schedule', 'accounts'].forEach(k => {
+                  if (!fullOrder.includes(k)) fullOrder.push(k);
+              });
+              const bottomKeyMap = { 'playlist': 'lessons', 'homework': 'assignments', 'recitation': 'recitations', 'exams': 'exams', 'library': 'library', 'games': 'games' };
+              fullOrder.forEach(key => {
                   const dataSec = secToData[key] || key;
                   const btn = navContainer.querySelector('button[data-section="' + dataSec + '"]');
                   if (btn && btn.parentElement) navContainer.appendChild(btn.parentElement);
                   const bottomContainer = document.querySelector('.bottom-app-bar');
                   if (bottomContainer) {
-                      const bottomBtn = bottomContainer.querySelector('a[data-bottom-section="' + dataSec + '"]');
+                      const bSec = bottomKeyMap[key] || dataSec;
+                      const bottomBtn = bottomContainer.querySelector('a[data-bottom-section="' + bSec + '"]');
                       if (bottomBtn) bottomContainer.appendChild(bottomBtn);
                   }
               });
@@ -2618,6 +2766,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
           'assignments': 'homework',
           'recitations': 'recitation',
           'exams': 'exams',
+               'games': 'games',
           'lessons': 'playlist',
           'champions': 'champions',
           'library': 'library',
@@ -3140,7 +3289,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                      if (row.pages && (String(row.pages).startsWith('http://') || String(row.pages).startsWith('https://'))) {
                          gradeDisplay = '<a href="' + row.pages + '" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline;"><i class="fas fa-file-download"></i> ملف الواجب</a>';
                      } else {
-                         gradeDisplay = 'صـ: ' + row.pages;
+                         gradeDisplay = row.pages;
                      }
                      statusLabel = 'المطلوب حله:';
                 } else {
@@ -3151,7 +3300,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 if (row.grade && row.grade !== "") {
                     isCompleted = true; gradeDisplay = row.grade; statusLabel = 'درجة التسميع:';
                 } else if (row.pages && row.pages !== "") {
-                    isCompleted = false; gradeDisplay = 'صـ: ' + row.pages; statusLabel = 'المطلوب تسميعه:';
+                    isCompleted = false; gradeDisplay = row.pages; statusLabel = 'المطلوب تسميعه:';
                 } else {
                     isCompleted = false; gradeDisplay = 'في الانتظار'; statusLabel = 'المطلوب تسميعه:';
                 }
@@ -3176,7 +3325,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
                 if (deadlineStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const todayStr = new Date().toISOString().split('T')[0];
-                    if (!isCompleted && deadlineStr <= todayStr) {
+                    if (!isCompleted && deadlineStr < todayStr) {
                         isExpired = true;
                     }
                     
@@ -3212,10 +3361,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 html += `<div class="task-meta-item"><span><i class="far fa-calendar-alt" style="color:var(--primary);"></i> تاريخ التسجيل:</span> <span style="font-weight:bold; color:var(--dark);">${row.date}</span></div>`;
             }
             
-            if (finalDeadlineStr) {
-                let expiryColor = isExpired ? 'var(--danger)' : 'var(--dark)';
-                html += `<div class="task-meta-item"><span><i class="fas fa-hourglass-end" style="color:var(--danger);"></i> تاريخ الانتهاء:</span> <span style="font-weight:bold; color:${expiryColor};">${finalDeadlineStr}</span></div>`;
-            }
+
 
             const badgeClass = isCompleted ? 'task-grade-badge' : 'task-grade-badge none';
             html += `<div class="task-meta-item"><span>${statusLabel}</span> <span class="${badgeClass}">${gradeDisplay}</span></div>`;
@@ -3286,8 +3432,10 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 if(isCompleted) {
                     // لو JSON وليه إجابات محفوظة في الملاحظات، نعرض مشاهدة التصحيح
                     if (isJsonExam && row.notes && row.notes.startsWith('[')) {
-                        const safeNotes = row.notes.replace(/'/g, "\\'");
-                        html += `<button class="btn" style="background:var(--secondary); color:white; width:100%; justify-content:center;" onclick="openExamCorrection('${examLink}', '${examTitle}', '${safeNotes}')"><i class="fas fa-eye"></i> مشاهدة التصحيح</button>`;
+                        window._examNotesStore = window._examNotesStore || {};
+                        const _nKey = 'n_' + Math.random().toString(36).slice(2);
+                        window._examNotesStore[_nKey] = row.notes;
+                        html += `<button class="btn" style="background:var(--secondary); color:white; width:100%; justify-content:center;" onclick="openExamCorrection('${examLink}', '${examTitle}', window._examNotesStore['${_nKey}'])"><i class="fas fa-eye"></i> مشاهدة التصحيح</button>`;
                     } else {
                         html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم الحل (${gradeDisplay})</button>`;
                     }
@@ -3334,7 +3482,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       const l = currentLessonsData[i];
       // تنظيف الاسم من أي قوسين قبل العرض
       const cleanName = currentUser && currentUser.name ? currentUser.name.replace(/\s*\(.*?\)\s*/g, '').trim() : '';
-      const studentLabel = currentUser ? `${cleanName} ${currentUser.password}`.trim() : 'محمي بحقوق الملكية';
+      const studentLabel = currentUser ? (cleanName || 'محمي بحقوق الملكية') : 'محمي بحقوق الملكية';
       
       const wmStyle = "pointer-events:none; z-index:10; color:rgba(255,255,255,0.95)!important; text-shadow:0 1px 4px #000; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:6px;";
       
@@ -3703,32 +3851,8 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         }).saveIkhtibaratGradeCustom(studentCode, examTitle, grade);
     };
 
-    function openExam(link, title) {
-        // لو رابط الاختبار JSON تفاعلي تبع النظام الجديد
-        if (link.includes('type=json') || (link.includes('drive.google.com') && (link.includes('ExamJSON_') || link.includes('.json')))) {
-            startCustomJsonExam(link, title, null); // null يعني امتحان جديد (بدون تصحيح)
-            return;
-        }
+    // (openExam موحدة بالأسفل)
 
-        // لو رابط خارجي عادي أو فورم
-        document.getElementById('examModalTitle').innerText = title;
-        const modal = document.getElementById('examModal');
-        const iframe = document.getElementById('examFrame');
-        const loader = document.getElementById('examLoading');
-        
-        modal.style.display = 'flex';
-        loader.style.display = 'block';
-        iframe.style.display = 'none';
-        iframe.src = '';
-        iframe.removeAttribute('srcdoc');
-        
-        let embedLink = link;
-        if(link.includes('viewform') && !link.includes('embedded=true')) {
-            embedLink = link + (link.includes('?') ? '&' : '?') + 'embedded=true';
-        }
-        iframe.src = embedLink;
-        iframe.onload = () => { loader.style.display = 'none'; iframe.style.display = 'block'; };
-    }
 
     // لفتح وضع مشاهدة التصحيح
     window.openExamCorrection = function(link, title, answersStr) {
@@ -4339,6 +4463,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
     function startStatusMonitoring() {
         if (statusCheckInterval) clearInterval(statusCheckInterval);
+        if (currentUser) verifyAccountStatus(true);
         statusCheckInterval = setInterval(() => { if (currentUser) verifyAccountStatus(false); }, 7000); 
 
         if (realTimeInterval) clearInterval(realTimeInterval);
@@ -4549,7 +4674,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                             sections: res.sections || {}, readNotis: res.readNotis || []
                         };
                         saveAccountToList(newAcc);
-                        Swal.fire('تم بنجاح', 'تمت إضافة حساب ' + res.name + '، يمكنك الآن التبديل إليه.', 'success');
+                        Swal.fire('تم بنجاح', 'تمت إضافة حساب ' + String(res.name || '').replace(/\s*[\(（]\s*\d+\s*[\)）]\s*/g, '').trim() + '، يمكنك الآن التبديل إليه.', 'success');
                     }
                     renderAccountsModalBody();
                 } else {
@@ -4749,6 +4874,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             const savedSession = localStorage.getItem('studentSession');
             if (savedSession) {
                 currentUser = JSON.parse(savedSession);
+                if (currentUser && currentUser.password) collectAndSendStudentSession(currentUser.password);
                 handleHashRouting();
             } else {
                 handleHashRouting();
@@ -5403,13 +5529,278 @@ function getRandomMotivation() {
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
         const msgApp = document.getElementById('motivationalMsg');
-        if (msgApp) msgApp.textContent = getRandomMotivation();
+        if (msgApp) msgApp.textContent = (typeof getRandomMotivation === 'function' ? getRandomMotivation() : 'بالتوفيق يا بطل!');
         
         const msgWeb = document.getElementById('motivationalMessage');
-        if (msgWeb) msgWeb.textContent = getRandomMotivation();
+        if (msgWeb) msgWeb.textContent = (typeof getRandomMotivation === 'function' ? getRandomMotivation() : 'بالتوفيق يا بطل!');
     }
 });
 
 </script>
+<script>
+
+        // ==============================================================
+        // UNIFIED EXAM ENGINE (MCQ, True/False, Essay, Correction, Matching)
+        // ==============================================================
+        function getFriendlyDeviceName() {
+            const ua = navigator.userAgent || "";
+            let br = "متصفح";
+            if (ua.includes("Edg/")) br = "Edge";
+            else if (ua.includes("Chrome/")) br = "Chrome";
+            else if (ua.includes("Firefox/")) br = "Firefox";
+            else if (ua.includes("Safari/") && !ua.includes("Chrome")) br = "Safari";
+            let os = "جهاز";
+            if (ua.includes("Android")) os = "Android";
+            else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+            else if (ua.includes("Windows")) os = "Windows";
+            else if (ua.includes("Mac OS")) os = "macOS";
+            const isApk = !!document.getElementById('loginScreen');
+            return isApk ? ("تطبيق أندرويد (" + os + ")") : (br + " (" + os + ")");
+        }
+
+        function normalizeArAnswer(str) {
+            return String(str || '').trim().replace(/[\u064B-\u065F\u0670]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ');
+        }
+
+        function isQuestionCorrect(q, ans) {
+            if (ans === null || ans === undefined || ans === '') return false;
+            const qt = q.question_type || 'mcq';
+            if (qt === 'mcq' || qt === 'true_false') {
+                return Number(ans) === Number(q.correctIndex);
+            }
+            if (qt === 'correction') {
+                return normalizeArAnswer(ans) === normalizeArAnswer(q.correctAnswer);
+            }
+            if (qt === 'matching' && Array.isArray(q.pairs)) {
+                if (!Array.isArray(ans) || ans.length !== q.pairs.length) return false;
+                return q.pairs.every((p, i) => normalizeArAnswer(ans[i]) === normalizeArAnswer(p.right));
+            }
+            if (qt === 'essay') {
+                return q.modelAnswer ? (normalizeArAnswer(ans) === normalizeArAnswer(q.modelAnswer)) : true;
+            }
+            return false;
+        }
+
+        function isQuestionAnswered(q, ans) {
+            if (ans === null || ans === undefined) return false;
+            const qt = q.question_type || 'mcq';
+            if (qt === 'essay' || qt === 'correction') return String(ans).trim() !== '';
+            if (qt === 'matching' && Array.isArray(q.pairs)) {
+                return Array.isArray(ans) && ans.length === q.pairs.length && ans.every(v => v && String(v).trim() !== '');
+            }
+            return true;
+        }
+
+        window.renderExamSlide = function() {
+            document.getElementById('customExamReviewScreen').style.display = 'none';
+            document.getElementById('customExamBody').style.display = 'flex';
+
+            const slide = flatExamQuestions[currentSlideIndex];
+            const progressPct = ((currentSlideIndex + 1) / flatExamQuestions.length) * 100;
+            document.getElementById('customExamProgressBar').style.width = progressPct + '%';
+            document.getElementById('customExamProgressText').innerText = currentExamMode === 'correction'
+                ? `المراجعة: السؤال ${currentSlideIndex + 1} من ${flatExamQuestions.length}`
+                : `السؤال ${currentSlideIndex + 1} من ${flatExamQuestions.length}`;
+
+            const progBar = document.getElementById('customExamProgressBar');
+            progBar.style.background = currentExamMode === 'correction' ? '#10b981' : '#fbbf24';
+
+            document.getElementById('customExamSectionTitle').innerText = slide.sectionTitle || 'الأسئلة';
+
+            const contextArea = document.getElementById('customExamContextArea');
+            if (slide.contextType === 'paragraph' && slide.contextText) {
+                contextArea.style.display = 'block'; contextArea.innerText = slide.contextText;
+            } else if (slide.contextType === 'poetry' && slide.verses) {
+                contextArea.style.display = 'block';
+                contextArea.innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">` +
+                    slide.verses.map(v => `<div style="display:flex; justify-content:space-between;"><span>${v.part1}</span><span>${v.part2}</span></div>`).join('') + `</div>`;
+            } else {
+                contextArea.style.display = 'none';
+            }
+
+            const q = slide.question;
+            const qt = q.question_type || 'mcq';
+            const curAns = studentExamAnswers[currentSlideIndex];
+            const optionsContainer = document.getElementById('customExamOptionsContainer');
+            document.getElementById('customExamQuestionText').innerText = `س${currentSlideIndex + 1}: ${q.text}`;
+
+            if (qt === 'mcq' || qt === 'true_false') {
+                const opts = q.options || (qt === 'true_false' ? ['صح', 'خطأ'] : []);
+                optionsContainer.style.display = 'grid';
+                optionsContainer.innerHTML = opts.map((opt, idx) => {
+                    const isSelected = curAns !== null && curAns !== undefined && Number(curAns) === Number(idx);
+                    const isCorrect = Number(q.correctIndex) === Number(idx);
+                    let bgStyle = "background: #f8fafc; border-color: #cbd5e1; color: #334155;";
+                    let iconHtml = '<i class="far fa-circle" style="color: #94a3b8;"></i>';
+                    const cursorStyle = currentExamMode === 'exam' ? 'cursor:pointer;' : 'cursor:default;';
+                    if (currentExamMode === 'correction') {
+                        if (isCorrect) { bgStyle = "background: #d1fae5; border-color: #10b981; color: #065f46; font-weight: bold;"; iconHtml = '<i class="fas fa-check-circle" style="color: #10b981;"></i>'; }
+                        else if (isSelected && !isCorrect) { bgStyle = "background: #fee2e2; border-color: #ef4444; color: #991b1b;"; iconHtml = '<i class="fas fa-times-circle" style="color: #ef4444;"></i>'; }
+                    } else if (isSelected) {
+                        bgStyle = "background: #eff6ff; border-color: #2563eb; color: #1e40af; font-weight: bold;";
+                        iconHtml = '<i class="fas fa-dot-circle" style="color: #2563eb;"></i>';
+                    }
+                    return `<div onclick="selectExamOption(${idx})" style="padding: 14px; border: 2px solid; border-radius: 10px; display: flex; align-items: center; gap: 10px; ${cursorStyle} ${bgStyle}"><span style="font-size:1.1rem;">${iconHtml}</span><span>${opt}</span></div>`;
+                }).join('');
+            } else if (qt === 'essay') {
+                optionsContainer.style.display = 'block';
+                const val = curAns || '';
+                optionsContainer.innerHTML = `<textarea id="examEssayInput" ${currentExamMode === 'correction' ? 'readonly' : ''} oninput="saveTextExamAnswer(this.value)" rows="4" style="width:100%; padding:12px; border:2px solid #cbd5e1; border-radius:10px; font-family:inherit;" placeholder="اكتب إجابتك هنا...">${val}</textarea>` +
+                    (currentExamMode === 'correction' && q.modelAnswer ? `<div style="margin-top:10px; padding:10px; background:#d1fae5; border-radius:8px; color:#065f46; font-weight:bold;">الإجابة النموذجية: ${q.modelAnswer}</div>` : '');
+            } else if (qt === 'correction') {
+                optionsContainer.style.display = 'block';
+                const val = curAns || '';
+                const wrongHint = q.wrongPart ? `<div style="margin-bottom:8px; font-size:0.9rem; color:#dc2626; font-weight:bold;">اضغط أو صوّب الجزء الخطأ: (${q.wrongPart})</div>` : '';
+                const isOk = currentExamMode === 'correction' && isQuestionCorrect(q, curAns);
+                optionsContainer.innerHTML = `${wrongHint}<input type="text" id="examCorrectionInput" ${currentExamMode === 'correction' ? 'readonly' : ''} oninput="saveTextExamAnswer(this.value)" value="${String(val).replace(/"/g, '&quot;')}" style="width:100%; padding:12px; border:2px solid ${currentExamMode === 'correction' ? (isOk ? '#10b981' : '#ef4444') : '#2563eb'}; border-radius:10px; font-weight:bold;" placeholder="اكتب التصويب الصحيح هنا...">` +
+                    (currentExamMode === 'correction' ? `<div style="margin-top:10px; padding:10px; background:#d1fae5; border-radius:8px; color:#065f46; font-weight:bold;">التصويب الصحيح: ${q.correctAnswer}</div>` : '');
+            } else if (qt === 'matching' && Array.isArray(q.pairs)) {
+                optionsContainer.style.display = 'block';
+                const rightOptions = q.pairs.map(p => p.right);
+                const ansArr = Array.isArray(curAns) ? curAns : new Array(q.pairs.length).fill('');
+                optionsContainer.innerHTML = q.pairs.map((p, pIdx) => {
+                    const chosen = ansArr[pIdx] || '';
+                    const isPairOk = currentExamMode === 'correction' && normalizeArAnswer(chosen) === normalizeArAnswer(p.right);
+                    return `<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:10px; background:#f8fafc; border-radius:10px; border:1px solid ${currentExamMode === 'correction' ? (isPairOk ? '#10b981' : '#ef4444') : '#e2e8f0'};">
+                        <div style="flex:1; font-weight:bold;">${p.left}</div>
+                        <select ${currentExamMode === 'correction' ? 'disabled' : ''} onchange="saveMatchingExamAnswer(${pIdx}, this.value)" style="flex:1; padding:8px; border-radius:8px; border:1px solid #cbd5e1;">
+                            <option value="">اختر المطابق...</option>
+                            ${rightOptions.map(ro => `<option value="${String(ro).replace(/"/g, '&quot;')}" ${chosen === ro ? 'selected' : ''}>${ro}</option>`).join('')}
+                        </select>
+                    </div>`;
+                }).join('');
+            }
+
+            const btnPrev = document.getElementById('btnPrevSlide');
+            const btnNext = document.getElementById('btnNextSlide');
+            const btnReview = document.getElementById('btnReviewExam');
+            const btnSubmit = document.getElementById('btnSubmitCustomExam');
+            const btnBackToReview = document.getElementById('btnBackToReview');
+
+            btnPrev.style.visibility = currentSlideIndex === 0 ? 'hidden' : 'visible';
+            btnSubmit.style.display = 'none';
+            btnBackToReview.style.display = (window.isExamReviewMode && currentExamMode === 'exam') ? 'block' : 'none';
+            if (currentSlideIndex === flatExamQuestions.length - 1) {
+                btnNext.style.display = 'none';
+                btnReview.style.display = currentExamMode === 'exam' ? 'block' : 'none';
+            } else {
+                btnNext.style.display = 'block';
+                btnReview.style.display = 'none';
+            }
+        };
+
+        window.saveTextExamAnswer = function(val) {
+            if (currentExamMode !== 'exam') return;
+            studentExamAnswers[currentSlideIndex] = val;
+            const userObj = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : ((typeof session !== 'undefined' && session) ? session : null);
+            const pwd = userObj ? userObj.password : 'guest';
+            if (examSettings.resume) localStorage.setItem(`exam_progress_${pwd}_${currentExamTitleGlobal}`, JSON.stringify(studentExamAnswers));
+        };
+
+        window.saveMatchingExamAnswer = function(pairIdx, val) {
+            if (currentExamMode !== 'exam') return;
+            const q = flatExamQuestions[currentSlideIndex].question;
+            if (!Array.isArray(studentExamAnswers[currentSlideIndex])) {
+                studentExamAnswers[currentSlideIndex] = new Array((q.pairs || []).length).fill('');
+            }
+            studentExamAnswers[currentSlideIndex][pairIdx] = val;
+            const userObj = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : ((typeof session !== 'undefined' && session) ? session : null);
+            const pwd = userObj ? userObj.password : 'guest';
+            if (examSettings.resume) localStorage.setItem(`exam_progress_${pwd}_${currentExamTitleGlobal}`, JSON.stringify(studentExamAnswers));
+        };
+
+        window.navigateCustomExam = function(dir) {
+            const q = flatExamQuestions[currentSlideIndex].question;
+            if (currentExamMode === 'exam' && dir === 1 && !isQuestionAnswered(q, studentExamAnswers[currentSlideIndex])) {
+                return Swal.fire('تنبيه', 'يرجى الإجابة على السؤال قبل الانتقال للسؤال التالي.', 'warning');
+            }
+            const newIndex = currentSlideIndex + dir;
+            if (newIndex >= 0 && newIndex < flatExamQuestions.length) {
+                currentSlideIndex = newIndex;
+                renderExamSlide();
+            }
+        };
+
+        window.showReviewScreen = function() {
+            window.isExamReviewMode = true;
+            document.getElementById('customExamBody').style.display = 'none';
+            document.getElementById('customExamReviewScreen').style.display = 'block';
+            document.getElementById('btnNextSlide').style.display = 'none';
+            document.getElementById('btnReviewExam').style.display = 'none';
+            document.getElementById('btnBackToReview').style.display = 'none';
+            document.getElementById('btnSubmitCustomExam').style.display = 'block';
+
+            let html = '';
+            flatExamQuestions.forEach((qObj, idx) => {
+                const q = qObj.question;
+                const qt = q.question_type || 'mcq';
+                const ans = studentExamAnswers[idx];
+                let ansText = '<span style="color:red; font-weight:bold;">لم يتم الإجابة</span>';
+                if (isQuestionAnswered(q, ans)) {
+                    if (qt === 'mcq' || qt === 'true_false') ansText = (q.options || ['صح', 'خطأ'])[Number(ans)] || ans;
+                    else if (qt === 'matching' && Array.isArray(ans)) ansText = ans.join(' | ');
+                    else ansText = String(ans);
+                }
+                html += `<div style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc;">
+                    <div><div style="font-weight: bold; color: #1e293b; font-size: 0.95rem; margin-bottom: 5px;">س${idx+1}: ${q.text}</div><div style="color: #2563eb; font-size: 0.9rem; font-weight: bold;">إجابتك: ${ansText}</div></div>
+                    <button class="btn btn-sm btn-outline" style="border-radius: 8px; background: white; padding:6px 12px; border:1px solid #cbd5e1;" onclick="currentSlideIndex=${idx}; renderExamSlide();"><i class="fas fa-edit"></i> تعديل</button>
+                </div>`;
+            });
+            document.getElementById('reviewQuestionsList').innerHTML = html;
+        };
+
+        window.submitCustomExam = function(forceSubmit = false) {
+            const unanswered = flatExamQuestions.filter((qObj, i) => !isQuestionAnswered(qObj.question, studentExamAnswers[i])).length;
+            if (!forceSubmit && unanswered > 0) {
+                return Swal.fire('تنبيه', `يوجد ${unanswered} سؤال لم تقم بالإجابة عليه. راجع إجاباتك.`, 'warning');
+            }
+            const confirmAction = forceSubmit ? Promise.resolve({ isConfirmed: true }) : Swal.fire({
+                title: 'تأكيد التسليم', text: "هل تريد تسليم الاختبار الآن؟", icon: 'question',
+                showCancelButton: true, confirmButtonText: 'نعم، سلم الاختبار', cancelButtonText: 'إلغاء'
+            });
+            confirmAction.then((result) => {
+                if (!result.isConfirmed) return;
+                clearInterval(timerInterval);
+                document.removeEventListener('visibilitychange', handleAntiCheat);
+
+                let score = 0;
+                flatExamQuestions.forEach((qObj, idx) => {
+                    if (isQuestionCorrect(qObj.question, studentExamAnswers[idx])) score++;
+                });
+                const finalGradeString = `${score}/${flatExamQuestions.length}`;
+                Swal.fire({ title: 'جاري التصحيح وحفظ النتيجة...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+                const userObj = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : ((typeof session !== 'undefined' && session) ? session : null);
+                const pwd = userObj ? userObj.password : '';
+                const onSaved = (res) => {
+                    if (res && res.success) {
+                        localStorage.removeItem(`exam_progress_${pwd}_${currentExamTitleGlobal}`);
+                        Swal.fire({
+                            title: 'أحسنت يا بطل! 🎉',
+                            html: `نتيجتك: <br><strong style="font-size:2.5rem; color:#2563eb;">${finalGradeString}</strong><br><br><span style="font-size:0.9rem; color:#64748b;">${res.message || ''}</span>`,
+                            icon: 'success', confirmButtonText: 'مشاهدة أخطائي والتصحيح'
+                        }).then(() => {
+                            currentExamMode = 'correction';
+                            currentSlideIndex = 0;
+                            renderExamSlide();
+                            if (window.studentDataCache) { delete window.studentDataCache['exams']; showSection('exams'); }
+                            if (window.apkCache) { delete window.apkCache['tasks_الاختبارات والامتحانات']; loadTasks('الاختبارات والامتحانات', document.querySelectorAll('.task-tab')[2]); }
+                        });
+                    } else {
+                        Swal.fire('خطأ', (res && res.error) || 'حدث خطأ أثناء الحفظ', 'error');
+                    }
+                };
+                if (typeof google !== 'undefined' && google.script && google.script.run && typeof api !== 'function') {
+                    google.script.run.withSuccessHandler(onSaved).saveIkhtibaratGradeCustom(pwd, currentExamTitleGlobal, finalGradeString, studentExamAnswers, examSettings.allowRetake);
+                } else {
+                    api('saveExam', { action: 'saveExam', password: pwd, title: currentExamTitleGlobal, grade: finalGradeString, answers: studentExamAnswers, allowRetake: examSettings.allowRetake }).then(onSaved);
+                }
+            });
+        };
+
+</script>
+
+<script src="games.js"></script>
+
 </body>
 </html>
