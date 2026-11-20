@@ -1729,6 +1729,7 @@
         if (s === 'رفض' || s === 'مرفوض') return 'رفض';
         if (s === 'اختبار' || s === 'مراجعة') return 'اختبار';
         if (s === 'انترفيو' || s === 'المقابلة الشخصية' || s === 'مؤهل للانترفيو' || s === 'مرشح للانترفيو') return 'انترفيو';
+        if (s === 'احتياطي' || s === 'قائمة الاحتياطي' || s === 'قائمة الانتظار' || s === 'waitlist') return 'احتياطي';
         if (s === 'قبول' || s === 'مقبول') return 'قبول';
         return s;
     }
@@ -1738,6 +1739,7 @@
         if (s === 'معلق') return 'قيد المراجعة';
         if (s === 'اختبار') return 'الاختبار التقييمي';
         if (s === 'انترفيو') return 'المقابلة الشخصية';
+        if (s === 'احتياطي') return 'قائمة الاحتياطي';
         if (s === 'قبول') return 'مقبول';
         if (s === 'رفض') return 'مرفوض';
         return s;
@@ -1781,18 +1783,19 @@
         const status = normalizePortalStatus(rawStatus);
         const isRejected = status === 'رفض';
         const isAccepted = status === 'قبول';
+        const isWaitlist = status === 'احتياطي';
 
         let activeStep = 1;
         if (status === 'معلق') activeStep = 1;
         else if (status === 'اختبار') activeStep = 2;
         else if (status === 'انترفيو') activeStep = 3;
-        else if (status === 'قبول' || status === 'رفض') activeStep = 4;
+        else if (status === 'احتياطي' || status === 'قبول' || status === 'رفض') activeStep = 4;
 
         const steps = [
             { num: 1, title: 'مراجعة الطلب', subtitle: 'استلام البيانات' },
             { num: 2, title: 'الاختبار التقييمي', subtitle: 'التقييم المهني' },
             { num: 3, title: 'المقابلة الشخصية', subtitle: 'تحديد الموعد' },
-            { num: 4, title: isRejected ? 'نتيجة الطلب' : 'القبول النهائي', subtitle: isRejected ? 'لم يتم القبول' : (isAccepted ? 'تم القبول' : 'القرار النهائي') }
+            { num: 4, title: isRejected ? 'نتيجة الطلب' : (isWaitlist ? 'قائمة الاحتياطي' : 'القبول النهائي'), subtitle: isRejected ? 'لم يتم القبول' : (isWaitlist ? 'مرشح احتياطي' : (isAccepted ? 'تم القبول' : 'القرار النهائي')) }
         ];
 
         const stepsHtml = steps.map(function(st, idx) {
@@ -1833,6 +1836,10 @@
                     circleClasses = 'bg-purple-600 text-white border-2 border-purple-600 shadow-md shadow-purple-500/30 ring-4 ring-purple-100';
                     titleClasses = 'text-purple-900';
                     subClasses = 'text-purple-600';
+                } else if (isWaitlist) {
+                    circleClasses = 'bg-sky-600 text-white border-2 border-sky-600 shadow-md shadow-sky-500/30 ring-4 ring-sky-100';
+                    titleClasses = 'text-sky-900';
+                    subClasses = 'text-sky-600';
                 } else {
                     circleClasses = 'bg-emerald-600 text-white border-2 border-emerald-600 shadow-md shadow-emerald-500/30 ring-4 ring-emerald-100';
                     titleClasses = 'text-emerald-900';
@@ -2338,10 +2345,11 @@
         });
 
         const bookedSlot = allSlots.find(function(s) { return s.isBookedByMe; });
-        const hasBookedOrAssigned = !!(bookedSlot || app.interviewDate);
+        const slotWasDeleted = !!(app.slotWasDeleted || (app.interviewSlotId && !allSlots.some(function(s) { return String(s.id) === String(app.interviewSlotId); })));
+        const hasBookedOrAssigned = !!(bookedSlot || (!slotWasDeleted && app.interviewDate));
 
-        const displayDate = bookedSlot ? bookedSlot.date : (app.interviewDate || '');
-        const displayTime = bookedSlot ? (bookedSlot.endTime ? (bookedSlot.time + ' - ' + bookedSlot.endTime) : bookedSlot.time) : (app.interviewTime || '');
+        const displayDate = bookedSlot ? bookedSlot.date : (slotWasDeleted ? '' : (app.interviewDate || ''));
+        const displayTime = bookedSlot ? (bookedSlot.endTime ? (bookedSlot.time + ' - ' + bookedSlot.endTime) : bookedSlot.time) : (slotWasDeleted ? '' : (app.interviewTime || ''));
         const displayDuration = bookedSlot ? (bookedSlot.durationMinutes || durationMin) : durationMin;
         const displayLink = app.interviewLink || cfg.defaultLink || '';
         const displayNotes = app.interviewNotes || (bookedSlot && bookedSlot.notes) || cfg.defaultNotes || '';
@@ -2441,14 +2449,23 @@
             </div>`;
         }
 
+        const deletedSlotBannerHtml = slotWasDeleted ? `
+            <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2.5">
+                <i class="fa-solid fa-circle-info text-amber-600 text-base flex-shrink-0"></i>
+                <span>تم إلغاء أو تحديث موعدك السابق من قِبل الإدارة — يمكنك الآن اختيار موعد جديد من المواعيد المتاحة أدناه.</span>
+            </div>` : '';
+
         if (jobSlots.length === 0) {
             return `
-            <div class="p-6 rounded-2xl bg-purple-50 border-2 border-purple-200 text-center space-y-2">
-                <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center mx-auto text-xl shadow">
-                    <i class="fa-solid fa-video"></i>
+            <div class="space-y-3">
+                ${deletedSlotBannerHtml}
+                <div class="p-6 rounded-2xl bg-purple-50 border-2 border-purple-200 text-center space-y-2">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center mx-auto text-xl shadow">
+                        <i class="fa-solid fa-video"></i>
+                    </div>
+                    <h5 class="font-black text-purple-950 text-base">تم ترشيحك للمقابلة الشخصية</h5>
+                    <p class="text-xs text-purple-700 font-bold">مدة المقابلة: <strong>${durationMin} دقيقة</strong> — جاري إتاحة المواعيد لتختار منها موعدك المناسب بتوقيت القاهرة.</p>
                 </div>
-                <h5 class="font-black text-purple-950 text-base">تم ترشيحك للمقابلة الشخصية</h5>
-                <p class="text-xs text-purple-700 font-bold">مدة المقابلة: <strong>${durationMin} دقيقة</strong> — جاري إتاحة المواعيد لتختار منها موعدك المناسب بتوقيت القاهرة.</p>
             </div>`;
         }
 
@@ -2457,6 +2474,7 @@
 
         return `
         <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-purple-200 shadow-md space-y-4">
+            ${deletedSlotBannerHtml}
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-purple-100 pb-4">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-black text-lg shadow-sm">
@@ -2610,6 +2628,7 @@
                 'رفض': 'bg-rose-50 text-rose-700 border-rose-200',
                 'اختبار': 'bg-indigo-50 text-indigo-700 border-indigo-200',
                 'انترفيو': 'bg-purple-50 text-purple-700 border-purple-200',
+                'احتياطي': 'bg-sky-50 text-sky-800 border-sky-200',
                 'قبول': 'bg-emerald-50 text-emerald-700 border-emerald-200'
             };
             const badgeIcons = {
@@ -2617,6 +2636,7 @@
                 'رفض': 'fa-circle-xmark',
                 'اختبار': 'fa-file-signature',
                 'انترفيو': 'fa-video',
+                'احتياطي': 'fa-bookmark',
                 'قبول': 'fa-circle-check'
             };
 
@@ -2663,13 +2683,77 @@
                     ${renderInterviewSectionForApp(app, intSettings)}
                     ${completedExamsHtml}
                 </div>`;
-            } else if (status === 'قبول') {
+            } else if (status === 'احتياطي') {
+                const completedExamsForWaitlist = (exams && exams.some(e => e.latestResult || (e.attemptsUsed || 0) > 0))
+                    ? `<div class="pt-3">${renderExamsListForApp(app, exams.filter(e => e.latestResult || (e.attemptsUsed || 0) > 0))}</div>`
+                    : '';
+                const hasEvalScore = (app.evalTotalScore !== null && app.evalTotalScore !== undefined && app.evalTotalScore !== '' && !isNaN(Number(app.evalTotalScore)));
+                const formattedScore = hasEvalScore ? (Number.isInteger(Number(app.evalTotalScore)) ? Number(app.evalTotalScore) : Number(app.evalTotalScore).toFixed(1)) : '';
+                const scoreBoxHtml = hasEvalScore ? `
+                    <div class="p-4 rounded-2xl bg-white border-2 border-sky-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg flex-shrink-0">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-slate-500">نتيجة التقييم الشامل (مجموع النقاط)</div>
+                                <div class="text-xs font-bold text-sky-700 mt-0.5">يُعتمد هذا المجموع في ترتيب الأولوية داخل قائمة الاحتياطي</div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 rounded-xl bg-sky-600 text-white text-center shadow-sm">
+                            <span class="text-xl sm:text-2xl font-black">${formattedScore}</span>
+                            <span class="text-xs font-bold opacity-90"> / 100 نقطة</span>
+                        </div>
+                    </div>` : '';
+                const defaultWaitlistDesc = 'تم وضع طلبك ضمن قائمة الاحتياطي المعتمدة لدينا ومرتّبة حسب مجموع النقاط. في حالة توفر فرصة قريبة (سواء خلال فترة التجربة أو عند احتياج الفريق مستقبلاً)، لكِ الأولوية الكاملة في التوظيف سريعاً دون الحاجة لإعادة الاختبار أو المقابلة الشخصية مرة أخرى، ويتم التواصل عبر الواتساب بالترتيب وفقاً لمجموع النقاط.';
                 statusInteractiveBody = `
-                <div class="flex items-start gap-3 text-emerald-900 pt-2">
-                    <i class="fa-solid fa-circle-check text-emerald-600 text-xl mt-0.5"></i>
-                    <div>
-                        <h5 class="font-black text-base sm:text-lg text-emerald-800">مبارك! تم قبولك النهائي في الوظيفة</h5>
-                        <p class="text-xs sm:text-sm text-slate-600 font-bold mt-1">${esc(app.statusReason || 'يسعدنا انضمامك إلى فريق العمل! سنتواصل معك عبر الواتساب لإجراءات بدء العمل.')}</p>
+                <div class="space-y-4 pt-2">
+                    ${scoreBoxHtml}
+                    <div class="p-4 sm:p-5 rounded-2xl bg-sky-50/80 border border-sky-200 flex items-start gap-3.5 text-sky-950">
+                        <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+                            <i class="fa-solid fa-bookmark"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h5 class="font-black text-sm sm:text-base text-sky-900">حالة الطلب: احتياطي (أولوية التوظيف السريع)</h5>
+                            <p class="text-xs sm:text-sm text-slate-700 font-bold leading-relaxed whitespace-pre-line">${esc(app.statusReason || defaultWaitlistDesc)}</p>
+                            <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-black text-sky-800">
+                                <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-sky-200"><i class="fa-solid fa-bolt text-amber-500 ml-1"></i> أولوية التوظيف الفوري بالترتيب</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-sky-200"><i class="fa-solid fa-circle-check text-emerald-600 ml-1"></i> بدون اختبار أو إنترفيو آخر</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${completedExamsForWaitlist}
+                </div>`;
+            } else if (status === 'قبول') {
+                const hasAcceptedScore = (app.evalTotalScore !== null && app.evalTotalScore !== undefined && app.evalTotalScore !== '' && !isNaN(Number(app.evalTotalScore)));
+                const formattedAcceptedScore = hasAcceptedScore ? (Number.isInteger(Number(app.evalTotalScore)) ? Number(app.evalTotalScore) : Number(app.evalTotalScore).toFixed(1)) : '';
+                const acceptedScoreHtml = hasAcceptedScore ? `
+                    <div class="p-4 rounded-2xl bg-white border-2 border-emerald-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg flex-shrink-0">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-slate-500">نتيجة التقييم الشامل (مجموع النقاط)</div>
+                                <div class="text-xs font-bold text-emerald-700 mt-0.5">أداء متميز أهّلكِ للقبول النهائي في الوظيفة</div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-center shadow-sm">
+                            <span class="text-xl sm:text-2xl font-black">${formattedAcceptedScore}</span>
+                            <span class="text-xs font-bold opacity-90"> / 100 نقطة</span>
+                        </div>
+                    </div>` : '';
+                statusInteractiveBody = `
+                <div class="space-y-4 pt-2">
+                    ${acceptedScoreHtml}
+                    <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-start gap-3.5 text-emerald-900">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-black text-base sm:text-lg text-emerald-800">مبارك! تم قبولك النهائي في الوظيفة</h5>
+                            <p class="text-xs sm:text-sm text-slate-700 font-bold leading-relaxed mt-1">${esc(app.statusReason || 'يسعدنا انضمامك إلى فريق العمل! سنتواصل معك عبر الواتساب لإجراءات بدء العمل.')}</p>
+                        </div>
                     </div>
                 </div>`;
             }
@@ -2734,7 +2818,7 @@
 
         (exam.questions || []).forEach(function(q, qIdx) {
             const qId = q.id || ('q_' + qIdx);
-            if (q.type === 'correction') {
+            if (q.type === 'correction' || q.type === 'error_correction') {
                 initialAnswers[qId] = { corrections: [] };
             } else {
                 initialAnswers[qId] = { answer: '' };
@@ -2899,7 +2983,7 @@
 
             let isAnswered = false;
             const curAnsObj = window._examState.answers[qId];
-            if (q.type === 'correction') {
+            if (q.type === 'correction' || q.type === 'error_correction') {
                 isAnswered = !!(curAnsObj && Array.isArray(curAnsObj.corrections) && curAnsObj.corrections.some(c => c.correctedWord));
             } else {
                 isAnswered = !!(curAnsObj && String(curAnsObj.answer || '').trim() !== '');
@@ -2940,7 +3024,7 @@
                         placeholder="${esc(q.placeholder || 'اكتب إجابتك هنا بوضوح...')}"
                         class="field-input bg-slate-50 focus:bg-white text-sm font-bold leading-relaxed">${esc(currentText)}</textarea>
                 </div>`;
-            } else if (q.type === 'correction') {
+            } else if (q.type === 'correction' || q.type === 'error_correction') {
                 bodyHtml = renderCorrectionQuestionBody(q, qId);
             }
 
@@ -2960,8 +3044,8 @@
                         <span class="text-xs font-black text-slate-600 bg-slate-100 px-3 py-1 rounded-full">${pts} ${pts === 1 ? 'درجة' : 'درجات'}</span>
                     </div>
                 </div>
-                ${q.type === 'correction' && q.prompt ? `<p class="text-xs font-black text-indigo-700">${esc(q.prompt)}</p>` : ''}
-                ${q.type !== 'correction' ? `<div class="text-base sm:text-lg font-black text-slate-800 leading-relaxed whitespace-pre-line pt-1">${esc(q.text)}</div>` : ''}
+                ${(q.type === 'correction' || q.type === 'error_correction') && q.prompt ? `<p class="text-xs font-black text-indigo-700">${esc(q.prompt)}</p>` : ''}
+                ${(q.type !== 'correction' && q.type !== 'error_correction') ? `<div class="text-base sm:text-lg font-black text-slate-800 leading-relaxed whitespace-pre-line pt-1">${esc(q.text)}</div>` : ''}
                 ${bodyHtml}
             </div>`;
         }).join('');
@@ -3622,7 +3706,7 @@
             const borderCls = isFull ? 'border-emerald-200 bg-emerald-50/20' : 'border-rose-200 bg-rose-50/20';
 
             let detailsBody = '';
-            if (item.type === 'correction') {
+            if (item.type === 'correction' || item.type === 'error_correction') {
                 const userCorrs = (item.applicantCorrections || []).map(c =>
                     `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${c.isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
                         ${esc(c.originalWord || '—')} ← ${esc(c.correctedWord || '—')} ${c.isCorrect ? '✓' : '✗'}
