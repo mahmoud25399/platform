@@ -10615,6 +10615,11 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
             return;
         }
         const emp = res.employees.find(function(e) { return String(e.code).trim() === myCode; }) || res.employees[0];
+        if (emp && emp.notStartedYet) {
+            alertWrap.classList.remove('hidden');
+            alertWrap.innerHTML = '<div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:14px; padding:16px 20px; color:#0369a1; font-weight:700; display:flex; align-items:center; gap:10px;"><i class="fas fa-hourglass-half fa-lg"></i><span>يبدأ احتساب تقييم أدائك تلقائياً اعتباراً من يوم <b>' + escapeHtml_(emp.perfStartDate || '') + '</b> (لا تُحتسب عليك أي مهام أو تراكمات قبل هذا التاريخ).</span></div>';
+            return;
+        }
         if (!emp || !emp.kpis || Object.keys(emp.kpis).length === 0) {
             alertWrap.classList.add('hidden');
             alertWrap.innerHTML = '';
@@ -11750,6 +11755,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         });
                     } catch (_e) {}
                     loadEmployeesManagement();
+                    if (typeof syncCurrentEmployeePermissionsLive_ === 'function') syncCurrentEmployeePermissionsLive_(true);
                     if (typeof loadEmployeesPerformanceDashboard === 'function') {
                         loadEmployeesPerformanceDashboard(null, null, true);
                     }
@@ -13005,6 +13011,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     { id: 'hossas', label: 'الحصص', tabs: [] },
                     { id: 'liveAttendance', label: 'الحضور المباشر', tabs: [] },
                     { id: 'library', label: 'المكتبة', tabs: [] },
+                    { id: 'adminFiles', label: 'ملفات الإدارة', tabs: [] },
+                    { id: 'scheduledTasks', label: 'المهام المجدولة', tabs: [] },
                     { id: 'games', label: 'العب وتعلّم', tabs: [] }
                 ]
             },
@@ -13320,6 +13328,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         Object.keys(localStorage).forEach(k => { if (k.startsWith('cache_emp_perf_')) localStorage.removeItem(k); });
                     } catch (_e) {}
                     loadEmployeesManagement();
+                    if (typeof syncCurrentEmployeePermissionsLive_ === 'function') syncCurrentEmployeePermissionsLive_(true);
                     if (typeof loadEmployeesPerformanceDashboard === 'function') {
                         loadEmployeesPerformanceDashboard(null, null, true);
                     }
@@ -16625,7 +16634,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                             '<div style="background:' + c + '1a; border:1px solid ' + c + '44; color:' + c + '; padding:6px 14px; border-radius:12px; font-weight:900; font-size:0.95rem;">' + scoreLabel_(comp) + ' &nbsp;' + (comp !== null ? comp + '/100' : '—') + '</div>' +
                         '</div>' +
                     '</div>' +
-                    '<div>' + (rowsHtml || '<div style="padding:18px; text-align:center; color:var(--gray);">لا توجد أقسام مراقبة لهذا الموظف.</div>') + '</div>' +
+                    '<div>' + (emp.notStartedYet ? ('<div style="padding:18px; text-align:center; color:#0369a1; background:#f0f9ff; font-weight:700; font-size:0.9rem;"><i class="fas fa-hourglass-start" style="margin-left:6px;"></i> لم يبدأ التقييم بعد — يبدأ احتساب أداء هذا الموظف تلقائياً اعتباراً من يوم ' + escapeHtml_(emp.perfStartDate || '') + ' (مع عزل كل التراكمات والاختبارات السابقة)</div>') : (rowsHtml || '<div style="padding:18px; text-align:center; color:var(--gray);">لا توجد أقسام مراقبة لهذا الموظف.</div>')) + '</div>' +
                 '</div>';
             });
             html += '</div>';
@@ -16914,6 +16923,28 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             container.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">خطأ: ' + escapeHtml_(err.message) + '</div>';
         });
     }
+
+    // ── تحديث صلاحيات الموظف الحالي لحظياً بدون الحاجة لتسجيل الخروج والدخول ──
+    window._lastEmpPermSyncTs = 0;
+    function syncCurrentEmployeePermissionsLive_(force) {
+        if (!window.currentEmployee || !window.currentEmployee.code) return;
+        var now = Date.now();
+        if (!force && (now - window._lastEmpPermSyncTs < 15000)) return;
+        window._lastEmpPermSyncTs = now;
+        runGS('verifyEmployeeCode', window.currentEmployee.code).then(function(res) {
+            if (res && res.success && res.employee) {
+                var prev = JSON.stringify(window.currentEmployee);
+                var next = JSON.stringify(res.employee);
+                if (prev !== next) {
+                    window.currentEmployee = res.employee;
+                    try { localStorage.setItem('cachedAdminEmp', next); } catch (_e) {}
+                    if (typeof applyEmployeePermissions === 'function') applyEmployeePermissions();
+                }
+            }
+        }).catch(function() {});
+    }
+    window.addEventListener('focus', function() { syncCurrentEmployeePermissionsLive_(false); });
+    setInterval(function() { syncCurrentEmployeePermissionsLive_(false); }, 60000);
     </script>
 </body>
 </html>
