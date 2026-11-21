@@ -3046,7 +3046,10 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 
                 <div class="form-group" id="empCodeWrap">
                     <label style="font-weight:bold;">كود الدخول</label>
-                    <input type="text" class="form-control" id="empCode" placeholder="اتركه فارغاً للتوليد التلقائي">
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" class="form-control" id="empCode" placeholder="يتم توليده تلقائياً">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateAutoEmpCode_()" title="توليد كود جديد" style="white-space:nowrap; padding:0 10px;"><i class="fas fa-magic"></i></button>
+                    </div>
  </div>
                 <div class="form-group">
                     <label style="font-weight:bold;"><i class="fab fa-whatsapp"></i> رقم واتساب الموظف (للملخص اليومي)</label>
@@ -3104,7 +3107,18 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
                         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; min-width:110px;"><input type="checkbox" value="ikhtibarat" class="emp-perf-sec-cb"> <span><i class="fas fa-file-contract" style="color:var(--danger);"></i> الاختبارات</span></label>
-                            <input type="number" min="0" class="form-control emp-perf-target" id="empPerfTargetIkhtibarat" placeholder="اختبارات/صف" style="max-width:150px;" title="عدد الاختبارات المطلوب إعدادها ورفعها لكل صف متاح للموظف في الفترة"><span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-info-circle"></i> يتم تقييم إعداد ورفع الاختبار لكل صف (التصحيح تلقائي)</span>
+                            <input type="number" min="0" class="form-control emp-perf-target" id="empPerfTargetIkhtibarat" placeholder="اختبارات/أسبوع" style="max-width:130px;" title="عدد الاختبارات الأسبوعية المطلوبة لكل صف">
+                            <select id="empPerfExamDay" class="form-control" style="max-width:210px;" title="اليوم الأسبوعي لنزول الاختبار — إذا مرّ هذا اليوم بدون رفع الاختبار يُحسب متأخراً في التحليل">
+                                <option value="">يوم النزول الأسبوعي (اختياري)</option>
+                                <option value="6">السبت</option>
+                                <option value="0">الأحد</option>
+                                <option value="1">الإثنين</option>
+                                <option value="2">الثلاثاء</option>
+                                <option value="3">الأربعاء</option>
+                                <option value="4">الخميس</option>
+                                <option value="5">الجمعة</option>
+                            </select>
+                            <span style="font-size:0.76rem; color:#64748b;"><i class="fas fa-calendar-check"></i> لو عدا اليوم المحدد بدون رفع الاختبار يتحسب متأخر في التحليل والجدولة</span>
  </div>
  </div>
  </div>
@@ -4177,102 +4191,141 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         function loadInitialData() {
             try { localStorage.removeItem('cachedAdminMenuOrder'); } catch(e){}
 
-            // ── 1. إعدادات المنصة (صفوف، مجموعات، ربط، واتساب …) ──────────────
+            // ── 0. عرض فوري من الكاش المحلي لمنع تعليق البيانات وشريط الحصة عند الفتح ──
+            try {
+                var cachedStats = JSON.parse(localStorage.getItem('cachedAdminStats') || 'null');
+                if (cachedStats) {
+                    var wEl = document.getElementById('statWajib');
+                    var tEl = document.getElementById('statTasmiya');
+                    var eEl = document.getElementById('statExams');
+                    if (wEl) wEl.innerText = cachedStats.pendingWajib || 0;
+                    if (tEl) tEl.innerText = cachedStats.pendingTasmiya || 0;
+                    if (eEl) eEl.innerText = cachedStats.pendingExams || 0;
+                    window.__dashStatsLoaded = true;
+                }
+            } catch(e) {}
+
+            try {
+                var cachedSched = JSON.parse(localStorage.getItem('cachedAdminSchedule_v1') || 'null');
+                if (Array.isArray(cachedSched) && cachedSched.length > 0) {
+                    allScheduleData = cachedSched;
+                    window.allScheduleData = cachedSched;
+                    window.__rawScheduleItems = cachedSched;
+                    if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(cachedSched);
+                    if (typeof updateDashboardUpcomingLessonBanner === 'function') updateDashboardUpcomingLessonBanner();
+                }
+            } catch(e) {}
+
+            try {
+                var cachedSettings = JSON.parse(localStorage.getItem('cachedAdminPlatformSettings_v1') || 'null');
+                if (cachedSettings && typeof cachedSettings === 'object') {
+                    window.currentPlatformSettings = cachedSettings;
+                    applyAdminMenuOrderToSidebar();
+                    populateAllGradeAndGroupSelects();
+                }
+            } catch(e) {}
+
+            // ── المرحلة الأولى (أولوية قصوى للرئيسية وشريط الانضمام السريع) ──
+            function fetchScheduleWithRetry_(attempt) {
+                runGS('getScheduleDataAdmin').then(function(data) {
+                    var items = Array.isArray(data) ? data : (data && Array.isArray(data.slots) ? data.slots : []);
+                    allScheduleData = items;
+                    window.allScheduleData  = items;
+                    window.__rawScheduleItems = items;
+                    try { localStorage.setItem('cachedAdminSchedule_v1', JSON.stringify(items)); } catch(e) {}
+                    if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(items);
+                    if (typeof updateDashboardUpcomingLessonBanner === 'function') updateDashboardUpcomingLessonBanner();
+                }).catch(function(err) {
+                    console.warn('getScheduleDataAdmin failed (attempt ' + attempt + '):', err);
+                    if (attempt < 2) setTimeout(function() { fetchScheduleWithRetry_(attempt + 1); }, 1800);
+                });
+            }
+            fetchScheduleWithRetry_(1);
+
+            loadDashboardStats();
+
             runGS('getPlatformSettings').then(function(settings) {
                 window.currentPlatformSettings = settings || {};
+                try { localStorage.setItem('cachedAdminPlatformSettings_v1', JSON.stringify(window.currentPlatformSettings)); } catch(e) {}
                 applyAdminMenuOrderToSidebar();
                 populateAllGradeAndGroupSelects();
                 loadWhatsAppSettingsUI();
                 if (typeof loadExamPromptTemplate === 'function') loadExamPromptTemplate();
             }).catch(function(err) {
                 console.warn('getPlatformSettings failed:', err);
-                window.currentPlatformSettings = {};
+                if (!window.currentPlatformSettings) window.currentPlatformSettings = {};
                 populateAllGradeAndGroupSelects();
             });
 
-            // ── 2. قائمة الطلاب ────────────────────────────────────────────────
-            runGS('getStudentsForAssistant').then(function(data) {
-                // data قد تكون [] مباشرة أو {students:[]} - نتعامل مع الحالتين
-                if (Array.isArray(data)) {
-                    globalStudents = data;
-                } else if (data && Array.isArray(data.students)) {
-                    globalStudents = data.students;
-                } else {
-                    globalStudents = [];
-                }
-                window.allStudentsFullData = globalStudents;
-                populateStudentSelects();
-                populateAllGradeAndGroupSelects();
-
-                // تعبئة فلتر تاريخ الطالب
-                const historyFilter = document.getElementById('historySearchStudent');
-                if (historyFilter) {
-                    historyFilter.innerHTML = '<option value="">كل الطلاب</option>';
-                    globalStudents.forEach(function(st) {
-                        historyFilter.innerHTML += '<option value="' + (st.name||st) + '">' + (st.name||st) + '</option>';
-                    });
-                }
-                // تعبئة select الطالب في مودال إضافة طالب
-                var stGrade = document.getElementById('stGrade');
-                if (!stGrade && window.currentPlatformSettings && window.currentPlatformSettings.grades) {
-                    populateAllGradeAndGroupSelects();
-                }
-            }).catch(function(err) {
-                console.warn('getStudentsForAssistant failed:', err);
-            });
-
-            // ── 3. قائمة الصفوف/المجموعات القديمة (globalClasses) ──────────────
-            runGS('getClassesForAssistant').then(function(data) {
-                globalClasses = Array.isArray(data) ? data : [];
-                populateLeaderboardFilter(globalClasses);
-
-                // نوتيفيكيشن - قائمة الصفوف الأساسية
-                var baseClasses = new Set();
-                globalClasses.forEach(function(c) {
-                    var base = String(c).replace(/\s*م\d+.*$/, '').replace(/\s*[-_]\s*مجموعة.*$/, '').trim();
-                    if (base) baseClasses.add(base);
-                });
-                var notiClassSelect = document.getElementById('notiClassSelect');
-                if (notiClassSelect) {
-                    notiClassSelect.innerHTML = '<option value="">اختر الصف الدراسي...</option>';
-                    baseClasses.forEach(function(bc) {
-                        notiClassSelect.innerHTML += '<option value="' + bc + '">' + bc + '</option>';
-                    });
-                }
-                var modalClassSelect = document.getElementById('stClass');
-                if (modalClassSelect) {
-                    modalClassSelect.innerHTML = '<option value="">اختر الصف والمجموعة</option>';
-                    globalClasses.forEach(function(c) {
-                        modalClassSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
-                    });
-                }
-            }).catch(function(err) {
-                console.warn('getClassesForAssistant failed:', err);
-            });
-
-            // ── 4. جدول الحصص ─────────────────────────────────────────────────
-            runGS('getScheduleDataAdmin').then(function(data) {
-                var items = Array.isArray(data) ? data : (data && Array.isArray(data.slots) ? data.slots : []);
-                allScheduleData = items;
-                window.allScheduleData  = items;
-                window.__rawScheduleItems = items;
-                if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(items);
-            }).catch(function(err) {
-                console.warn('getScheduleDataAdmin failed:', err);
-            });
-            
-            // ── 5. قائمة الموظفين (للمديرين فقط) ─────────────────────────────
-            if (window.currentEmployee && isPlatformAdmin(window.currentEmployee)) {
-                runGS('getEmployeesListGS').then(function(res) {
-                    // res قد يكون { success, employees } أو [] مباشرة
-                    if (res && Array.isArray(res.employees)) {
-                        window.allEmployees = res.employees;
-                    } else if (Array.isArray(res)) {
-                        window.allEmployees = res;
+            // ── المرحلة الثانية (بعد 500ms لتخفيف الضغط المتزامن على السيرفر ومنع التعليق) ──
+            setTimeout(function() {
+                // قائمة الطلاب
+                runGS('getStudentsForAssistant').then(function(data) {
+                    if (Array.isArray(data)) {
+                        globalStudents = data;
+                    } else if (data && Array.isArray(data.students)) {
+                        globalStudents = data.students;
+                    } else {
+                        globalStudents = [];
                     }
-                }).catch(function() {});
-            }
-            loadDashboardStats();
+                    window.allStudentsFullData = globalStudents;
+                    populateStudentSelects();
+                    populateAllGradeAndGroupSelects();
+
+                    const historyFilter = document.getElementById('historySearchStudent');
+                    if (historyFilter) {
+                        historyFilter.innerHTML = '<option value="">كل الطلاب</option>';
+                        globalStudents.forEach(function(st) {
+                            historyFilter.innerHTML += '<option value="' + (st.name||st) + '">' + (st.name||st) + '</option>';
+                        });
+                    }
+                    var stGrade = document.getElementById('stGrade');
+                    if (!stGrade && window.currentPlatformSettings && window.currentPlatformSettings.grades) {
+                        populateAllGradeAndGroupSelects();
+                    }
+                }).catch(function(err) {
+                    console.warn('getStudentsForAssistant failed:', err);
+                });
+
+                // قائمة الصفوف/المجموعات القديمة (globalClasses)
+                runGS('getClassesForAssistant').then(function(data) {
+                    globalClasses = Array.isArray(data) ? data : [];
+                    populateLeaderboardFilter(globalClasses);
+
+                    var baseClasses = new Set();
+                    globalClasses.forEach(function(c) {
+                        var base = String(c).replace(/\s*م\d+.*$/, '').replace(/\s*[-_]\s*مجموعة.*$/, '').trim();
+                        if (base) baseClasses.add(base);
+                    });
+                    var notiClassSelect = document.getElementById('notiClassSelect');
+                    if (notiClassSelect) {
+                        notiClassSelect.innerHTML = '<option value="">اختر الصف الدراسي...</option>';
+                        baseClasses.forEach(function(bc) {
+                            notiClassSelect.innerHTML += '<option value="' + bc + '">' + bc + '</option>';
+                        });
+                    }
+                    var modalClassSelect = document.getElementById('stClass');
+                    if (modalClassSelect) {
+                        modalClassSelect.innerHTML = '<option value="">اختر الصف والمجموعة</option>';
+                        globalClasses.forEach(function(c) {
+                            modalClassSelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
+                        });
+                    }
+                }).catch(function(err) {
+                    console.warn('getClassesForAssistant failed:', err);
+                });
+
+                // قائمة الموظفين (للمديرين فقط)
+                if (window.currentEmployee && isPlatformAdmin(window.currentEmployee)) {
+                    runGS('getEmployeesListGS').then(function(res) {
+                        if (res && Array.isArray(res.employees)) {
+                            window.allEmployees = res.employees;
+                        } else if (Array.isArray(res)) {
+                            window.allEmployees = res;
+                        }
+                    }).catch(function() {});
+                }
+            }, 500);
         }
 
         function populateLeaderboardFilter(classesArray) {
@@ -4980,14 +5033,15 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     
                     var html = '<div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;">';
                     html += '<table class="table" style="width:100%;border-collapse:collapse;text-align:right;font-size:0.9rem;margin:0;">';
-                    html += '<thead style="background:#f8fafc;"><tr><th style="padding:12px;">الطالب</th><th style="padding:12px;">الصف</th><th style="padding:12px;">تاريخ الرفع</th><th style="padding:12px;">الدرس</th><th style="padding:12px;">الملف</th><th style="padding:12px;">إجراء</th></tr></thead><tbody>';
+                    html += '<thead style="background:#f8fafc;"><tr><th style="padding:12px;">الطالب</th><th style="padding:12px;">الصف</th><th style="padding:12px;">تاريخ الرفع</th><th style="padding:12px;">الدرس</th><th style="padding:12px;">الصفحات</th><th style="padding:12px;">الملف</th><th style="padding:12px;">إجراء</th></tr></thead><tbody>';
                     
                     items.forEach(function(item) {
                         html += '<tr style="border-bottom:1px solid var(--border);">';
-                        html += '<td style="padding:12px;font-weight:600;">' + (item.student || '-') + '</td>';
+                        html += '<td style="padding:12px;font-weight:600;">' + (stripCode(item.student) || '-') + '</td>';
                         html += '<td style="padding:12px;">' + (item.class || '-') + '</td>';
                         html += '<td style="padding:12px;">' + (item.date || '-') + '</td>';
                         html += '<td style="padding:12px;">' + (item.lesson || '-') + '</td>';
+                        html += '<td style="padding:12px;">' + (item.pages ? ('<span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:8px; font-weight:700; font-size:0.82rem;">' + escapeHtml_(item.pages) + '</span>') : '<span style="color:var(--gray);">—</span>') + '</td>';
                         html += '<td style="padding:12px;"><a href="' + (item.downloadLink || '#') + '" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> تحميل</a></td>';
                         // الزرار يعتمد على item.serial ومفيش أي تغيير فيه لضمان عمل الحفظ بشكل سليم
                         html += '<td style="padding:12px;"><div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-sm btn-success" onclick="openCorrectionModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', ' + item.serial + ')"><i class="fas fa-check"></i> تصحيح</button><button class="btn btn-sm" onclick="openQuickWhatsAppModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', \'واجب\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;" title="إرسال رسالة واتساب"><i class="fab fa-whatsapp"></i> واتساب</button><button class="btn btn-sm btn-danger" onclick="deletePendingWajib(' + item.serial + ')" title="حذف الواجب"><i class="fas fa-trash"></i></button></div></td>';
@@ -5050,12 +5104,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     
                     var html = '<div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;">';
                     html += '<table class="table" style="width:100%;border-collapse:collapse;text-align:right;font-size:0.9rem;margin:0;">';
-                    html += '<thead style="background:#f8fafc;"><tr><th style="padding:12px;">الطالب</th><th style="padding:12px;">الصف</th><th style="padding:12px;">الدرس</th><th style="padding:12px;">التاريخ</th><th style="padding:12px;">الموعد</th><th style="padding:12px;">إجراء</th></tr></thead><tbody>';
+                    html += '<thead style="background:#f8fafc;"><tr><th style="padding:12px;">الطالب</th><th style="padding:12px;">الصف</th><th style="padding:12px;">الدرس</th><th style="padding:12px;">الصفحات المطلوب تسميعها</th><th style="padding:12px;">التاريخ</th><th style="padding:12px;">الموعد</th><th style="padding:12px;">إجراء</th></tr></thead><tbody>';
                     items.forEach(function(item) {
                         html += '<tr style="border-bottom:1px solid var(--border);">';
-                        html += '<td style="padding:12px;font-weight:600;">' + (item.student || '-') + '</td>';
+                        html += '<td style="padding:12px;font-weight:600;">' + (stripCode(item.student) || '-') + '</td>';
                         html += '<td style="padding:12px;">' + (item.class || '-') + '</td>';
                         html += '<td style="padding:12px;">' + (item.lesson || '-') + '</td>';
+                        html += '<td style="padding:12px;">' + (item.pages ? ('<span style="background:#eef2ff; color:#3730a3; padding:3px 9px; border-radius:8px; font-weight:700; font-size:0.82rem;">' + escapeHtml_(item.pages) + '</span>') : '<span style="color:var(--gray);">—</span>') + '</td>';
                         html += '<td style="padding:12px;">' + (item.reserveDate || '-') + '</td>';
                         html += '<td style="padding:12px;"><span style="background:var(--primary-glow); color:var(--primary-dark); padding:4px 10px; border-radius:12px; font-weight:bold;">' + (item.appointment || '-') + '</span></td>';
                         // الأزرار هنا كما هي
@@ -9470,8 +9525,20 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             // الحقول الأساسية
             if(document.getElementById('stName'))         document.getElementById('stName').value = stripCode(st.name);
             if(document.getElementById('stCode'))         document.getElementById('stCode').value = st.code;
-            if(document.getElementById('stGrade'))        document.getElementById('stGrade').value = st.grade || '';
-            if(document.getElementById('stGroup'))        document.getElementById('stGroup').value = st.group || '';
+            if(document.getElementById('stGrade')) {
+                var gSel = document.getElementById('stGrade');
+                if (st.grade && !Array.prototype.some.call(gSel.options, o => o.value === st.grade)) {
+                    var gOpt = document.createElement('option'); gOpt.value = st.grade; gOpt.textContent = st.grade; gSel.appendChild(gOpt);
+                }
+                gSel.value = st.grade || '';
+            }
+            if(document.getElementById('stGroup')) {
+                var grSel = document.getElementById('stGroup');
+                if (st.group && !Array.prototype.some.call(grSel.options, o => o.value === st.group)) {
+                    var grOpt = document.createElement('option'); grOpt.value = st.group; grOpt.textContent = st.group; grSel.appendChild(grOpt);
+                }
+                grSel.value = st.group || '';
+            }
             if(document.getElementById('stParentPhone'))  document.getElementById('stParentPhone').value = st.parentPhone || '';
             if(document.getElementById('stStudentPhone')) document.getElementById('stStudentPhone').value = st.studentPhone || '';
             if(document.getElementById('editStudentOriginalCode')) document.getElementById('editStudentOriginalCode').value = st.code;
@@ -9526,12 +9593,14 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             }
 
             // الصلاحيات
-            if(st.allowedSections) {
+            if(st.allowedSections && String(st.allowedSections).trim() !== '') {
                 var secs = String(st.allowedSections).split(',').map(function(s) { return s.trim(); });
                 var isAll = (st.allowedSections === 'ALL' || secs.indexOf('ALL') !== -1);
                 document.querySelectorAll('#studentAllowedSectionsGrid .st-sec-cb').forEach(function(cb) {
                     cb.checked = isAll || secs.indexOf(cb.value) !== -1;
                 });
+            } else {
+                document.querySelectorAll('#studentAllowedSectionsGrid .st-sec-cb').forEach(function(cb) { cb.checked = true; });
             }
 
             const modal = document.getElementById('addStudentModal') || document.getElementById('studentModal');
@@ -10063,6 +10132,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             
             document.getElementById('stStatus').value = 'نشط';
             document.getElementById('stMaxDevices').value = '1';
+            if (document.getElementById('stTeacherCode')) document.getElementById('stTeacherCode').value = '';
+            document.querySelectorAll('#studentAllowedSectionsGrid .st-sec-cb').forEach(cb => cb.checked = true);
             document.getElementById('stDeviceResetWrap').style.display = 'none';
             openModal('studentModal');
         }
@@ -10117,6 +10188,30 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     showNotify('success', res.message || 'تم حفظ بيانات الطالب بنجاح');
                     closeModal('studentModal');
                     if(typeof loadStudentsManagement === 'function') loadStudentsManagement();
+                } else if (res && res.duplicateWarning && Array.isArray(res.duplicates)) {
+                    const dupNames = res.duplicates.map(d => `${d.name} (كود: ${d.code})`).join(' ، ');
+                    Swal.fire({
+                        title: 'تنبيه: طالب مشابه مسجّل مسبقاً',
+                        text: 'يوجد طالب بنفس البيانات: ' + dupNames + '. هل تريد إضافته على أي حال؟',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'نعم، احفظ الطالب',
+                        cancelButtonText: 'إلغاء'
+                    }).then(r => {
+                        if (r.isConfirmed) {
+                            payload.forceSave = true;
+                            toggleLoading(btn, true);
+                            runGS('saveStudentProfile', payload).then(r2 => {
+                                if (r2 && r2.success) {
+                                    showNotify('success', r2.message || 'تم حفظ بيانات الطالب بنجاح');
+                                    closeModal('studentModal');
+                                    if(typeof loadStudentsManagement === 'function') loadStudentsManagement();
+                                } else {
+                                    showNotify('error', r2 ? r2.message : 'حدث خطأ من السيرفر');
+                                }
+                            }).finally(() => toggleLoading(btn, false));
+                        }
+                    });
                 } else {
                     showNotify('error', res ? res.message : 'حدث خطأ من السيرفر');
                 }
@@ -11230,13 +11325,26 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
         // --- الدوال المفقودة لعمل الأزرار ---
 
+        function generateAutoEmpCode_() {
+            const used = new Set((window.allEmployees || []).map(e => String(e.code || '').trim()));
+            let code = '';
+            do {
+                code = String(Math.floor(10000 + Math.random() * 90000));
+            } while (used.has(code));
+            const el = document.getElementById('empCode');
+            if (el) el.value = code;
+            return code;
+        }
+
         function onEmployeeRoleChanged(role) {
             const wrap = document.getElementById('empTeacherSelectWrap');
             if (role === 'مساعد معلم') {
-                wrap.style.display = 'block';
+                if (wrap) wrap.style.display = 'block';
                 populateTeachersDropdown('empTeacherCode');
             } else {
-                wrap.style.display = 'none';
+                if (wrap) wrap.style.display = 'none';
+                const tc = document.getElementById('empTeacherCode');
+                if (tc) tc.value = '';
             }
         }
 
@@ -11245,7 +11353,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const container = document.getElementById('empPerfSectionsContainer');
             if (!container) return;
             container.style.opacity = enabled ? '1' : '0.45';
-            container.querySelectorAll('input').forEach(el => el.disabled = !enabled);
+            container.querySelectorAll('input, select').forEach(el => el.disabled = !enabled);
+            if (enabled) {
+                const anyChecked = Array.from(document.querySelectorAll('.emp-perf-sec-cb')).some(cb => cb.checked);
+                if (!anyChecked) {
+                    document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = true);
+                }
+            }
         }
 
         function renderEmployeePermissionsDropdowns(empData) {
@@ -11286,10 +11400,10 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.getElementById('editEmployeeOriginalCode').value = '';
             document.getElementById('empName').value = '';
             document.getElementById('empRole').value = 'موظف';
-            document.getElementById('empCode').value = '';
+            generateAutoEmpCode_();
             document.getElementById('empTeacherCode').value = '';
             document.getElementById('empPhone').value = '';
-            document.getElementById('employeeModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة موظف جديد';
+            document.getElementById('employeeModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة موظف / معلم جديد';
             
             onEmployeeRoleChanged('موظف');
             
@@ -11299,6 +11413,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = false);
             document.getElementById('empPerfTargetWajib').value = '';
             document.getElementById('empPerfTargetIkhtibarat').value = '';
+            var exDayEl = document.getElementById('empPerfExamDay');
+            if (exDayEl) exDayEl.value = '';
             var slaW = document.getElementById('empPerfSlaWajib');
             var slaT = document.getElementById('empPerfSlaTasmiya');
             var slaI = document.getElementById('empPerfSlaIkhtibarat');
@@ -11338,6 +11454,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfTargets = emp.perfTargets || {};
             document.getElementById('empPerfTargetWajib').value = perfTargets.wajib || '';
             document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
+            var exDayEdit = document.getElementById('empPerfExamDay');
+            if (exDayEdit) exDayEdit.value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
             const perfSla = emp.perfSla || {};
             var slaW = document.getElementById('empPerfSlaWajib');
             var slaT = document.getElementById('empPerfSlaTasmiya');
@@ -11377,18 +11495,19 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         function saveEmployeeProfile(btn) {
             const name = document.getElementById('empName').value.trim();
             const role = document.getElementById('empRole').value;
-            const teacherCode = document.getElementById('empTeacherCode').value;
-            const code = document.getElementById('empCode').value.trim();
-            const originalCode = document.getElementById('editEmployeeOriginalCode').value;
+            const teacherCode = (role === 'مساعد معلم') ? (document.getElementById('empTeacherCode').value || '') : '';
+            let code = document.getElementById('empCode').value.trim();
+            const originalCode = document.getElementById('editEmployeeOriginalCode').value.trim();
             const phone = document.getElementById('empPhone').value.trim();
 
-            if (!name) return showNotify('error', 'يرجى إدخال اسم الموظف');
+            if (!name) return showNotify('error', 'يرجى إدخال اسم الموظف أو المعلم');
+            if (!code) code = originalCode || generateAutoEmpCode_();
 
             const secCbs = document.querySelectorAll('.emp-sec-cb');
             let selectedSecs = [];
-            let allSecsChecked = true;
+            let allSecsChecked = secCbs.length > 0;
             secCbs.forEach(cb => {
-                if(cb.checked) selectedSecs.push(cb.value);
+                if (cb.checked) selectedSecs.push(cb.value);
                 else allSecsChecked = false;
             });
             let finalSections = allSecsChecked ? 'ALL' : (selectedSecs.length > 0 ? selectedSecs : 'لا يوجد');
@@ -11405,9 +11524,12 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfEnabled = document.getElementById('empPerfEnabled').checked;
             let selectedPerfSecs = [];
             document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
+            if (perfEnabled && selectedPerfSecs.length === 0) {
+                selectedPerfSecs = ['wajib', 'tasmiya', 'ikhtibarat'];
+            }
             const perfTargets = {
                 wajib: Number(document.getElementById('empPerfTargetWajib')?.value) || 0,
-                tasmiya: 0, // التسميع بيتحسب تلقائي فمش محتاجين رقم ثابت
+                tasmiya: 0,
                 ikhtibarat: Number(document.getElementById('empPerfTargetIkhtibarat')?.value) || 0
             };
             const perfSla = {
@@ -11415,6 +11537,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 tasmiya: Number(document.getElementById('empPerfSlaTasmiya')?.value) || 48,
                 ikhtibarat: Number(document.getElementById('empPerfSlaIkhtibarat')?.value) || 96
             };
+            const perfExamDay = document.getElementById('empPerfExamDay') ? document.getElementById('empPerfExamDay').value : '';
 
             const empData = {
                 originalCode: originalCode,
@@ -11424,6 +11547,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 teacherCode: teacherCode,
                 phone: phone,
                 allowedTypes: selectedTypes,
+                assignedTypes: selectedTypes,
                 assignedGrades: selectedGrades,
                 allowedClasses: selectedGrades,
                 assignedGroups: selectedGroups,
@@ -11432,21 +11556,31 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 perfEnabled: perfEnabled,
                 perfSections: selectedPerfSecs,
                 perfTargets: perfTargets,
-                perfSla: perfSla
+                perfSla: perfSla,
+                perfExamDay: perfExamDay
             };
 
-            if(btn) disableBtn(btn);
+            if (btn) disableBtn(btn);
             runGS('saveEmployeeProfileGS', empData, window.currentEmployee.code).then(res => {
-                if(btn) enableBtn(btn);
-                if(res && res.success) {
+                if (btn) enableBtn(btn);
+                if (res && res.success) {
                     showNotify('success', res.message);
                     closeModal('employeeModal');
+                    // مسح كاش تحليل الأداء المحلي ليظهر الموظف المفعّل فوراً
+                    try {
+                        Object.keys(localStorage).forEach(k => {
+                            if (k.startsWith('cache_emp_perf_')) localStorage.removeItem(k);
+                        });
+                    } catch (_e) {}
                     loadEmployeesManagement();
+                    if (typeof loadEmployeesPerformanceDashboard === 'function') {
+                        loadEmployeesPerformanceDashboard(null, null, true);
+                    }
                 } else {
-                    showNotify('error', res ? res.message : 'حدث خطأ');
+                    showNotify('error', res ? res.message : 'حدث خطأ أثناء الحفظ');
                 }
             }).catch(err => {
-                if(btn) enableBtn(btn);
+                if (btn) enableBtn(btn);
                 showNotify('error', err.message);
             });
         }
@@ -11903,8 +12037,10 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                                     <div style="width: 45px; height: 45px; border-radius: 10px; background: ${colors[item.contentType]}15; color: ${colors[item.contentType]}; display: flex; justify-content: center; align-items: center; font-size: 1.3rem;"><i class="fas ${icons[item.contentType]}"></i></div>
                                     <div style="font-weight: 800; color: var(--dark); font-size: 1.05rem; line-height:1.4;">${item.title}</div>
  </div>
+                                ${item.isLatest ? `<div style="margin-bottom:10px;"><span style="background:linear-gradient(135deg,#0f5d57,#0d9488); color:#fff; padding:4px 12px; border-radius:99px; font-size:0.78rem; font-weight:800; display:inline-flex; align-items:center; gap:5px;"><i class="fas fa-history"></i> ${item.latestBadge || 'آخر ما تم تسجيله'}</span></div>` : ''}
                                 <div style="font-size: 0.85rem; color: var(--gray); margin-bottom: 15px; display:flex; flex-wrap:wrap; gap:8px;">
                                     <span style="background:${colors[item.contentType]}15; color:${colors[item.contentType]}; padding:4px 10px; border-radius:6px; font-weight:bold;">${labels[item.contentType]}</span>
+                                    ${item.date ? `<span style="background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:6px; font-weight:bold;"><i class="far fa-calendar-alt"></i> ${item.date}</span>` : ''}
                                     ${mode === 'group' ? `<span style="background:#f1f5f9; padding:4px 10px; border-radius:6px;">${item.grade} - ${item.group}</span>` : ''}
                                     <span style="background:#ecfdf5; color:#059669; padding:4px 10px; border-radius:6px; font-weight:bold;">متاح لـ ${item.studentCount} طالب</span>
  </div>
@@ -12078,6 +12214,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         <label>2. نوع المحتوى المطلوب</label>
                         <select id="globalSearchType" class="form-control" style="font-weight:bold;">
                             <option value="all">كل شيء (شامل)</option>
+                            <option value="latest">آخر ما تم تسجيله (واجب وتسميع وحصص)</option>
                             <option value="wajib">الواجبات</option>
                             <option value="tasmiya">التسميع</option>
                             <option value="ikhtibarat">الاختبارات</option>
@@ -12895,6 +13032,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfTargets = emp.perfTargets || {};
             document.getElementById('empPerfTargetWajib').value = perfTargets.wajib || '';
             document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
+            var exDayEdit = document.getElementById('empPerfExamDay');
+            if (exDayEdit) exDayEdit.value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
             const perfSla = emp.perfSla || {};
             if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = perfSla.wajib || 48;
             if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = perfSla.tasmiya || 48;
@@ -14298,9 +14437,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         <div class="form-group" style="margin:0;">
                             <label style="font-size:0.82rem; font-weight:700;">نوع المهام المتراكمة</label>
                             <select id="bsTaskType" class="form-control" onchange="rebuildBacklogSchedulePreview()">
-                                <option value="both">الكل (واجبات + تسميعات)</option>
+                                <option value="both">الكل (واجبات + اختبارات)</option>
                                 <option value="wajib">الواجبات المتأخرة فقط</option>
-                                <option value="tasmiya">التسميعات المتأخرة فقط</option>
+                                <option value="ikhtibarat">الاختبارات المتأخرة فقط</option>
                             </select>
  </div>
                         <div class="form-group" style="margin:0;">
@@ -14661,14 +14800,17 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     if (prev) prev.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">' + escapeHtml_((res && res.message) || 'تعذر تحميل البيانات') + '</div>';
                     return;
                 }
-                window._bsState.sla = res.sla || { wajib: 48, tasmiya: 48 };
+                window._bsState.sla = res.sla || { wajib: 48, ikhtibarat: 96 };
                 window._bsState.overdueWajib = res.overdueWajib || [];
-                window._bsState.overdueTasmiya = res.overdueTasmiya || [];
+                window._bsState.overdueExams = res.overdueExams || [];
+                window._bsState.overdueTasmiya = [];
                 window._bsState.savedSchedule = res.savedSchedule || null;
 
                 var slaEl = document.getElementById('bsSlaSummaryChip');
                 if (slaEl) {
-                    slaEl.innerHTML = '<i class="fas fa-stopwatch" style="color:var(--primary); margin-left:4px;"></i> مدة SLA الموظف — الواجب: <b>' + window._bsState.sla.wajib + ' ساعة</b> | التسميع: <b>' + window._bsState.sla.tasmiya + ' ساعة</b>';
+                    var arDaysChip = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+                    var exDayChip = (res.examDay !== undefined && res.examDay !== '' && !isNaN(Number(res.examDay))) ? ('يوم ' + arDaysChip[Number(res.examDay)]) : ((window._bsState.sla.ikhtibarat || 96) + ' ساعة');
+                    slaEl.innerHTML = '<i class="fas fa-stopwatch" style="color:var(--primary); margin-left:4px;"></i> الجدولة للواجبات والاختبارات فقط — مهلة الواجب: <b>' + window._bsState.sla.wajib + ' ساعة</b> | موعد الاختبار: <b>' + exDayChip + '</b>';
                 }
 
                 var savedBanner = document.getElementById('bsSavedNotice');
@@ -14708,7 +14850,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var tt = (document.getElementById('bsTaskType') || {}).value || 'both';
             var list = [];
             if (tt === 'wajib' || tt === 'both') list = list.concat(window._bsState.overdueWajib || []);
-            if (tt === 'tasmiya' || tt === 'both') list = list.concat(window._bsState.overdueTasmiya || []);
+            if (tt === 'ikhtibarat' || tt === 'both') list = list.concat(window._bsState.overdueExams || []);
             // ترتيب صارم من الأقدم للأحدث (أكبر عمر بالساعات أولاً)
             list.sort(function(a, b) { return (b.ageHours || 0) - (a.ageHours || 0); });
             return list;
@@ -14741,13 +14883,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var skipFridays = !!(document.getElementById('bsSkipFridays') && document.getElementById('bsSkipFridays').checked);
 
             var wCount = (window._bsState.overdueWajib || []).length;
-            var tCount = (window._bsState.overdueTasmiya || []).length;
+            var eCount = (window._bsState.overdueExams || []).length;
 
             if (statsEl) {
                 statsEl.innerHTML =
                     '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#dc2626;">' + pool.length + '</div><div style="font-size:0.76rem;color:var(--gray);">إجمالي المتراكم (محدد)</div></div>' +
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#d97706;">' + wCount + '</div><div style="font-size:0.76rem;color:var(--gray);">واجبات متأخرة عن SLA</div></div>' +
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#4f46e5;">' + tCount + '</div><div style="font-size:0.76rem;color:var(--gray);">تسميعات متأخرة عن SLA</div></div>' +
+                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#d97706;">' + wCount + '</div><div style="font-size:0.76rem;color:var(--gray);">واجبات متأخرة</div></div>' +
+                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#dc2626;">' + eCount + '</div><div style="font-size:0.76rem;color:var(--gray);">اختبارات أسبوعية متأخرة</div></div>' +
                     '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#16a34a;">' + Math.min(pool.length, perDay * maxDays) + '</div><div style="font-size:0.76rem;color:var(--gray);">سيتم جدولتها الآن</div></div>';
             }
 
@@ -14792,8 +14934,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 html += '</div>';
                 html += '<div style="padding:10px 14px; display:flex; flex-direction:column; gap:6px;">';
                 dayObj.items.forEach(function(it, iIdx) {
-                    var typeBadge = it.type === 'tasmiya'
-                        ? '<span style="background:#eef2ff; color:#4f46e5; padding:2px 8px; border-radius:6px; font-size:0.74rem; font-weight:700;">تسميع</span>'
+                    var typeBadge = it.type === 'ikhtibarat'
+                        ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:6px; font-size:0.74rem; font-weight:700;">اختبار</span>'
                         : '<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:6px; font-size:0.74rem; font-weight:700;">واجب</span>';
                     html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:6px 10px; background:#f8fafc; border-radius:8px; font-size:0.84rem;">' +
                         '<div style="display:flex; align-items:center; gap:8px;">' +
@@ -15185,7 +15327,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             processed.forEach(function(item, idx) {
                 if (!canUserJoinScheduledLesson_(item)) return;
                 var st = item.status;
-                if (st.isLive || (st.daysDiff === 0 && st.minutesUntilStart >= 0 && st.minutesUntilStart <= 5)) {
+                if (st.isLive || (st.daysDiff === 0 && st.minutesUntilStart >= 0 && st.minutesUntilStart <= 15)) {
                     activeSlots.push({ item: item, idx: idx });
                 }
             });
@@ -16049,16 +16191,41 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     // 4. إخفاء أكواد الطلاب مثل (24502) بجانب أسماء الطلاب في كل القوائم والجداول
     // =========================================================================
     function cleanAllStudentSelectLabels_() {
-        document.querySelectorAll('select.student-select option').forEach(function(opt) {
-            if (opt.textContent && /[\(（]\s*\d+\s*[\)）]/.test(opt.textContent)) {
-                opt.textContent = opt.textContent.replace(/\s*[\(（]\s*\d+\s*[\)）]\s*/g, '').trim();
+        // 1. تنظيف جميع القوائم المنسدلة (مع الحفاظ على القيمة الداخلية value كما هي)
+        document.querySelectorAll('select option').forEach(function(opt) {
+            if (opt.textContent && /[\u0600-\u06FF]\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/.test(opt.textContent)) {
+                opt.textContent = opt.textContent.replace(/([\u0600-\u06FF])\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/g, '$1').replace(/\s{2,}/g, ' ').trim();
             }
         });
+        // 2. تنظيف أسماء الطلاب المعروضة في كل الجداول والبطاقات والنوافذ بجميع الأقسام (مثل: محمد أحمد (21542) -> محمد أحمد)
+        var skipTags = { SCRIPT: 1, STYLE: 1, INPUT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, OPTION: 1 };
+        var codeInNameRe = /([\u0600-\u06FF])\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/g;
+        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        var node;
+        while ((node = walker.nextNode())) {
+            var val = node.nodeValue;
+            if (!val || val.indexOf('(') === -1 && val.indexOf('（') === -1) continue;
+            var parent = node.parentNode;
+            if (!parent || skipTags[parent.nodeName]) continue;
+            if (codeInNameRe.test(val)) {
+                codeInNameRe.lastIndex = 0;
+                node.nodeValue = val.replace(codeInNameRe, '$1').replace(/\s{2,}/g, ' ');
+            }
+        }
     }
     (function() {
-        var observer = new MutationObserver(function() { cleanAllStudentSelectLabels_(); });
+        var rafPending = false;
+        var scheduleClean = function() {
+            if (rafPending) return;
+            rafPending = true;
+            requestAnimationFrame(function() {
+                rafPending = false;
+                cleanAllStudentSelectLabels_();
+            });
+        };
+        var observer = new MutationObserver(scheduleClean);
         observer.observe(document.body, { childList: true, subtree: true });
-        setTimeout(cleanAllStudentSelectLabels_, 500);
+        setTimeout(cleanAllStudentSelectLabels_, 400);
     })();
     </script>
 
@@ -16098,7 +16265,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }
             var emps = Array.isArray(res.employees) ? res.employees : [];
             if (emps.length === 0) {
-                container.innerHTML = '<div style="padding:32px; text-align:center; color:var(--gray); font-weight:700;">لا يوجد موظفون مفعّل لهم تحليل الأداء حالياً.</div>';
+                var isAdminEmpty = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
+                container.innerHTML = '<div style="padding:32px; text-align:center; color:var(--gray); font-weight:700;">لا يوجد موظفون مفعّل لهم تحليل الأداء حالياً — يمكنك تفعيله من إعدادات كل موظف.' +
+                    (isAdminEmpty ? '<div style="margin-top:14px;"><button type="button" class="btn btn-sm btn-warning" onclick="openBacklogSchedulerModal()"><i class="fas fa-calendar-alt"></i> جدولة المهام المتأخرة (الواجبات والاختبارات)</button></div>' : '') + '</div>';
                 return;
             }
 
@@ -16181,6 +16350,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     } else if (key === 'ikhtibarat') {
                         chips.push('<span class="emp-perf-chip"><i class="fas fa-upload" style="color:#2563eb;"></i> مرفوع: ' + (k.publishedCount || k.totalAchievements || 0) + ' اختبار</span>');
                         chips.push('<span class="emp-perf-chip">تغطية الصفوف: <b style="color:' + scoreColor_(k.gradeCoverage) + ';">' + (k.coveredGrades || 0) + '/' + (k.totalGrades || 0) + ' (' + (k.gradeCoverage || 0) + '%)</b></span>');
+                        if (k.examDayNote) chips.push('<span class="emp-perf-chip" style="color:#0f5d57;"><i class="fas fa-calendar-day"></i> ' + escapeHtml_(k.examDayNote) + '</span>');
                     }
 
                     var accumPill = k.isAccumulating

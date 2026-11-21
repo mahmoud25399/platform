@@ -1247,6 +1247,8 @@
     let lastEraseTime     = 0;
     let currentStamp     = 'check';
     let currentBoardId   = 'board_' + Date.now();
+    let lastPublishedLessonName = '';
+    let lastPublishedPdfUrl = '';
     let customFrameImage = null;
 
     // Camera (Pan & Zoom)
@@ -1582,8 +1584,137 @@
       ctx.restore();
     }
 
+    function ensureElementId(el) {
+      if (!el) return '';
+      if (!el.id) el.id = 'el_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+      return el.id;
+    }
+
+    function attachStrokeIfOverContainer(stroke) {
+      if (!stroke || (stroke.type !== 'pen' && stroke.type !== 'highlighter')) return;
+      if (!stroke.points || stroke.points.length === 0) return;
+      const els = curElements();
+      const pStart = stroke.points[0];
+      const pMid = stroke.points[Math.floor(stroke.points.length / 2)] || pStart;
+      const testPts = [pStart, pMid];
+
+      for (let i = els.length - 1; i >= 0; i--) {
+        const target = els[i];
+        if (!target || target === stroke) continue;
+
+        if (target.type === 'mindmap' && Array.isArray(target.nodes)) {
+          for (let ni = target.nodes.length - 1; ni >= 0; ni--) {
+            const node = target.nodes[ni];
+            const nw = node.w || 100, nh = node.h || 36;
+            const hit = testPts.some(pt => pt.x >= node.x - 14 && pt.x <= node.x + nw + 14 && pt.y >= node.y - 14 && pt.y <= node.y + nh + 14);
+            if (hit) {
+              const pid = ensureElementId(target);
+              stroke.attach = { parentId: pid, parentType: 'mindmap', nodeId: node.id, baseW: nw, baseH: nh };
+              stroke.relPoints = stroke.points.map(pt => ({ nx: (pt.x - node.x) / nw, ny: (pt.y - node.y) / nh, p: pt.p }));
+              return;
+            }
+          }
+        } else if (target.type === 'table') {
+          const totalW = getTblTotalW(target), totalH = getTblTotalH(target);
+          const hit = testPts.some(pt => pt.x >= target.x - 8 && pt.x <= target.x + totalW + 8 && pt.y >= target.y - 8 && pt.y <= target.y + totalH + 8);
+          if (hit) {
+            const pid = ensureElementId(target);
+            stroke.attach = { parentId: pid, parentType: 'table', baseW: totalW, baseH: totalH };
+            stroke.relPoints = stroke.points.map(pt => ({ nx: (pt.x - target.x) / totalW, ny: (pt.y - target.y) / totalH, p: pt.p }));
+            return;
+          }
+        } else if (target.type === 'pdf' || target.type === 'image') {
+          const hit = testPts.some(pt => pt.x >= target.x && pt.x <= target.x + target.w && pt.y >= target.y && pt.y <= target.y + target.h);
+          if (hit) {
+            const pid = ensureElementId(target);
+            const { drawW, drawH } = getPdfDrawDims(target);
+            const vx = target.viewX || 0, vy = target.viewY || 0;
+            const safeW = drawW || target.w || 1, safeH = drawH || target.h || 1;
+            stroke.attach = {
+              parentId: pid,
+              parentType: target.type,
+              pdfPage: target.type === 'pdf' ? (target.pageNum || 1) : undefined,
+              baseW: safeW,
+              baseH: safeH
+            };
+            stroke.relPoints = stroke.points.map(pt => ({
+              nx: (pt.x - (target.x + vx)) / safeW,
+              ny: (pt.y - (target.y + vy)) / safeH,
+              p: pt.p
+            }));
+            return;
+          }
+        }
+      }
+    }
+
+    function resolveAttachedStrokeWorld(stroke, parent) {
+      if (!stroke || !stroke.attach || !stroke.relPoints || !parent) return null;
+      const att = stroke.attach;
+      if (att.parentType === 'pdf') {
+        if ((parent.pageNum || 1) !== (att.pdfPage || 1)) return null;
+        const { drawW, drawH } = getPdfDrawDims(parent);
+        const vx = parent.viewX || 0, vy = parent.viewY || 0;
+        const scale = (att.baseW && drawW) ? (drawW / att.baseW) : 1;
+        return {
+          ...stroke,
+          size: (stroke.size || 4) * scale,
+          points: stroke.relPoints.map(rp => ({ x: parent.x + vx + rp.nx * drawW, y: parent.y + vy + rp.ny * drawH, p: rp.p }))
+        };
+      }
+      if (att.parentType === 'image') {
+        const { drawW, drawH } = getPdfDrawDims(parent);
+        const vx = parent.viewX || 0, vy = parent.viewY || 0;
+        const scale = (att.baseW && drawW) ? (drawW / att.baseW) : 1;
+        return {
+          ...stroke,
+          size: (stroke.size || 4) * scale,
+          points: stroke.relPoints.map(rp => ({ x: parent.x + vx + rp.nx * drawW, y: parent.y + vy + rp.ny * drawH, p: rp.p }))
+        };
+      }
+      if (att.parentType === 'table') {
+        const totalW = getTblTotalW(parent), totalH = getTblTotalH(parent);
+        const scale = (att.baseW && totalW) ? (totalW / att.baseW) : 1;
+        return {
+          ...stroke,
+          size: (stroke.size || 4) * scale,
+          points: stroke.relPoints.map(rp => ({ x: parent.x + rp.nx * totalW, y: parent.y + rp.ny * totalH, p: rp.p }))
+        };
+      }
+      if (att.parentType === 'mindmap') {
+        const node = (parent.nodes || []).find(n => n.id === att.nodeId);
+        if (!node) return null;
+        const nw = node.w || 100, nh = node.h || 36;
+        const scale = (att.baseW && nw) ? (nw / att.baseW) : 1;
+        return {
+          ...stroke,
+          size: (stroke.size || 4) * scale,
+          points: stroke.relPoints.map(rp => ({ x: node.x + rp.nx * nw, y: node.y + rp.ny * nh, p: rp.p }))
+        };
+      }
+      return null;
+    }
+
+    function drawAttachedStrokesForParent(ctx, parent, clipToFrame) {
+      if (!parent || !parent.id) return;
+      const attached = curElements().filter(s => s && s.attach && s.attach.parentId === parent.id);
+      if (attached.length === 0) return;
+      ctx.save();
+      if (clipToFrame) {
+        ctx.beginPath();
+        ctx.rect(parent.x, parent.y, parent.w, parent.h);
+        ctx.clip();
+      }
+      for (const s of attached) {
+        const worldStroke = resolveAttachedStrokeWorld(s, parent);
+        if (worldStroke) renderRibbonStroke(ctx, worldStroke);
+      }
+      ctx.restore();
+    }
+
     function drawElement(ctx, el) {
       if (!el) return;
+      if (el.attach) return; // تُرسم فوق العنصر المرتبط بها مباشرة
       if (el.type === 'pen' || el.type === 'highlighter') {
         renderRibbonStroke(ctx, el);
         return;
@@ -1652,6 +1783,7 @@
         ctx.clip();
         ctx.drawImage(el.imgObj, el.x + vx, el.y + vy, drawW, drawH);
         ctx.restore();
+        drawAttachedStrokesForParent(ctx, el, true);
       } else if (el.type === 'pdf') {
         ctx.save();
         ctx.shadowColor = 'rgba(15, 23, 42, 0.14)';
@@ -1671,13 +1803,16 @@
           ctx.drawImage(el.imgObj, el.x + vx, el.y + vy, drawW, drawH);
           ctx.restore();
         }
+        drawAttachedStrokesForParent(ctx, el, true);
         ctx.strokeStyle = el.locked ? '#94a3b8' : '#cbd5e1';
         ctx.lineWidth = 1.2 / zoom;
         ctx.strokeRect(el.x, el.y, el.w, el.h);
       } else if (el.type === 'table') {
         drawTableElement(ctx, el);
+        drawAttachedStrokesForParent(ctx, el, false);
       } else if (el.type === 'mindmap') {
         drawMindmapElement(ctx, el);
+        drawAttachedStrokesForParent(ctx, el, false);
       }
       ctx.restore();
     }
@@ -2114,26 +2249,57 @@
         const nextEls = [];
         for (const el of els) {
           if (el.type === 'pen' || el.type === 'highlighter') {
-            let hit = false;
-            const segments = [];
-            let seg = [];
-            for (const pt of el.points) {
-              if (Math.hypot(pt.x - coords.x, pt.y - coords.y) <= r) {
-                hit = true;
-                if (seg.length > 1) segments.push(seg);
-                seg = [];
+            if (el.attach && el.relPoints) {
+              const parent = els.find(p => p && p.id === el.attach.parentId);
+              const worldEl = resolveAttachedStrokeWorld(el, parent);
+              if (!worldEl) {
+                // ضربة تابعة لصفحة PDF أخرى - نحتفظ بها كما هي
+                nextEls.push(el);
+                continue;
+              }
+              let hit = false;
+              const relSegs = [];
+              let rSeg = [];
+              for (let idx = 0; idx < worldEl.points.length; idx++) {
+                const pt = worldEl.points[idx];
+                if (Math.hypot(pt.x - coords.x, pt.y - coords.y) <= r) {
+                  hit = true;
+                  if (rSeg.length > 1) relSegs.push(rSeg);
+                  rSeg = [];
+                } else {
+                  rSeg.push(el.relPoints[idx]);
+                }
+              }
+              if (rSeg.length > 1) relSegs.push(rSeg);
+              if (hit) {
+                changed = true;
+                relSegs.forEach(s => nextEls.push({ ...el, relPoints: s }));
               } else {
-                seg.push(pt);
+                nextEls.push(el);
+              }
+            } else {
+              let hit = false;
+              const segments = [];
+              let seg = [];
+              for (const pt of el.points) {
+                if (Math.hypot(pt.x - coords.x, pt.y - coords.y) <= r) {
+                  hit = true;
+                  if (seg.length > 1) segments.push(seg);
+                  seg = [];
+                } else {
+                  seg.push(pt);
+                }
+              }
+              if (seg.length > 1) segments.push(seg);
+              if (hit) {
+                changed = true;
+                segments.forEach(s => nextEls.push({ ...el, points: s }));
+              } else {
+                nextEls.push(el);
               }
             }
-            if (seg.length > 1) segments.push(seg);
-            if (hit) {
-              changed = true;
-              segments.forEach(s => nextEls.push({ ...el, points: s }));
-            } else {
-              nextEls.push(el);
-            }
-          } else if (el.type === 'mindmap' || el.type === 'table' || el.type === 'pdf' || (el.type === 'image' && el.locked)) {
+          } else if (el.type === 'mindmap' || el.type === 'table' || el.type === 'pdf' || el.type === 'image') {
+            // حماية PDF والصور والجداول والخرائط الذهنية من الممحاة - تُحذف فقط من أيقونة الحذف الخاصة بها
             nextEls.push(el);
           } else {
             const box = getBox(el);
@@ -2151,8 +2317,14 @@
         }
       } else {
         const filtered = els.filter(el => {
-          if (el.type === 'mindmap' || el.type === 'table' || el.type === 'pdf' || (el.type === 'image' && el.locked)) return true;
+          if (el.type === 'mindmap' || el.type === 'table' || el.type === 'pdf' || el.type === 'image') return true;
           if (el.type === 'pen' || el.type === 'highlighter') {
+            if (el.attach && el.relPoints) {
+              const parent = els.find(p => p && p.id === el.attach.parentId);
+              const worldEl = resolveAttachedStrokeWorld(el, parent);
+              if (!worldEl) return true;
+              return !worldEl.points.some(pt => Math.hypot(pt.x - coords.x, pt.y - coords.y) <= r);
+            }
             return !el.points.some(pt => Math.hypot(pt.x - coords.x, pt.y - coords.y) <= r);
           }
           const box = getBox(el);
@@ -2964,6 +3136,9 @@
             renderStatic();
           } else {
             pushUndoSnapshot();
+            if (currentElement.type === 'pen' || currentElement.type === 'highlighter') {
+              attachStrokeIfOverContainer(currentElement);
+            }
             curElements().push(currentElement);
             renderStatic();
           }
@@ -3914,13 +4089,14 @@
     document.getElementById('btn-undo').addEventListener('click', undoAction);
     document.getElementById('btn-redo').addEventListener('click', redoAction);
     document.getElementById('btn-clear').addEventListener('click', () => {
-      showConfirm('مسح الصفحة', 'هل تريد مسح جميع عناصر هذه الصفحة؟ يمكنك التراجع لاحقًا بـ Ctrl+Z.', () => {
+      showConfirm('مسح الصفحة', 'سيتم مسح الكتابات والأشكال فقط مع الإبقاء على ملفات PDF والصور والجداول والخرائط الذهنية (يمكن حذفها من أيقونة الحذف الخاصة بها).', () => {
         pushUndoSnapshot();
-        curPage().elements = [];
+        const protectedTypes = ['pdf', 'image', 'table', 'mindmap'];
+        curPage().elements = curPage().elements.filter(el => el && protectedTypes.includes(el.type));
         clearSelection();
         renderStatic();
         renderActive();
-        showToast('warning', 'تم مسح الصفحة');
+        showToast('warning', 'تم مسح الكتابات مع الحفاظ على الملفات والصور والجداول والخرائط');
       });
     });
 
@@ -5360,6 +5536,8 @@
           lessonName,
           grade: document.getElementById('wb-grade-select').value,
           group: document.getElementById('wb-group-select').value,
+          lastPublishedLessonName: lastPublishedLessonName || '',
+          lastPublishedPdfUrl: lastPublishedPdfUrl || '',
           pages: serializePages()
         })
       };
@@ -5367,7 +5545,7 @@
       runGS('saveBoardToCloud', pkg).then(res => {
         if (res && (res.success || (res.data && res.data.success))) {
           clearAutoSave();
-          showToast('success', 'تم حفظ السبورة بالسحابة بنجاح');
+          showToast('success', (res && res.message) || 'تم حفظ السبورة بالسحابة بنجاح');
         } else {
           showToast('error', 'تعذر الاتصال بالسحابة الآن');
         }
@@ -5416,7 +5594,9 @@
             if (res && res.success && res.data) {
               try {
                 const parsed = JSON.parse(res.data);
-                currentBoardId = bid;
+                currentBoardId = String(bid || ('board_' + Date.now())).trim();
+                lastPublishedLessonName = parsed.lastPublishedLessonName || parsed.lessonName || '';
+                lastPublishedPdfUrl = parsed.lastPublishedPdfUrl || '';
                 if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
                 if (parsed.grade) { document.getElementById('wb-grade-select').value = parsed.grade; onGradeChange(parsed.grade); }
                 if (parsed.group) setTimeout(() => { document.getElementById('wb-group-select').value = parsed.group; }, 100);
@@ -5467,9 +5647,19 @@
           const uri = pdf.output('datauristring');
           const base64 = uri.includes(',') ? uri.split(',')[1] : uri;
           document.getElementById('saving-status-text').textContent = 'جاري الرفع لمكتبة الطلاب...';
-          runGS('saveWhiteboardPdfToLibrary', { lessonName, grade, group, pdfBase64: base64 }).then(res => {
+          runGS('saveWhiteboardPdfToLibrary', {
+            lessonName,
+            grade,
+            group,
+            pdfBase64: base64,
+            boardId: currentBoardId,
+            previousLessonName: lastPublishedLessonName || '',
+            previousFileUrl: lastPublishedPdfUrl || ''
+          }).then(res => {
             document.getElementById('modal-saving').classList.add('hidden');
             if (res && res.success) {
+              lastPublishedLessonName = lessonName;
+              if (res.fileUrl) lastPublishedPdfUrl = res.fileUrl;
               clearAutoSave();
               showToast('success', res.message || 'تم حفظ السبورة في مكتبة الطلاب بنجاح');
               saveCurrentBoardToCloud();

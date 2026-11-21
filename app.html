@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1528,46 +1526,58 @@
             container.innerHTML = html;
         }
 
-        function checkLiveLessonStatus() {
+        function parseScheduleTimeMinutes_(timeStr) {
+            if (!timeStr) return null;
+            const normalized = String(timeStr)
+                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                .replace(/مساءً|مساء|pm|PM/g, 'م')
+                .replace(/صباحاً|صباحا|صباح|am|AM/g, 'ص')
+                .trim();
+            const m = normalized.match(/(\d{1,2})\s*:\s*(\d{1,2})\s*(م|ص)?/);
+            if (!m) return null;
+            let hours = parseInt(m[1], 10);
+            const minutes = parseInt(m[2], 10);
+            const ampm = m[3] || '';
+            if (ampm === 'م' && hours < 12) hours += 12;
+            if (ampm === 'ص' && hours === 12) hours = 0;
+            return hours * 60 + minutes;
+        }
+
+        let _appScheduleFetching = false;
+        function checkLiveLessonStatus(forceRefresh) {
             if (!session) return;
+            const cacheKey = 'student_apk_schedule_' + session.password;
             
             const checkLogic = (schedule) => {
+                if (!Array.isArray(schedule)) return;
                 const egyptNow = getEgyptDayAndMinutes();
                 const currentDayName = egyptNow.day;
                 const currentMinutesTotal = egyptNow.minutes;
                 
                 let activeLesson = null;
+                let activeLessonStartsIn = 0;
                 
                 for (let i = 0; i < schedule.length; i++) {
                     const item = schedule[i];
-                    if (item.day !== currentDayName || !item.link) continue;
+                    if (!item || item.day !== currentDayName || !item.link) continue;
                     
-                    const timeMatch = item.time.match(/(\d+):(\d+)\s*(م|ص)/);
-                    if (!timeMatch) continue;
+                    const schedMinutesStart = parseScheduleTimeMinutes_(item.time);
+                    if (schedMinutesStart === null) continue;
                     
-                    let hours = parseInt(timeMatch[1]);
-                    const minutes = parseInt(timeMatch[2]);
-                    const ampm = timeMatch[3];
-                    
-                    if (ampm === "م" && hours < 12) hours += 12;
-                    if (ampm === "ص" && hours === 12) hours = 0;
-                    
-                    const schedMinutesStart = hours * 60 + minutes;
-                    const duration = parseInt(item.duration || 120);
+                    const duration = parseInt(item.duration || 120, 10);
                     const schedMinutesEnd = schedMinutesStart + duration;
                     
-                    if (currentMinutesTotal >= schedMinutesStart && currentMinutesTotal < schedMinutesEnd) {
+                    if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal < schedMinutesEnd) {
                         activeLesson = item;
-                        break;
-                    }
-                    
-                    // Class starts exactly now
-                    if (currentMinutesTotal === schedMinutesStart) {
-                        const alarmKey = `alarm_${currentDayName}_${schedMinutesStart}`;
-                        if (localStorage.getItem('lastAlarmTriggered') !== alarmKey) {
-                            localStorage.setItem('lastAlarmTriggered', alarmKey);
-                            triggerClassAlarm(item);
+                        activeLessonStartsIn = Math.max(0, schedMinutesStart - currentMinutesTotal);
+                        if (currentMinutesTotal === schedMinutesStart) {
+                            const alarmKey = `alarm_${currentDayName}_${schedMinutesStart}`;
+                            if (localStorage.getItem('lastAlarmTriggered') !== alarmKey) {
+                                localStorage.setItem('lastAlarmTriggered', alarmKey);
+                                triggerClassAlarm(item);
+                            }
                         }
+                        break;
                     }
                 }
                 
@@ -1578,27 +1588,64 @@
                 
                 if (banner && titleEl && subtitleEl && linkBtn) {
                     if (activeLesson) {
-                        titleEl.textContent = `الحصة المباشرة قائمة الآن!`;
-                        subtitleEl.textContent = `بدأت الحصة الساعة ${activeLesson.time} (المدة: ${activeLesson.duration} دقيقة).`;
+                        if (activeLessonStartsIn > 0) {
+                            titleEl.textContent = `الحصة المباشرة تبدأ خلال ${activeLessonStartsIn} دقيقة!`;
+                            subtitleEl.textContent = `موعد الحصة الساعة ${activeLesson.time} — يمكنك الدخول الآن.`;
+                        } else {
+                            titleEl.textContent = `الحصة المباشرة قائمة الآن!`;
+                            subtitleEl.textContent = `بدأت الحصة الساعة ${activeLesson.time} (المدة: ${activeLesson.duration || 60} دقيقة).`;
+                        }
                         linkBtn.onclick = () => window.open(activeLesson.link, '_blank');
                         banner.style.display = 'block';
                     } else {
                         banner.style.display = 'none';
                     }
                 }
-                // Render mobile dashboard schedule timetable widget
                 renderDashboardSchedule(schedule);
             };
 
-            if (window.studentScheduleCache && window._scheduleCacheTime && (Date.now() - window._scheduleCacheTime < 2 * 60 * 1000)) {
-                checkLogic(window.studentScheduleCache);
-            } else {
-                api('schedule').then(res => {
-                    if (res.schedule) {
-                        window.studentScheduleCache = res.schedule; window._scheduleCacheTime = Date.now();
-                        checkLogic(window.studentScheduleCache);
+            // 1. عرض فوري من الكاش المحلي (0ms) لمنع تعليق شريط دخول الحصة عند فتح التطبيق
+            if (!window.studentScheduleCache) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+                    if (saved && Array.isArray(saved.schedule)) {
+                        window.studentScheduleCache = saved.schedule;
+                        window._scheduleCacheTime = saved.ts || 0;
                     }
-                }).catch(() => {});
+                } catch(e) {}
+            }
+            if (window.studentScheduleCache) {
+                checkLogic(window.studentScheduleCache);
+            }
+
+            // 2. تحديث من السيرفر في الخلفية مع إعادة المحاولة التلقائية عند التعذر
+            const cacheAge = window._scheduleCacheTime ? (Date.now() - window._scheduleCacheTime) : Infinity;
+            if (forceRefresh || !window.studentScheduleCache || cacheAge >= 2 * 60 * 1000) {
+                if (_appScheduleFetching) return;
+                _appScheduleFetching = true;
+                const fetchAttempt = (attempt) => {
+                    if (!session) { _appScheduleFetching = false; return; }
+                    api('schedule').then(res => {
+                        if (res && Array.isArray(res.schedule)) {
+                            _appScheduleFetching = false;
+                            window.studentScheduleCache = res.schedule;
+                            window._scheduleCacheTime = Date.now();
+                            try { localStorage.setItem(cacheKey, JSON.stringify({ schedule: res.schedule, ts: window._scheduleCacheTime })); } catch(e) {}
+                            checkLogic(window.studentScheduleCache);
+                        } else if (attempt < 2) {
+                            setTimeout(() => fetchAttempt(attempt + 1), 2000);
+                        } else {
+                            _appScheduleFetching = false;
+                        }
+                    }).catch(() => {
+                        if (attempt < 2) {
+                            setTimeout(() => fetchAttempt(attempt + 1), 2000);
+                        } else {
+                            _appScheduleFetching = false;
+                        }
+                    });
+                };
+                fetchAttempt(1);
             }
         }
 
@@ -3190,7 +3237,8 @@
                 }
             }
             api('checkStatus').then(r => { 
-                if(r.isActive === false) forceLogout(r.reason); 
+                if(!r || typeof r !== 'object' || r.error) return;
+                if(r.isActive === false && (r.explicitLogout === true || r.reason)) { forceLogout(r.reason || 'تم إنهاء الجلسة من الإدارة.'); return; }
                 else if(r.sections) {
                     const oldSec = JSON.stringify(session.sections || {});
                     const newSec = JSON.stringify(r.sections);
@@ -3216,7 +3264,9 @@
                     
                     if (sessionChanged) {
                         localStorage.setItem('student_apk_session', JSON.stringify(session));
-                collectAndSendStudentSession(pwd);
+                        if (typeof collectAndSendStudentSession === 'function' && session && session.password) {
+                            collectAndSendStudentSession(session.password);
+                        }
                         applyPlatformSettings();
                         if (document.getElementById('headerClass')) {
                             document.getElementById('headerClass').textContent = session.class || '---';

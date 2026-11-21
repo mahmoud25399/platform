@@ -4461,10 +4461,11 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         });
     }
 
+    let _isVerifyingStatus = false;
     function startStatusMonitoring() {
         if (statusCheckInterval) clearInterval(statusCheckInterval);
-        if (currentUser) verifyAccountStatus(true);
-        statusCheckInterval = setInterval(() => { if (currentUser) verifyAccountStatus(false); }, 7000); 
+        if (currentUser) setTimeout(() => { if (currentUser) verifyAccountStatus(true); }, 2500);
+        statusCheckInterval = setInterval(() => { if (currentUser) verifyAccountStatus(false); }, 45000);
 
         if (realTimeInterval) clearInterval(realTimeInterval);
         realTimeInterval = setInterval(() => {
@@ -4477,19 +4478,27 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
 
                 if (currentSection === 'dashboard') {
                     google.script.run.withSuccessHandler(res => {
-                        const data = JSON.parse(res);
-                        updateDashboardStatsDOM(data);
+                        try {
+                            const data = JSON.parse(res);
+                            updateDashboardStatsDOM(data);
+                        } catch(e) {}
                     }).getDashboardData(currentUser.password);
                     checkLiveLessonStatus();
                 }
             }
-        }, 15000); 
+        }, 25000); 
     }
 
     function verifyAccountStatus(isInitialLoad) {
-        if (!currentUser) return;
+        if (!currentUser || _isVerifyingStatus) return;
+        _isVerifyingStatus = true;
         google.script.run.withSuccessHandler(res => {
-            if (!res.isActive) { forceLogout(res.reason); return; }
+            _isVerifyingStatus = false;
+            if (!res || typeof res !== 'object') return;
+            if (res.isActive === false && (res.explicitLogout === true || res.reason)) {
+                forceLogout(res.reason || 'تم إنهاء الجلسة من الإدارة.');
+                return;
+            }
             if (window.Notification && Notification.permission === 'default') {
                 Notification.requestPermission();
             }
@@ -4523,6 +4532,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 }
             }
         }).withFailureHandler(err => {
+            _isVerifyingStatus = false;
             console.log("Network error checking status, ignoring...");
         }).checkStudentActiveStatus(currentUser.password, getDeviceId());
     }
@@ -5128,46 +5138,59 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         container.innerHTML = html;
     }
 
-    function checkLiveLessonStatus() {
+    function parseScheduleTimeMinutes_(timeStr) {
+        if (!timeStr) return null;
+        const normalized = String(timeStr)
+            .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+            .replace(/مساءً|مساء|pm|PM/g, 'م')
+            .replace(/صباحاً|صباحا|صباح|am|AM/g, 'ص')
+            .trim();
+        const m = normalized.match(/(\d{1,2})\s*:\s*(\d{1,2})\s*(م|ص)?/);
+        if (!m) return null;
+        let hours = parseInt(m[1], 10);
+        const minutes = parseInt(m[2], 10);
+        const ampm = m[3] || '';
+        if (ampm === 'م' && hours < 12) hours += 12;
+        if (ampm === 'ص' && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+    }
+
+    let _scheduleFetchInFlight = false;
+    function checkLiveLessonStatus(forceRefresh) {
         if (!currentUser) return;
+        const cacheKey = 'student_schedule_cache_' + currentUser.password;
         
         const checkLogic = (schedule) => {
+            if (!Array.isArray(schedule)) return;
             const egyptNow = getEgyptDayAndMinutes();
             const currentDayName = egyptNow.day;
             const currentMinutesTotal = egyptNow.minutes;
             
             let activeLesson = null;
+            let activeLessonStartsIn = 0;
             
             for (let i = 0; i < schedule.length; i++) {
                 const item = schedule[i];
-                if (item.day !== currentDayName || !item.link) continue;
+                if (!item || item.day !== currentDayName || !item.link) continue;
                 
-                const timeMatch = item.time.match(/(\d+):(\d+)\s*(م|ص)/);
-                if (!timeMatch) continue;
+                const schedMinutesStart = parseScheduleTimeMinutes_(item.time);
+                if (schedMinutesStart === null) continue;
                 
-                let hours = parseInt(timeMatch[1]);
-                const minutes = parseInt(timeMatch[2]);
-                const ampm = timeMatch[3];
-                
-                if (ampm === "م" && hours < 12) hours += 12;
-                if (ampm === "ص" && hours === 12) hours = 0;
-                
-                const schedMinutesStart = hours * 60 + minutes;
-                const duration = parseInt(item.duration || 120);
+                const duration = parseInt(item.duration || 120, 10);
                 const schedMinutesEnd = schedMinutesStart + duration;
                 
-                if (currentMinutesTotal >= schedMinutesStart && currentMinutesTotal < schedMinutesEnd) {
+                // إظهار شريط الدخول قبل بداية الحصة بـ 15 دقيقة وحتى نهايتها
+                if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal < schedMinutesEnd) {
                     activeLesson = item;
-                    break;
-                }
-                
-                // Class starts exactly now
-                if (currentMinutesTotal === schedMinutesStart) {
-                    const alarmKey = `alarm_${currentDayName}_${schedMinutesStart}`;
-                    if (localStorage.getItem('lastAlarmTriggered') !== alarmKey) {
-                        localStorage.setItem('lastAlarmTriggered', alarmKey);
-                        triggerClassAlarm(item);
+                    activeLessonStartsIn = Math.max(0, schedMinutesStart - currentMinutesTotal);
+                    if (currentMinutesTotal === schedMinutesStart) {
+                        const alarmKey = `alarm_${currentDayName}_${schedMinutesStart}`;
+                        if (localStorage.getItem('lastAlarmTriggered') !== alarmKey) {
+                            localStorage.setItem('lastAlarmTriggered', alarmKey);
+                            triggerClassAlarm(item);
+                        }
                     }
+                    break;
                 }
             }
             
@@ -5178,31 +5201,63 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             
             if (banner && titleEl && subtitleEl && linkEl) {
                 if (activeLesson) {
-                    titleEl.textContent = `حصتك المباشرة قائمة الآن!`;
-                    subtitleEl.textContent = `بدأت الحصة الساعة ${activeLesson.time} (المدة: ${activeLesson.duration} دقيقة).`;
+                    if (activeLessonStartsIn > 0) {
+                        titleEl.textContent = `حصتك المباشرة تبدأ خلال ${activeLessonStartsIn} دقيقة!`;
+                        subtitleEl.textContent = `موعد الحصة الساعة ${activeLesson.time} — يمكنك الدخول والاستعداد الآن.`;
+                    } else {
+                        titleEl.textContent = `حصتك المباشرة قائمة الآن!`;
+                        subtitleEl.textContent = `بدأت الحصة الساعة ${activeLesson.time} (المدة: ${activeLesson.duration || 60} دقيقة).`;
+                    }
                     linkEl.href = activeLesson.link;
                     banner.style.display = 'block';
                 } else {
                     banner.style.display = 'none';
                 }
             }
-            // Render the dashboard schedule timetable grid
             renderDashboardSchedule(schedule);
         };
 
-        if (window.studentScheduleCache && window._scheduleCacheTime && (Date.now() - window._scheduleCacheTime < 2 * 60 * 1000)) {
+        // 1. تحميل فوري من الكاش المحلي (0ms) حتى لا يعلق شريط الحصة أبداً عند الفتح
+        if (!window.studentScheduleCache) {
+            try {
+                const saved = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+                if (saved && Array.isArray(saved.schedule)) {
+                    window.studentScheduleCache = saved.schedule;
+                    window._scheduleCacheTime = saved.ts || 0;
+                }
+            } catch(e) {}
+        }
+        if (window.studentScheduleCache) {
             checkLogic(window.studentScheduleCache);
-        } else {
-            google.script.run.withSuccessHandler(res => {
-                try {
-                    const data = JSON.parse(res);
-                    if (data.schedule) {
-                        window.studentScheduleCache = data.schedule;
-                        window._scheduleCacheTime = Date.now();
-                        checkLogic(window.studentScheduleCache);
+        }
+
+        // 2. تحديث الجدول من السيرفر في الخلفية مع إعادة المحاولة التلقائية عند الفشل
+        const cacheAge = window._scheduleCacheTime ? (Date.now() - window._scheduleCacheTime) : Infinity;
+        if (forceRefresh || !window.studentScheduleCache || cacheAge >= 2 * 60 * 1000) {
+            if (_scheduleFetchInFlight) return;
+            _scheduleFetchInFlight = true;
+            const fetchScheduleAttempt = (attempt) => {
+                if (!currentUser) { _scheduleFetchInFlight = false; return; }
+                google.script.run.withSuccessHandler(res => {
+                    _scheduleFetchInFlight = false;
+                    try {
+                        const data = JSON.parse(res);
+                        if (data && Array.isArray(data.schedule)) {
+                            window.studentScheduleCache = data.schedule;
+                            window._scheduleCacheTime = Date.now();
+                            try { localStorage.setItem(cacheKey, JSON.stringify({ schedule: data.schedule, ts: window._scheduleCacheTime })); } catch(e) {}
+                            checkLogic(window.studentScheduleCache);
+                        }
+                    } catch(e) {}
+                }).withFailureHandler(() => {
+                    if (attempt < 2) {
+                        setTimeout(() => fetchScheduleAttempt(attempt + 1), 2000);
+                    } else {
+                        _scheduleFetchInFlight = false;
                     }
-                } catch(e) {}
-            }).getStudentSchedule(currentUser.password);
+                }).getStudentSchedule(currentUser.password);
+            };
+            fetchScheduleAttempt(1);
         }
     }
 
