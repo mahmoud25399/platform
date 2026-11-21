@@ -4237,45 +4237,39 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     localStorage.setItem('adminCode', code);
                     try { localStorage.setItem('cachedAdminEmp', JSON.stringify(res.employee)); } catch(e) {}
                     window.currentEmployee = res.employee;
-                    applyEmployeePermissions();
+                    try { applyEmployeePermissions(); } catch (_pe) { console.error('applyEmployeePermissions error:', _pe); }
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
                     if(!isAuto) {
                         showNotify('success', 'تم تسجيل الدخول بنجاح');
                     }
-                    document.getElementById('userName').innerText = res.employee.name;
-                    // 1. تحديث اسم الموظف ودوره في رسالة الترحيب
+                    const uNameEl = document.getElementById('userName');
+                    if (uNameEl) uNameEl.innerText = res.employee.name;
                     const welcomeNameEl = document.getElementById('dashWelcomeEmpName');
                     const welcomeRoleEl = document.getElementById('dashWelcomeEmpRole');
                     if(welcomeNameEl) welcomeNameEl.innerText = res.employee.name;
                     if(welcomeRoleEl) welcomeRoleEl.innerText = res.employee.role;
-                    updateAdminMotivation();
+                    try { updateAdminMotivation(); } catch (_me) {}
 
-                    // 2. التحكم في كروت النظرة العامة بناءً على صلاحيات الأقسام
-                    const allowedSecs = res.employee.allowedSections || '';
+                    const allowedSecs = Array.isArray(res.employee.allowedSections) ? res.employee.allowedSections.join(',') : String(res.employee.allowedSections || '');
                     const isAllAllowed = allowedSecs === 'ALL' || allowedSecs === 'الكل' || res.employee.role === 'مالك المنصة' || res.employee.role === 'مدير';
                     
                     const cardWajib = document.getElementById('dashCardWajib');
                     const cardTasmiya = document.getElementById('dashCardTasmiya');
                     const cardExams = document.getElementById('dashCardExams');
 
-                    if(cardWajib) {
-                        cardWajib.style.display = (isAllAllowed || allowedSecs.includes('wajib')) ? 'flex' : 'none';
-                    }
-                    if(cardTasmiya) {
-                        cardTasmiya.style.display = (isAllAllowed || allowedSecs.includes('tasmiya')) ? 'flex' : 'none';
-                    }
-                    if(cardExams) {
-                        cardExams.style.display = (isAllAllowed || allowedSecs.includes('ikhtibarat')) ? 'flex' : 'none';
-                    }
-                    loadInitialData();
+                    if(cardWajib) cardWajib.style.display = (isAllAllowed || allowedSecs.includes('wajib')) ? 'flex' : 'none';
+                    if(cardTasmiya) cardTasmiya.style.display = (isAllAllowed || allowedSecs.includes('tasmiya')) ? 'flex' : 'none';
+                    if(cardExams) cardExams.style.display = (isAllAllowed || allowedSecs.includes('ikhtibarat')) ? 'flex' : 'none';
+
+                    try { loadInitialData(); } catch (_le) { console.error('loadInitialData error:', _le); }
                     
                     if (window.pendingRedirect) {
                         const target = window.pendingRedirect;
                         window.pendingRedirect = null;
                         window.location.hash = '/' + target;
                     }
-                    handleHashRouting();
+                    try { handleHashRouting(); } catch (_he) { console.error('handleHashRouting error:', _he); }
                 } else {
                     if(isAuto) {
                         localStorage.removeItem('adminCode');
@@ -4283,12 +4277,14 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         document.getElementById('loginScreen').style.display = 'flex';
                         showNotify('error', 'انتهت الجلسة');
                     } else {
-                        showNotify('error', res.message);
+                        showNotify('error', (res && res.message) || 'كود الموظف غير صحيح');
                     }
                 }
             })
             .catch(err => {
-                if(!isAuto) showNotify('error', 'خطأ في الاتصال');
+                console.error('performLogin error:', err);
+                const msg = (err && err.message) ? ('خطأ في الاتصال: ' + err.message) : 'خطأ في الاتصال بالسيرفر';
+                if(!isAuto) showNotify('error', msg);
             })
             .finally(() => {
                 if(!isAuto && btn) toggleLoading(btn, false);
@@ -4510,7 +4506,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const validSections = [
                 'dashboard', 'students', 'reports', 'notifications', 
                 'tasmiya', 'wajib', 'ikhtibarat', 'hossas', 
-                'library', 'whatsappSettings', 'platformSettings', 'users', 'schedule', 'liveAttendance'
+                'library', 'adminFiles', 'scheduledTasks', 'games', 'leaderboard', 'whatsappSettings', 'platformSettings', 'users', 'schedule', 'liveAttendance'
             ];
             if (!validSections.includes(targetSection)) {
                 window.location.hash = '#/dashboard';
@@ -16405,27 +16401,26 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     // =========================================================================
     // 4. إخفاء أكواد الطلاب مثل (24502) بجانب أسماء الطلاب في كل القوائم والجداول
     // =========================================================================
+    var _isCleaningSelects = false;
     function cleanAllStudentSelectLabels_() {
-        // 1. تنظيف جميع القوائم المنسدلة (مع الحفاظ على القيمة الداخلية value كما هي)
-        document.querySelectorAll('select option').forEach(function(opt) {
-            if (opt.textContent && /[\u0600-\u06FF]\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/.test(opt.textContent)) {
-                opt.textContent = opt.textContent.replace(/([\u0600-\u06FF])\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/g, '$1').replace(/\s{2,}/g, ' ').trim();
-            }
-        });
-        // 2. تنظيف أسماء الطلاب المعروضة في كل الجداول والبطاقات والنوافذ بجميع الأقسام (مثل: محمد أحمد (21542) -> محمد أحمد)
-        var skipTags = { SCRIPT: 1, STYLE: 1, INPUT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, OPTION: 1 };
-        var codeInNameRe = /([\u0600-\u06FF])\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{3,8}\s*[\)）]/g;
-        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-        var node;
-        while ((node = walker.nextNode())) {
-            var val = node.nodeValue;
-            if (!val || val.indexOf('(') === -1 && val.indexOf('（') === -1) continue;
-            var parent = node.parentNode;
-            if (!parent || skipTags[parent.nodeName]) continue;
-            if (codeInNameRe.test(val)) {
-                codeInNameRe.lastIndex = 0;
-                node.nodeValue = val.replace(codeInNameRe, '$1').replace(/\s{2,}/g, ' ');
-            }
+        if (_isCleaningSelects) return;
+        _isCleaningSelects = true;
+        try {
+            var codeInNameRe = /([\u0600-\u06FF])\s*[\(（]\s*(?!202[0-9]\s*[\)）])\d{4,8}\s*[\)）]/g;
+            document.querySelectorAll('select.student-select option, #historySearchStudent option, #globalSearchStudent option').forEach(function(opt) {
+                if (opt.textContent && codeInNameRe.test(opt.textContent)) {
+                    codeInNameRe.lastIndex = 0;
+                    opt.textContent = opt.textContent.replace(codeInNameRe, '$1').replace(/\s{2,}/g, ' ').trim();
+                }
+            });
+            document.querySelectorAll('table td:first-child, .live-student-name').forEach(function(cell) {
+                if (cell.children.length === 0 && cell.textContent && codeInNameRe.test(cell.textContent)) {
+                    codeInNameRe.lastIndex = 0;
+                    cell.textContent = cell.textContent.replace(codeInNameRe, '$1').replace(/\s{2,}/g, ' ').trim();
+                }
+            });
+        } finally {
+            _isCleaningSelects = false;
         }
     }
     (function() {
