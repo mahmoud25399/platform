@@ -1543,7 +1543,7 @@
             return hours * 60 + minutes;
         }
 
-        let _appScheduleFetching = false;
+        var _appScheduleFetching = false;
         function checkLiveLessonStatus(forceRefresh) {
             if (!session) return;
             const cacheKey = 'student_apk_schedule_' + session.password;

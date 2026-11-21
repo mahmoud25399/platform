@@ -1908,6 +1908,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div class="form-group full-width" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-top:15px;">
                                 <h4 style="color:var(--dark); margin-bottom:15px; font-weight:800;"><i class="fas fa-sliders-h text-primary"></i> إعدادات الاختبار المتقدمة</h4>
                                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:bold; color:var(--primary-dark);"><i class="fas fa-calendar-day"></i> تاريخ ظهور الاختبار للطلاب (اختياري)</label>
+                                        <input type="date" id="ikhtibaratJSONPublishDate" class="form-control" title="اتركه فارغاً ليظهر فوراً، أو اختر يوماً محدداً (مثل الخميس) ليظهر للطلاب تلقائياً في ذلك اليوم">
+                                        <small style="color:var(--gray); font-size:0.75rem;">اتركه فارغاً للنشر فوراً، أو حدد اليوم الذي يظهر فيه للطالب</small>
+                                    </div>
                                     
                                     <div style="background:white; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
                                         <label style="font-weight:bold; font-size:0.9rem; color:var(--dark);"><i class="fas fa-clock text-warning"></i> مدة الاختبار (بالدقائق)</label>
@@ -3119,6 +3124,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                                 <option value="5">الجمعة</option>
                             </select>
                             <span style="font-size:0.76rem; color:#64748b;"><i class="fas fa-calendar-check"></i> لو عدا اليوم المحدد بدون رفع الاختبار يتحسب متأخر في التحليل والجدولة</span>
+ </div>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:8px; border-top:1px dashed rgba(99,102,241,0.25);">
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; min-width:170px; color:var(--primary-dark);"><i class="fas fa-calendar-plus"></i> تاريخ بداية محاسبة الأداء</label>
+                            <input type="date" id="empPerfStartDate" class="form-control" style="max-width:190px;" title="لن يتم احتساب أي واجبات أو تراكمات سابقة قبل هذا التاريخ على هذا الموظف">
+                            <span style="font-size:0.76rem; color:#64748b;">يعزل التراكمات القديمة عن الموظف الجديد تلقائياً (فقط ما بعد هذا التاريخ يُحسب عليه)</span>
  </div>
  </div>
  </div>
@@ -5415,11 +5425,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             
             const finalJsonString = JSON.stringify(examConfig);
 
+            const publishDate = document.getElementById('ikhtibaratJSONPublishDate') ? document.getElementById('ikhtibaratJSONPublishDate').value : '';
             const payload = {
                 "اسم الاختبار": examName,
                 "الدرجة": "",
                 "ملاحظات": "",
-                "تاريخ الانتهاء": deadline
+                "تاريخ الانتهاء": deadline,
+                "تاريخ الظهور": publishDate
             };
             if(mode === 'single') payload["اسم الطالب"] = student;
 
@@ -10308,6 +10320,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const fileInp = document.getElementById('ikhtibaratFile');
             const dlToggle = document.getElementById('ikhtibaratDeadlineToggle');
             const deadline = (dlToggle && dlToggle.checked) ? document.getElementById('ikhtibaratDeadline').value : '';
+            const publishDateEl = document.getElementById('ikhtibaratPublishDate');
+            const publishDate = publishDateEl ? publishDateEl.value : '';
 
             if (!name) return showNotify('error', 'يرجى إدخال اسم الاختبار');
             if (isGroup && !grade) return showNotify('error', 'يرجى اختيار الصف');
@@ -10315,7 +10329,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             const doSave = function(fileBase64, fileName, fileMime) {
                 if (btn) toggleLoading(btn, true);
-                const dataObj = { "اسم الاختبار": name, "الرابط": link, "تاريخ الانتهاء": deadline };
+                const dataObj = { "اسم الاختبار": name, "الرابط": link, "تاريخ الانتهاء": deadline, "تاريخ الظهور": publishDate };
                 if (!isGroup) dataObj["اسم الطالب"] = student;
                 const fileData = fileBase64 ? { base64: fileBase64, name: fileName, mimeType: fileMime } : null;
 
@@ -11415,6 +11429,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.getElementById('empPerfTargetIkhtibarat').value = '';
             var exDayEl = document.getElementById('empPerfExamDay');
             if (exDayEl) exDayEl.value = '';
+            var sdEl = document.getElementById('empPerfStartDate');
+            if (sdEl) sdEl.value = (typeof getLocalDateString === 'function') ? getLocalDateString() : '';
             var slaW = document.getElementById('empPerfSlaWajib');
             var slaT = document.getElementById('empPerfSlaTasmiya');
             var slaI = document.getElementById('empPerfSlaIkhtibarat');
@@ -11456,6 +11472,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
             var exDayEdit = document.getElementById('empPerfExamDay');
             if (exDayEdit) exDayEdit.value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
+            var sdEdit = document.getElementById('empPerfStartDate');
+            if (sdEdit) sdEdit.value = emp.perfStartDate || '';
             const perfSla = emp.perfSla || {};
             var slaW = document.getElementById('empPerfSlaWajib');
             var slaT = document.getElementById('empPerfSlaTasmiya');
@@ -11538,6 +11556,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 ikhtibarat: Number(document.getElementById('empPerfSlaIkhtibarat')?.value) || 96
             };
             const perfExamDay = document.getElementById('empPerfExamDay') ? document.getElementById('empPerfExamDay').value : '';
+            const perfStartDate = document.getElementById('empPerfStartDate') ? document.getElementById('empPerfStartDate').value : '';
 
             const empData = {
                 originalCode: originalCode,
@@ -11557,7 +11576,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 perfSections: selectedPerfSecs,
                 perfTargets: perfTargets,
                 perfSla: perfSla,
-                perfExamDay: perfExamDay
+                perfExamDay: perfExamDay,
+                perfStartDate: perfStartDate
             };
 
             if (btn) disableBtn(btn);
@@ -13034,6 +13054,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
             var exDayEdit = document.getElementById('empPerfExamDay');
             if (exDayEdit) exDayEdit.value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
+            var sdEdit = document.getElementById('empPerfStartDate');
+            if (sdEdit) sdEdit.value = emp.perfStartDate || '';
             const perfSla = emp.perfSla || {};
             if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = perfSla.wajib || 48;
             if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = perfSla.tasmiya || 48;
@@ -14456,10 +14478,16 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
  </div>
  </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:var(--dark);">
-                            <input type="checkbox" id="bsSkipFridays" checked onchange="rebuildBacklogSchedulePreview()" style="width:16px; height:16px; accent-color:var(--primary);">
-                            <span>استثناء يوم الجمعة من أيام الجدولة</span>
- </label>
+                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:var(--dark);">
+                                <input type="checkbox" id="bsSkipFridays" checked onchange="rebuildBacklogSchedulePreview()" style="width:16px; height:16px; accent-color:var(--primary);">
+                                <span>استثناء يوم الجمعة</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:#b45309;">
+                                <input type="checkbox" id="bsIncludeLegacy" onchange="loadBacklogSchedulerData()" style="width:16px; height:16px; accent-color:#d97706;">
+                                <span>تضمين التراكمات القديمة (قبل تاريخ بداية الموظف) لتوزيعها عليه</span>
+                            </label>
+                        </div>
                         <div id="bsSlaSummaryChip" style="font-size:0.8rem; color:var(--gray); font-weight:600;"></div>
  </div>
  </div>
@@ -14795,7 +14823,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var prev = document.getElementById('bsPreviewContainer');
             if (prev) prev.innerHTML = '<div style="text-align:center; padding:30px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">جاري فحص المهام المتأخرة عن SLA...</p></div>';
 
-            runGS('getBacklogScheduleDataGS', empCode, 'both').then(function(res) {
+            var incLegacy = !!(document.getElementById('bsIncludeLegacy') && document.getElementById('bsIncludeLegacy').checked);
+            runGS('getBacklogScheduleDataGS', empCode, 'both', incLegacy).then(function(res) {
                 if (!res || !res.success) {
                     if (prev) prev.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">' + escapeHtml_((res && res.message) || 'تعذر تحميل البيانات') + '</div>';
                     return;

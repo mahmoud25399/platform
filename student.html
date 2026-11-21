@@ -3471,18 +3471,39 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     })();
 
-    window.onYouTubeIframeAPIReady = function() {
+    function flushPendingYtPlayers_() {
+      if (window.YT && window.YT.Player) {
+        ytApiReady = true;
+        Object.keys(ytPendingAutoplay).forEach(idx => {
+          createYtPlayer(idx, false);
+        });
+      }
+    }
+    window.onYouTubeIframeAPIReady = flushPendingYtPlayers_;
+    // فحص فوري + احتياطي في حال تحميل مكتبة يوتيوب قبل تسجيل الدالة
+    if (window.YT && window.YT.Player) {
       ytApiReady = true;
-      Object.keys(ytPendingAutoplay).forEach(idx => {
-        createYtPlayer(idx, false);
-      });
-    };
+    } else {
+      var _ytPollCount = 0;
+      var _ytPollTimer = setInterval(function() {
+        _ytPollCount++;
+        if (window.YT && window.YT.Player) {
+          clearInterval(_ytPollTimer);
+          flushPendingYtPlayers_();
+        } else if (_ytPollCount > 40) {
+          clearInterval(_ytPollTimer);
+        }
+      }, 300);
+    }
 
     function guardInnerHtml(i) {
       const l = currentLessonsData[i];
       // تنظيف الاسم من أي قوسين قبل العرض
       const cleanName = currentUser && currentUser.name ? currentUser.name.replace(/\s*\(.*?\)\s*/g, '').trim() : '';
-      const studentLabel = currentUser ? (cleanName || 'محمي بحقوق الملكية') : 'محمي بحقوق الملكية';
+      const stCode = currentUser ? String(currentUser.code || currentUser.password || '').trim() : '';
+      const studentLabel = currentUser
+        ? (cleanName ? (stCode ? (cleanName + ' (' + stCode + ')') : cleanName) : (stCode || 'محمي بحقوق الملكية'))
+        : 'محمي بحقوق الملكية';
       
       const wmStyle = "pointer-events:none; z-index:10; color:rgba(255,255,255,0.95)!important; text-shadow:0 1px 4px #000; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:6px;";
       
@@ -3537,26 +3558,67 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
       }
     }
 
+    function mountFallbackYtIframe_(i, videoId) {
+      const mountEl = document.getElementById('ytmount-' + i);
+      if (!mountEl) return;
+      const guard = mountEl.closest('.yt-guard') || mountEl.parentElement;
+      if (guard) {
+        const shield = guard.querySelector('.yt-shield');
+        const centerBtn = guard.querySelector('.yt-center-play');
+        const controls = guard.querySelector('.yt-controls');
+        if (shield) shield.style.display = 'none';
+        if (centerBtn) centerBtn.style.display = 'none';
+        if (controls) controls.style.display = 'none';
+      }
+      mountEl.outerHTML = '<iframe id="ytmount-' + i + '" src="https://www.youtube.com/embed/' + encodeURIComponent(videoId) + '?rel=0&modestbranding=1&playsinline=1&autoplay=1" style="position:absolute;inset:0;width:100%;height:100%;border:none;z-index:2;pointer-events:auto;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    }
+
     function createYtPlayer(i, silentAutoplay) {
-      if (!ytApiReady || ytPlayers[i]) return;
+      if (ytPlayers[i]) return;
       const lesson = currentLessonsData[i];
-      if (!lesson || !lesson.isYoutube) return;
+      if (!lesson || !lesson.isYoutube || !lesson.id) return;
+      if (window.YT && window.YT.Player) ytApiReady = true;
+      if (!ytApiReady) {
+        ytPendingAutoplay[i] = !silentAutoplay;
+        // لو مكتبة YouTube IFrame API لم تحمل خلال 4 ثوانٍ، نفتح مشغل iframe مباشر حتى لا تظهر شاشة سوداء
+        setTimeout(() => {
+          if (!ytPlayers[i] && (!window.YT || !window.YT.Player)) {
+            mountFallbackYtIframe_(i, lesson.id);
+          }
+        }, 4000);
+        return;
+      }
       if (!silentAutoplay) ytPendingAutoplay[i] = true;
       const centerIcon = document.querySelector('#ytcenter-' + i + ' i');
       if (centerIcon) { centerIcon.className = 'fas fa-spinner fa-spin'; }
-      ytPlayers[i] = new YT.Player('ytmount-' + i, {
-        videoId: lesson.id,
-        host: 'https://www.youtube-nocookie.com',
-        playerVars: { rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0, controls: 0, playsinline: 1, origin: window.location.origin },
-        events: {
-          onReady: (e) => {
-            if (ytPendingAutoplay[i]) { e.target.playVideo(); delete ytPendingAutoplay[i]; }
-            const ci = document.querySelector('#ytcenter-' + i + ' i');
-            if (ci) ci.className = 'fas fa-play';
-          },
-          onStateChange: (e) => onYtStateChange(i, e)
-        }
-      });
+      const pVars = { rel: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, fs: 0, controls: 0, playsinline: 1, enablejsapi: 1 };
+      if (window.location && window.location.origin && /^https?:\/\//i.test(window.location.origin)) {
+        pVars.origin = window.location.origin;
+      }
+      try {
+        ytPlayers[i] = new YT.Player('ytmount-' + i, {
+          width: '100%',
+          height: '100%',
+          videoId: lesson.id,
+          host: 'https://www.youtube.com',
+          playerVars: pVars,
+          events: {
+            onReady: (e) => {
+              if (ytPendingAutoplay[i]) { e.target.playVideo(); delete ytPendingAutoplay[i]; }
+              const ci = document.querySelector('#ytcenter-' + i + ' i');
+              if (ci) ci.className = 'fas fa-play';
+            },
+            onStateChange: (e) => onYtStateChange(i, e),
+            onError: () => {
+              try { if (ytPlayers[i] && ytPlayers[i].destroy) ytPlayers[i].destroy(); } catch(_e) {}
+              delete ytPlayers[i];
+              mountFallbackYtIframe_(i, lesson.id);
+            }
+          }
+        });
+      } catch (_err) {
+        mountFallbackYtIframe_(i, lesson.id);
+      }
     }
 
     function formatYtTime(secs) {
@@ -4461,7 +4523,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         });
     }
 
-    let _isVerifyingStatus = false;
+    var _isVerifyingStatus = false;
     function startStatusMonitoring() {
         if (statusCheckInterval) clearInterval(statusCheckInterval);
         if (currentUser) setTimeout(() => { if (currentUser) verifyAccountStatus(true); }, 2500);
@@ -5155,7 +5217,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         return hours * 60 + minutes;
     }
 
-    let _scheduleFetchInFlight = false;
+    var _scheduleFetchInFlight = false;
     function checkLiveLessonStatus(forceRefresh) {
         if (!currentUser) return;
         const cacheKey = 'student_schedule_cache_' + currentUser.password;
