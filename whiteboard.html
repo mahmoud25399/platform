@@ -575,6 +575,440 @@
       <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="العودة للوحة التحكم">
         <i class="ph ph-arrow-right text-lg"></i>
       </button>
+      <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
+      <47;
+      display: none;
+      user-select: none;
+      touch-action: none;
+    }
+    #timer-widget.open { display: block; animation: toastIn 0.2s ease; }
+
+    /* Setup Panel View */
+    #timer-widget .timer-setup-view {
+      width: var(--setup-w);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(203, 213, 225, 0.92);
+      box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.18);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+    #timer-widget.circle-mode .timer-setup-view { display: none; }
+
+    /* Circular Live View */
+    #timer-widget .timer-circle-view {
+      display: none;
+      width: var(--circle-sz);
+      height: var(--circle-sz);
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(203, 213, 225, 0.9);
+      position: relative;
+      cursor: grab;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #timer-widget .timer-circle-view:active { cursor: grabbing; }
+    #timer-widget.circle-mode .timer-circle-view { display: flex; }
+
+    #timer-ring-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      pointer-events: none;
+    }
+    .timer-circle-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 84%;
+    }
+    #timer-circle-display {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 700;
+      font-size: calc(var(--circle-sz) * 0.22);
+      line-height: 1;
+      color: #0f172a;
+      direction: ltr;
+    }
+    .timer-circle-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+    .timer-resize-handle {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: nwse-resize;
+      z-index: 5;
+      font-size: 11px;
+      opacity: 0.85;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .timer-resize-handle:hover { opacity: 1; background: #e2e8f0; color: #0f5d57; }
+    #timer-drag-handle { cursor: grab; }
+    #timer-drag-handle:active { cursor: grabbing; }
+    .timer-digits { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; direction: ltr; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #zoom-pill { display: none; }
+      #top-bar { padding: 0 8px; gap: 4px; }
+      .dock-btn { width: 34px; height: 34px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Wacom Hover Cursor & Laser -->
+  <div id="pen-cursor"></div>
+  <div id="laser-pointer"></div>
+
+  <!-- Hidden Inputs -->
+  <textarea id="text-input" class="hidden" placeholder="اكتب النص هنا..."></textarea>
+  <input type="file" id="image-upload" accept="image/*" class="hidden">
+  <input type="file" id="frame-upload" accept="image/*" class="hidden">
+  <input type="file" id="pdf-upload" accept="application/pdf,.pdf" class="hidden">
+
+  <!-- Focus Mode Exit Pill -->
+  <button id="focus-exit-btn" type="button" class="glass-dock px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-teal-800 flex items-center gap-1.5 cursor-pointer" title="إظهار الأشرطة [Tab]">
+    <i class="ph ph-arrows-in-simple text-base"></i>
+    <span>إظهار الأدوات</span>
+  </button>
+
+  <!-- Floating Draggable & Resizable Classroom Timer Widget -->
+  <div id="timer-widget" aria-label="مؤقت الحصة">
+    <!-- 1. Setup Form View -->
+    <div class="timer-setup-view">
+      <div id="timer-drag-handle" class="px-3 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <i class="ph ph-dots-six-vertical text-slate-400 text-sm"></i>
+          <span class="text-xs font-extrabold text-slate-800">مؤقت الحصة</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="timer-sound-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="صوت الجرس عند الانتهاء">
+            <i class="ph ph-bell text-sm"></i>
+          </button>
+          <button id="timer-close-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center" title="إغلاق">
+            <i class="ph ph-x text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-3 pb-4">
+        <!-- Mode Switcher -->
+        <div class="grid grid-cols-2 gap-1 bg-slate-100 rounded-xl p-0.5 mb-2.5">
+          <button id="timer-mode-down" type="button" class="py-1 rounded-lg text-[11px] font-bold bg-white text-teal-800 shadow-sm">عدّ تنازلي</button>
+          <button id="timer-mode-up" type="button" class="py-1 rounded-lg text-[11px] font-bold text-slate-600">ساعة إيقاف</button>
+        </div>
+
+        <!-- Big Display + Stepper -->
+        <div class="flex items-center justify-between gap-1 mb-2.5">
+          <button id="timer-minus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="-30 ثانية">−</button>
+          <div id="timer-display" class="timer-digits text-3xl font-bold text-slate-900 text-center flex-1">03:00</div>
+          <button id="timer-plus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="+30 ثانية">+</button>
+        </div>
+
+        <!-- Quick Presets (Countdown only) -->
+        <div id="timer-presets-row" class="grid grid-cols-5 gap-1 mb-3">
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="60">1د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="120">2د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-teal-50 border border-teal-600 text-[11px] font-bold text-teal-800" data-sec="180">3د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="300">5د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="600">10د</button>
+        </div>
+
+        <!-- Start Button (Normal) -->
+        <button id="timer-start-btn" type="button" class="w-full bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+          <i class="ph ph-play text-sm"></i>
+          <span>بدء المؤقت</span>
+        </button>
+
+        <!-- Resume + Stop Buttons (Shown when paused from circle) -->
+        <div id="timer-paused-actions" class="hidden flex items-center gap-1.5">
+          <button id="timer-resume-btn" type="button" class="flex-1 bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="ph ph-play text-sm"></i>
+            <span>استئناف</span>
+          </button>
+          <button id="timer-stop-btn" type="button" class="px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+            <i class="ph ph-stop text-sm"></i>
+            <span>إيقاف</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Circular Live View (Only 1 clean Pause button inside!) -->
+    <div id="timer-circle-drag" class="timer-circle-view">
+      <svg id="timer-ring-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="53" fill="none" stroke="#e2e8f0" stroke-width="5.5"></circle>
+        <circle id="timer-ring-progress" cx="60" cy="60" r="53" fill="none" stroke="#0f5d57" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="333.01" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-circle-content">
+        <div id="timer-circle-display">03:00</div>
+        <div class="timer-circle-actions">
+          <button id="timer-pause-btn" type="button" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-sm" title="إيقاف مؤقت والعودة للنموذج">
+            <i class="ph ph-pause text-xs"></i>
+            <span>إيقاف مؤقت</span>
+          </button>
+        </div>
+      </div>
+      <div id="timer-circle-resize" class="timer-resize-handle" title="اسحب لتكبير أو تصغير الدائرة">
+        <i class="ph ph-arrows-out-simple"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       1. ULTRA-SLIM TOP HEADER (52px)
+       ══════════════════════════════════════════════════ -->
+  <header id="top-bar">
+    <!-- Right: Back + Lesson Name + Grade/Group -->
+    <div class="flex items-center gap-2 min-w-0">
+      <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="العودة للوحة التحكم">
+        <i class="ph ph-arrow-right text-lg"></i>
+      </button>
+      <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
+      <47;
+      display: none;
+      user-select: none;
+      touch-action: none;
+    }
+    #timer-widget.open { display: block; animation: toastIn 0.2s ease; }
+
+    /* Setup Panel View */
+    #timer-widget .timer-setup-view {
+      width: var(--setup-w);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(203, 213, 225, 0.92);
+      box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.18);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+    #timer-widget.circle-mode .timer-setup-view { display: none; }
+
+    /* Circular Live View */
+    #timer-widget .timer-circle-view {
+      display: none;
+      width: var(--circle-sz);
+      height: var(--circle-sz);
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(203, 213, 225, 0.9);
+      position: relative;
+      cursor: grab;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #timer-widget .timer-circle-view:active { cursor: grabbing; }
+    #timer-widget.circle-mode .timer-circle-view { display: flex; }
+
+    #timer-ring-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      pointer-events: none;
+    }
+    .timer-circle-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 84%;
+    }
+    #timer-circle-display {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 700;
+      font-size: calc(var(--circle-sz) * 0.22);
+      line-height: 1;
+      color: #0f172a;
+      direction: ltr;
+    }
+    .timer-circle-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+    .timer-resize-handle {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: nwse-resize;
+      z-index: 5;
+      font-size: 11px;
+      opacity: 0.85;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .timer-resize-handle:hover { opacity: 1; background: #e2e8f0; color: #0f5d57; }
+    #timer-drag-handle { cursor: grab; }
+    #timer-drag-handle:active { cursor: grabbing; }
+    .timer-digits { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; direction: ltr; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #zoom-pill { display: none; }
+      #top-bar { padding: 0 8px; gap: 4px; }
+      .dock-btn { width: 34px; height: 34px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Wacom Hover Cursor & Laser -->
+  <div id="pen-cursor"></div>
+  <div id="laser-pointer"></div>
+
+  <!-- Hidden Inputs -->
+  <textarea id="text-input" class="hidden" placeholder="اكتب النص هنا..."></textarea>
+  <input type="file" id="image-upload" accept="image/*" class="hidden">
+  <input type="file" id="frame-upload" accept="image/*" class="hidden">
+  <input type="file" id="pdf-upload" accept="application/pdf,.pdf" class="hidden">
+
+  <!-- Focus Mode Exit Pill -->
+  <button id="focus-exit-btn" type="button" class="glass-dock px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-teal-800 flex items-center gap-1.5 cursor-pointer" title="إظهار الأشرطة [Tab]">
+    <i class="ph ph-arrows-in-simple text-base"></i>
+    <span>إظهار الأدوات</span>
+  </button>
+
+  <!-- Floating Draggable & Resizable Classroom Timer Widget -->
+  <div id="timer-widget" aria-label="مؤقت الحصة">
+    <!-- 1. Setup Form View -->
+    <div class="timer-setup-view">
+      <div id="timer-drag-handle" class="px-3 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <i class="ph ph-dots-six-vertical text-slate-400 text-sm"></i>
+          <span class="text-xs font-extrabold text-slate-800">مؤقت الحصة</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="timer-sound-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="صوت الجرس عند الانتهاء">
+            <i class="ph ph-bell text-sm"></i>
+          </button>
+          <button id="timer-close-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center" title="إغلاق">
+            <i class="ph ph-x text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-3 pb-4">
+        <!-- Mode Switcher -->
+        <div class="grid grid-cols-2 gap-1 bg-slate-100 rounded-xl p-0.5 mb-2.5">
+          <button id="timer-mode-down" type="button" class="py-1 rounded-lg text-[11px] font-bold bg-white text-teal-800 shadow-sm">عدّ تنازلي</button>
+          <button id="timer-mode-up" type="button" class="py-1 rounded-lg text-[11px] font-bold text-slate-600">ساعة إيقاف</button>
+        </div>
+
+        <!-- Big Display + Stepper -->
+        <div class="flex items-center justify-between gap-1 mb-2.5">
+          <button id="timer-minus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="-30 ثانية">−</button>
+          <div id="timer-display" class="timer-digits text-3xl font-bold text-slate-900 text-center flex-1">03:00</div>
+          <button id="timer-plus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="+30 ثانية">+</button>
+        </div>
+
+        <!-- Quick Presets (Countdown only) -->
+        <div id="timer-presets-row" class="grid grid-cols-5 gap-1 mb-3">
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="60">1د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="120">2د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-teal-50 border border-teal-600 text-[11px] font-bold text-teal-800" data-sec="180">3د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="300">5د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="600">10د</button>
+        </div>
+
+        <!-- Start Button (Normal) -->
+        <button id="timer-start-btn" type="button" class="w-full bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+          <i class="ph ph-play text-sm"></i>
+          <span>بدء المؤقت</span>
+        </button>
+
+        <!-- Resume + Stop Buttons (Shown when paused from circle) -->
+        <div id="timer-paused-actions" class="hidden flex items-center gap-1.5">
+          <button id="timer-resume-btn" type="button" class="flex-1 bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="ph ph-play text-sm"></i>
+            <span>استئناف</span>
+          </button>
+          <button id="timer-stop-btn" type="button" class="px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+            <i class="ph ph-stop text-sm"></i>
+            <span>إيقاف</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Circular Live View (Only 1 clean Pause button inside!) -->
+    <div id="timer-circle-drag" class="timer-circle-view">
+      <svg id="timer-ring-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="53" fill="none" stroke="#e2e8f0" stroke-width="5.5"></circle>
+        <circle id="timer-ring-progress" cx="60" cy="60" r="53" fill="none" stroke="#0f5d57" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="333.01" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-circle-content">
+        <div id="timer-circle-display">03:00</div>
+        <div class="timer-circle-actions">
+          <button id="timer-pause-btn" type="button" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-sm" title="إيقاف مؤقت والعودة للنموذج">
+            <i class="ph ph-pause text-xs"></i>
+            <span>إيقاف مؤقت</span>
+          </button>
+        </div>
+      </div>
+      <div id="timer-circle-resize" class="timer-resize-handle" title="اسحب لتكبير أو تصغير الدائرة">
+        <i class="ph ph-arrows-out-simple"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       1. ULTRA-SLIM TOP HEADER (52px)
+       ══════════════════════════════════════════════════ -->
+  <header id="top-bar">
+    <!-- Right: Back + Lesson Name + Grade/Group -->
+    <div class="flex items-center gap-2 min-w-0">
+      <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="العودة للوحة التحكم">
+        <i class="ph ph-arrow-right text-lg"></i>
+      </button>
       <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>#1e293b;"></span>
         </button>
         <button type="button" class="preset-btn" data-preset="1" title="قرمزي [2]">
