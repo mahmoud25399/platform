@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -7,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -282,21 +284,25 @@
       box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--brand);
     }
 
-    /* Textarea for Text Tool */
+    /* Textarea for Text Tool (Auto-growing width & height) */
     #text-input {
       position: fixed;
       z-index: 46;
       background: rgba(255, 255, 255, 0.96);
       border: 2px dashed var(--brand);
-      border-radius: 10px;
-      padding: 6px 12px;
+      border-radius: 12px;
+      padding: 8px 14px;
       font-family: 'Cairo', sans-serif;
       font-weight: 700;
+      line-height: 1.45;
       direction: rtl;
       text-align: right;
       outline: none;
-      resize: both;
-      min-width: 160px;
+      resize: none;
+      overflow: hidden;
+      white-space: pre;
+      min-width: 220px;
+      min-height: 54px;
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15);
     }
 
@@ -347,6 +353,108 @@
       cursor: pointer;
     }
 
+    /* Floating Draggable Classroom Timer (Fixed Setup Form <-> Resizable Circular Live Ring) */
+    #timer-widget {
+      --setup-w: 264px;
+      --circle-sz: 220px;
+      position: fixed;
+      top: 68px;
+      left: 18px;
+      z-index: 47;
+      display: none;
+      user-select: none;
+      touch-action: none;
+    }
+    #timer-widget.open { display: block; animation: toastIn 0.2s ease; }
+
+    /* Setup Panel View */
+    #timer-widget .timer-setup-view {
+      width: var(--setup-w);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(203, 213, 225, 0.92);
+      box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.18);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+    #timer-widget.circle-mode .timer-setup-view { display: none; }
+
+    /* Circular Live View */
+    #timer-widget .timer-circle-view {
+      display: none;
+      width: var(--circle-sz);
+      height: var(--circle-sz);
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(203, 213, 225, 0.9);
+      position: relative;
+      cursor: grab;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #timer-widget .timer-circle-view:active { cursor: grabbing; }
+    #timer-widget.circle-mode .timer-circle-view { display: flex; }
+
+    #timer-ring-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      pointer-events: none;
+    }
+    .timer-circle-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 84%;
+    }
+    #timer-circle-display {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 700;
+      font-size: calc(var(--circle-sz) * 0.22);
+      line-height: 1;
+      color: #0f172a;
+      direction: ltr;
+    }
+    .timer-circle-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+    .timer-resize-handle {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: nwse-resize;
+      z-index: 5;
+      font-size: 11px;
+      opacity: 0.85;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .timer-resize-handle:hover { opacity: 1; background: #e2e8f0; color: #0f5d57; }
+    #timer-drag-handle { cursor: grab; }
+    #timer-drag-handle:active { cursor: grabbing; }
+    .timer-digits { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; direction: ltr; }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
       #zoom-pill { display: none; }
@@ -368,12 +476,96 @@
   <textarea id="text-input" class="hidden" placeholder="اكتب النص هنا..."></textarea>
   <input type="file" id="image-upload" accept="image/*" class="hidden">
   <input type="file" id="frame-upload" accept="image/*" class="hidden">
+  <input type="file" id="pdf-upload" accept="application/pdf,.pdf" class="hidden">
 
   <!-- Focus Mode Exit Pill -->
   <button id="focus-exit-btn" type="button" class="glass-dock px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-teal-800 flex items-center gap-1.5 cursor-pointer" title="إظهار الأشرطة [Tab]">
     <i class="ph ph-arrows-in-simple text-base"></i>
     <span>إظهار الأدوات</span>
   </button>
+
+  <!-- Floating Draggable & Resizable Classroom Timer Widget -->
+  <div id="timer-widget" aria-label="مؤقت الحصة">
+    <!-- 1. Setup Form View -->
+    <div class="timer-setup-view">
+      <div id="timer-drag-handle" class="px-3 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <i class="ph ph-dots-six-vertical text-slate-400 text-sm"></i>
+          <span class="text-xs font-extrabold text-slate-800">مؤقت الحصة</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="timer-sound-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="صوت الجرس عند الانتهاء">
+            <i class="ph ph-bell text-sm"></i>
+          </button>
+          <button id="timer-close-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center" title="إغلاق">
+            <i class="ph ph-x text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-3 pb-4">
+        <!-- Mode Switcher -->
+        <div class="grid grid-cols-2 gap-1 bg-slate-100 rounded-xl p-0.5 mb-2.5">
+          <button id="timer-mode-down" type="button" class="py-1 rounded-lg text-[11px] font-bold bg-white text-teal-800 shadow-sm">عدّ تنازلي</button>
+          <button id="timer-mode-up" type="button" class="py-1 rounded-lg text-[11px] font-bold text-slate-600">ساعة إيقاف</button>
+        </div>
+
+        <!-- Big Display + Stepper -->
+        <div class="flex items-center justify-between gap-1 mb-2.5">
+          <button id="timer-minus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="-30 ثانية">−</button>
+          <div id="timer-display" class="timer-digits text-3xl font-bold text-slate-900 text-center flex-1">03:00</div>
+          <button id="timer-plus-30" type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold flex items-center justify-center" title="+30 ثانية">+</button>
+        </div>
+
+        <!-- Quick Presets (Countdown only) -->
+        <div id="timer-presets-row" class="grid grid-cols-5 gap-1 mb-3">
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="60">1د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="120">2د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-teal-50 border border-teal-600 text-[11px] font-bold text-teal-800" data-sec="180">3د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="300">5د</button>
+          <button type="button" class="timer-preset-btn py-1 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200 text-[11px] font-bold text-slate-700" data-sec="600">10د</button>
+        </div>
+
+        <!-- Start Button (Normal) -->
+        <button id="timer-start-btn" type="button" class="w-full bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+          <i class="ph ph-play text-sm"></i>
+          <span>بدء المؤقت</span>
+        </button>
+
+        <!-- Resume + Stop Buttons (Shown when paused from circle) -->
+        <div id="timer-paused-actions" class="hidden flex items-center gap-1.5">
+          <button id="timer-resume-btn" type="button" class="flex-1 bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="ph ph-play text-sm"></i>
+            <span>استئناف</span>
+          </button>
+          <button id="timer-stop-btn" type="button" class="px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+            <i class="ph ph-stop text-sm"></i>
+            <span>إيقاف</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Circular Live View (Only 1 clean Pause button inside!) -->
+    <div id="timer-circle-drag" class="timer-circle-view">
+      <svg id="timer-ring-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="53" fill="none" stroke="#e2e8f0" stroke-width="5.5"></circle>
+        <circle id="timer-ring-progress" cx="60" cy="60" r="53" fill="none" stroke="#0f5d57" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="333.01" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-circle-content">
+        <div id="timer-circle-display">03:00</div>
+        <div class="timer-circle-actions">
+          <button id="timer-pause-btn" type="button" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-sm" title="إيقاف مؤقت والعودة للنموذج">
+            <i class="ph ph-pause text-xs"></i>
+            <span>إيقاف مؤقت</span>
+          </button>
+        </div>
+      </div>
+      <div id="timer-circle-resize" class="timer-resize-handle" title="اسحب لتكبير أو تصغير الدائرة">
+        <i class="ph ph-arrows-out-simple"></i>
+      </div>
+    </div>
+  </div>
 
   <!-- ══════════════════════════════════════════════════
        1. ULTRA-SLIM TOP HEADER (52px)
@@ -384,141 +576,7 @@
       <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="العودة للوحة التحكم">
         <i class="ph ph-arrow-right text-lg"></i>
       </button>
-      <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
-      <input type="text" id="lesson-name" placeholder="عنوان الدرس..." dir="rtl"
-        class="bg-transparent hover:bg-slate-50 focus:bg-white border border-transparent focus:border-teal-600 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-extrabold text-slate-800 outline-none w-28 sm:w-44 md:w-52 transition-all truncate">
-      <select id="wb-grade-select" dir="rtl"
-        class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none focus:border-teal-600 cursor-pointer max-w-[120px] hidden sm:block">
-        <option value="">جاري التحميل...</option>
-      </select>
-      <select id="wb-group-select" dir="rtl"
-        class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none focus:border-teal-600 cursor-pointer max-w-[110px] hidden md:block">
-        <option value="">جميع المجموعات</option>
-      </select>
-    </div>
-
-    <!-- Center: Compact Page Navigator -->
-    <div class="flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 rounded-xl px-1.5 py-1 flex-shrink-0">
-      <button id="btn-prev-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة السابقة">
-        <i class="ph ph-caret-right text-sm font-bold"></i>
-      </button>
-      <button id="btn-pages-drawer" type="button" class="px-2 py-0.5 rounded-lg text-xs font-extrabold text-slate-700 hover:bg-white transition-colors flex items-center gap-1" title="عرض كل الصفحات">
-        <i class="ph ph-squares-four text-sm text-teal-700"></i>
-        <span id="page-indicator" class="font-mono">1 / 1</span>
-      </button>
-      <button id="btn-next-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة التالية">
-        <i class="ph ph-caret-left text-sm font-bold"></i>
-      </button>
-      <div class="h-4 w-px bg-slate-300 mx-0.5"></div>
-      <button id="btn-add-page" type="button" class="w-7 h-7 rounded-lg bg-white hover:bg-teal-50 text-teal-800 border border-slate-200 flex items-center justify-center transition-colors" title="إضافة صفحة جديدة">
-        <i class="ph ph-plus text-sm font-bold"></i>
-      </button>
-    </div>
-
-    <!-- Left: Wacom Badge + Publish CTA + More Menu + Focus Mode -->
-    <div class="flex items-center gap-1.5 flex-shrink-0">
-      <button id="btn-publish-library" type="button"
-        class="bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer">
-        <i class="ph ph-cloud-arrow-up text-base"></i>
-        <span class="hidden sm:inline">حفظ ونشر</span>
-      </button>
-
-      <!-- More Menu Dropdown -->
-      <div class="relative" id="more-menu-wrap">
-        <button id="btn-more-menu" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="المزيد من الخيارات">
-          <i class="ph ph-dots-three-vertical text-lg font-bold"></i>
-        </button>
-        <div id="more-menu-dropdown" class="hidden absolute top-11 left-0 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-1.5 z-50 flex flex-col gap-0.5">
-          <button id="menu-cloud-save" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-teal-800 flex items-center gap-2.5">
-            <i class="ph ph-cloud-check text-base text-teal-700"></i> حفظ المسودة بالسحابة
-          </button>
-          <button id="menu-saved-boards" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-teal-50 hover:text-teal-800 flex items-center gap-2.5">
-            <i class="ph ph-folder-open text-base text-teal-700"></i> السبورات المحفوظة
-          </button>
-          <div class="h-px bg-slate-100 my-1"></div>
-          <button id="menu-export-png" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-            <i class="ph ph-image text-base text-slate-500"></i> تصدير الصفحة صورة (PNG)
-          </button>
-          <button id="menu-export-pdf" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-            <i class="ph ph-file-pdf text-base text-rose-600"></i> تصدير كل الصفحات (PDF)
-          </button>
-          <div class="h-px bg-slate-100 my-1"></div>
-          <button id="menu-settings" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-            <i class="ph ph-sliders-horizontal text-base text-slate-500"></i> الخلفية والإطار والإعدادات
-          </button>
-          <button id="menu-fullscreen" type="button" class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-            <i class="ph ph-corners-out text-base text-slate-500"></i> ملء الشاشة
-          </button>
-        </div>
-      </div>
-
-      <button id="btn-focus-mode" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="وضع التركيز — إخفاء الأشرطة [Tab]">
-        <i class="ph ph-arrows-out-simple text-base"></i>
-      </button>
-    </div>
-  </header>
-
-  <!-- ══════════════════════════════════════════════════
-       2. PAGES THUMBNAIL DRAWER (Collapsible)
-       ══════════════════════════════════════════════════ -->
-  <aside id="pages-drawer" aria-label="صفحات السبورة">
-    <div class="px-3.5 py-2.5 border-b border-slate-200 flex items-center justify-between">
-      <span class="text-xs font-extrabold text-slate-800">صفحات الدرس</span>
-      <div class="flex items-center gap-1">
-        <button id="drawer-add-page" type="button" class="w-7 h-7 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 flex items-center justify-center" title="صفحة جديدة">
-          <i class="ph ph-plus text-sm"></i>
-        </button>
-        <button id="drawer-close" type="button" class="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 flex items-center justify-center" title="إغلاق">
-          <i class="ph ph-x text-sm"></i>
-        </button>
-      </div>
-    </div>
-    <div id="pages-thumb-list" class="flex-1 overflow-y-auto slim-scroll p-2.5 flex flex-col gap-2.5"></div>
-  </aside>
-
-  <!-- ══════════════════════════════════════════════════
-       3. TWO-LAYER CANVAS STAGE
-       ══════════════════════════════════════════════════ -->
-  <main id="canvas-wrapper">
-    <canvas id="board-static"></canvas>
-    <canvas id="board-active"></canvas>
-    <div id="overlay-layer"></div>
-  </main>
-
-  <!-- ══════════════════════════════════════════════════
-       4. FLOATING ZOOM PILL (Bottom Left)
-       ══════════════════════════════════════════════════ -->
-  <div id="zoom-pill" class="glass-dock px-1.5 py-1 flex items-center gap-1">
-    <button id="btn-zoom-out" type="button" class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center justify-center" title="تصغير">
-      <i class="ph ph-minus text-sm"></i>
-    </button>
-    <button id="btn-zoom-reset" type="button" class="px-1.5 py-0.5 rounded-lg text-xs font-mono font-semibold text-slate-700 hover:bg-slate-100 min-w-[46px] text-center" title="إعادة ضبط الزوم 100%">
-      <span id="zoom-level">100%</span>
-    </button>
-    <button id="btn-zoom-in" type="button" class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center justify-center" title="تكبير">
-      <i class="ph ph-plus text-sm"></i>
-    </button>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════
-       5. UNIFIED FLOATING BOTTOM DOCK + POPOVERS
-       ══════════════════════════════════════════════════ -->
-  <div id="bottom-dock-wrap">
-    <div class="glass-dock px-2 py-1.5 flex items-center gap-1 overflow-x-auto slim-scroll">
-      <!-- Navigation Tools -->
-      <button id="btn-select" type="button" class="dock-btn" title="تحديد وتحريك العناصر [S]">
-        <i class="ph ph-cursor text-xl"></i>
-      </button>
-      <button id="btn-hand" type="button" class="dock-btn" title="تحريك السبورة [M] أو زر القلم الجانبي">
-        <i class="ph ph-hand-palm text-xl"></i>
-      </button>
-
-      <div class="h-6 w-px bg-slate-200 mx-0.5 flex-shrink-0"></div>
-
-      <!-- 5 Quick Colors (keep pen type & size global across all colors) -->
-      <div id="pen-presets-bar" class="flex items-center gap-1 px-1">
-        <button type="button" class="preset-btn active" data-preset="0" title="فحمي [1]">
-          <span class="preset-dot" style="width:15px;height:15px;background:#1e293b;"></span>
+      <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>#1e293b;"></span>
         </button>
         <button type="button" class="preset-btn" data-preset="1" title="قرمزي [2]">
           <span class="preset-dot" style="width:15px;height:15px;background:#b91c1c;"></span>
