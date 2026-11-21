@@ -5533,57 +5533,145 @@
       return { x: minX, y: minY, w: w, h: h };
     }
 
-    function drawBackgroundForExport_(ctx, bgState, rx, ry, rw, rh, scale) {
+    function getExportMargins_(contentW, contentH) {
+      // هوامش مريحة ومتناسقة على غرار Microsoft Whiteboard (تتناسب مع حجم الشرح وتحجز مساحة آمنة للإطار)
+      const baseSide = Math.max(85, Math.round((contentW || 1000) * 0.08));
+      const baseVert = Math.max(95, Math.round((contentH || 1000) * 0.065));
+      if (customFrameImage) {
+        return { top: Math.max(145, Math.round(baseVert * 1.25)), bottom: Math.max(125, Math.round(baseVert * 1.15)), side: Math.max(105, Math.round(baseSide * 1.2)) };
+      }
+      return { top: baseVert, bottom: baseVert, side: baseSide };
+    }
+
+    // إيجاد أفضل نقطة قص رأسية في مساحة فارغة تماماً (لا تقطع أي سطر أو كتابة أو جدول أو خريطة)
+    function findSafeSplitY_(page, curY, idealCutY, maxY) {
+      const els = (page && Array.isArray(page.elements)) ? page.elements : [];
+      const intervals = [];
+      for (const el of els) {
+        if (!el || el.attach) continue;
+        const b = getBox(el);
+        if (!b) continue;
+        const y1 = Math.min(b.y, b.y + (b.h || 0)) - 3;
+        const y2 = Math.max(b.y, b.y + (b.h || 0)) + 3;
+        if (isFinite(y1) && isFinite(y2) && y2 > curY && y1 < maxY) {
+          intervals.push([y1, y2]);
+        }
+      }
+
+      const searchMin = Math.round(curY + (idealCutY - curY) * 0.52);
+      const searchMax = Math.round(Math.min(maxY, idealCutY));
+      const step = 4;
+
+      // 1. نبحث عن أوسع فجوة بيضاء فارغة تماماً (0 تقاطع) وأقربها إلى نهاية الصفحة
+      let bestGapY = null;
+      let bestGapScore = -Infinity;
+      let runStart = null;
+
+      const countHits = (y) => {
+        let c = 0;
+        for (let i = 0; i < intervals.length; i++) {
+          if (y >= intervals[i][0] && y <= intervals[i][1]) c++;
+        }
+        return c;
+      };
+
+      for (let y = searchMin; y <= searchMax; y += step) {
+        if (countHits(y) === 0) {
+          if (runStart === null) runStart = y;
+        } else {
+          if (runStart !== null) {
+            const gapLen = y - runStart;
+            const midY = Math.round((runStart + y) / 2);
+            // نفضّل الفجوة القريبة من idealCutY مع تفضيل الفجوات الأوسع
+            const closeness = 1 - Math.abs(idealCutY - midY) / Math.max(1, idealCutY - curY);
+            const score = closeness * 100 + Math.min(gapLen, 60) * 0.8;
+            if (score > bestGapScore) { bestGapScore = score; bestGapY = midY; }
+            runStart = null;
+          }
+        }
+      }
+      if (runStart !== null) {
+        const gapLen = searchMax - runStart;
+        const midY = Math.round((runStart + searchMax) / 2);
+        const closeness = 1 - Math.abs(idealCutY - midY) / Math.max(1, idealCutY - curY);
+        const score = closeness * 100 + Math.min(gapLen, 60) * 0.8;
+        if (score > bestGapScore) { bestGapScore = score; bestGapY = midY; }
+      }
+
+      if (bestGapY !== null) return bestGapY;
+
+      // 2. إن لم توجد فجوة فارغة 100% (مثل قوس طويل جداً)، نختار النقطة الأقل تقاطعاً مع العناصر
+      let minHits = Infinity;
+      let fallbackY = searchMax;
+      for (let y = searchMax; y >= searchMin; y -= step) {
+        const h = countHits(y);
+        if (h < minHits) {
+          minHits = h;
+          fallbackY = y;
+          if (h === 0) break;
+        }
+      }
+      return fallbackY;
+    }
+
+    function drawBackgroundForExport_(ctx, bgState, rx, ry, innerX, innerY, innerW, innerH, fullW, fullH, scale) {
       ctx.save();
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       const isDark = bgState === 3;
       ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
-      ctx.fillRect(0, 0, rw, rh);
+      ctx.fillRect(0, 0, fullW, fullH);
+
+      // رسم خلفية السطور / الشبكة داخل منطقة المحتوى الآمنة فقط (حتى يبقى الهيدر والفوتر نظيفين للإطار)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(innerX, innerY, innerW, innerH);
+      ctx.clip();
 
       if (bgState === 1) {
         const step = 42;
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
-        const startY = (((-ry) % step) + step) % step;
+        const startY = innerY + (((-ry) % step) + step) % step;
         ctx.beginPath();
-        for (let y = startY; y < rh; y += step) {
-          ctx.moveTo(0, y);
-          ctx.lineTo(rw, y);
+        for (let y = startY; y < innerY + innerH; y += step) {
+          ctx.moveTo(innerX, y);
+          ctx.lineTo(innerX + innerW, y);
         }
         ctx.stroke();
       } else if (bgState === 2) {
         const step = 32;
         ctx.strokeStyle = '#eef2f6';
         ctx.lineWidth = 1;
-        const startX = (((-rx) % step) + step) % step;
-        const startY = (((-ry) % step) + step) % step;
+        const startX = innerX + (((-rx) % step) + step) % step;
+        const startY = innerY + (((-ry) % step) + step) % step;
         ctx.beginPath();
-        for (let x = startX; x < rw; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, rh); }
-        for (let y = startY; y < rh; y += step) { ctx.moveTo(0, y); ctx.lineTo(rw, y); }
+        for (let x = startX; x < innerX + innerW; x += step) { ctx.moveTo(x, innerY); ctx.lineTo(x, innerY + innerH); }
+        for (let y = startY; y < innerY + innerH; y += step) { ctx.moveTo(innerX, y); ctx.lineTo(innerX + innerW, y); }
         ctx.stroke();
       } else if (bgState === 3) {
         const step = 36;
         ctx.fillStyle = 'rgba(148, 163, 184, 0.16)';
-        const startX = (((-rx) % step) + step) % step;
-        const startY = (((-ry) % step) + step) % step;
-        for (let x = startX; x < rw; x += step) {
-          for (let y = startY; y < rh; y += step) {
+        const startX = innerX + (((-rx) % step) + step) % step;
+        const startY = innerY + (((-ry) % step) + step) % step;
+        for (let x = startX; x < innerX + innerW; x += step) {
+          for (let y = startY; y < innerY + innerH; y += step) {
             ctx.fillRect(x, y, 1.5, 1.5);
           }
         }
       }
-      if (customFrameImage) {
-        ctx.drawImage(customFrameImage, 0, 0, rw, rh);
-      }
+      ctx.restore();
       ctx.restore();
     }
 
-    function renderWorldRegionToDataUrl_(pageIdx, rx, ry, rw, rh, mime, quality) {
-      const maxDim = 2200;
-      const scale = Math.min(1.75, maxDim / Math.max(rw, rh, 1));
+    function renderWorldRegionToDataUrl_(pageIdx, rx, ry, rw, rh, mime, quality, pageNumLabel, totalPagesLabel) {
+      const m = getExportMargins_(rw, rh);
+      const fullW = Math.round(rw + m.side * 2);
+      const fullH = Math.round(rh + m.top + m.bottom);
+      const maxDim = 3400;
+      const scale = Math.min(2.0, maxDim / Math.max(fullW, fullH, 1));
       const offCanvas = document.createElement('canvas');
-      offCanvas.width = Math.max(1, Math.round(rw * scale));
-      offCanvas.height = Math.max(1, Math.round(rh * scale));
+      offCanvas.width = Math.max(1, Math.round(fullW * scale));
+      offCanvas.height = Math.max(1, Math.round(fullH * scale));
       const oCtx = offCanvas.getContext('2d');
 
       const savedIdx = currentPageIndex;
@@ -5598,15 +5686,58 @@
         panY = -ry;
 
         const page = pages[pageIdx];
-        drawBackgroundForExport_(oCtx, page.bgState, rx, ry, rw, rh, scale);
+        drawBackgroundForExport_(oCtx, page.bgState, rx, ry, m.side, m.top, rw, rh, fullW, fullH, scale);
 
+        // رسم الشرح والعناصر داخل المنطقة الآمنة فقط مع قص نظيف عند الهوامش
         oCtx.save();
         oCtx.setTransform(scale, 0, 0, scale, 0, 0);
-        oCtx.translate(-rx, -ry);
+        oCtx.beginPath();
+        oCtx.rect(m.side, m.top, rw, rh);
+        oCtx.clip();
+        oCtx.translate(m.side - rx, m.top - ry);
         (page.elements || []).forEach(el => drawElement(oCtx, el));
         oCtx.restore();
 
-        return offCanvas.toDataURL(mime || 'image/jpeg', quality || 0.88);
+        // رسم الإطار المخصص فوق الهوامش المحجوزة (فلا يغطي الشرح أبداً) أو هيدر وفوتر نظيفين
+        oCtx.save();
+        oCtx.setTransform(scale, 0, 0, scale, 0, 0);
+        if (customFrameImage) {
+          oCtx.drawImage(customFrameImage, 0, 0, fullW, fullH);
+        } else {
+          const isDark = page.bgState === 3;
+          const lessonTitle = (document.getElementById('lesson-name')?.value || '').trim();
+          // خط فاصل خفيف للهيدر والفوتر
+          oCtx.strokeStyle = isDark ? 'rgba(148,163,184,0.22)' : 'rgba(15,93,87,0.16)';
+          oCtx.lineWidth = 1;
+          oCtx.beginPath();
+          oCtx.moveTo(m.side, m.top - 12);
+          oCtx.lineTo(fullW - m.side, m.top - 12);
+          oCtx.moveTo(m.side, fullH - m.bottom + 12);
+          oCtx.lineTo(fullW - m.side, fullH - m.bottom + 12);
+          oCtx.stroke();
+
+          oCtx.font = '700 16px Cairo, sans-serif';
+          oCtx.fillStyle = isDark ? '#cbd5e1' : '#0f5d57';
+          oCtx.direction = 'rtl';
+          oCtx.textAlign = 'right';
+          oCtx.textBaseline = 'middle';
+          if (lessonTitle) oCtx.fillText(lessonTitle, fullW - m.side, (m.top - 12) / 2);
+          oCtx.textAlign = 'left';
+          oCtx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+          oCtx.font = '600 13px Cairo, sans-serif';
+          oCtx.fillText('منصة مستر محمود الهليهي', m.side, (m.top - 12) / 2);
+        }
+        if (pageNumLabel && totalPagesLabel) {
+          const isDark = page.bgState === 3;
+          oCtx.font = '700 13px Cairo, sans-serif';
+          oCtx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+          oCtx.textAlign = 'center';
+          oCtx.textBaseline = 'middle';
+          oCtx.fillText(`صفحة ${pageNumLabel} من ${totalPagesLabel}`, fullW / 2, fullH - (m.bottom / 2) + 4);
+        }
+        oCtx.restore();
+
+        return { dataUrl: offCanvas.toDataURL(mime || 'image/jpeg', quality || 0.88), fullW, fullH };
       } finally {
         currentPageIndex = savedIdx;
         zoom = savedZoom;
@@ -5618,12 +5749,12 @@
     function exportCurrentPng() {
       const name = document.getElementById('lesson-name').value.trim() || 'سبورة_الهليهي';
       const bounds = getPageFullContentBounds_(curPage());
-      const dataUrl = renderWorldRegionToDataUrl_(currentPageIndex, bounds.x, bounds.y, bounds.w, bounds.h, 'image/png', 1.0);
+      const rendered = renderWorldRegionToDataUrl_(currentPageIndex, bounds.x, bounds.y, bounds.w, bounds.h, 'image/png', 1.0, 1, 1);
       const a = document.createElement('a');
       a.download = `${name}_صفحة${currentPageIndex + 1}.png`;
-      a.href = dataUrl;
+      a.href = rendered.dataUrl;
       a.click();
-      showToast('success', 'تم تنزيل صورة الشرح بالكامل بدقة عالية');
+      showToast('success', 'تم تنزيل صورة الشرح بالكامل بهوامش نظيفة');
     }
 
     function generateMultiPagePdf() {
@@ -5632,37 +5763,18 @@
       const savedIdx = currentPageIndex;
 
       try {
+        // أسلوب Microsoft Whiteboard: كل صفحة سبورة تُصدَّر كصفحة PDF واحدة كاملة متصلة بكامل طولها وعرضها وهوامشها المريحة بدون أي تقطيع
+        const totalPdfPages = pages.length;
         pages.forEach((page, idx) => {
           const bounds = getPageFullContentBounds_(page);
-          const exportW = Math.round(bounds.w);
-          const sliceH = Math.max(Math.round(viewH), Math.round(exportW * 0.72));
-
-          // لو المحتوى أطول من شاشة واحدة (بسبب النزول لأسفل في السبورة المتحركة) نقسمه لشرائح متتابعة بدون قص أي حرف
-          const slices = [];
-          if (bounds.h <= sliceH * 1.2) {
-            slices.push({ x: bounds.x, y: bounds.y, w: exportW, h: Math.round(Math.max(viewH, bounds.h)) });
+          const rendered = renderWorldRegionToDataUrl_(idx, bounds.x, bounds.y, bounds.w, bounds.h, 'image/jpeg', 0.90, totalPdfPages > 1 ? (idx + 1) : 0, totalPdfPages > 1 ? totalPdfPages : 0);
+          const isLand = rendered.fullW >= rendered.fullH;
+          if (!pdf) {
+            pdf = new jsPDF({ orientation: isLand ? 'landscape' : 'portrait', unit: 'px', format: [rendered.fullW, rendered.fullH] });
           } else {
-            let curY = bounds.y;
-            const endY = bounds.y + bounds.h;
-            while (curY < endY - 12) {
-              const rem = endY - curY;
-              const h = (rem <= sliceH * 1.18) ? Math.round(rem) : sliceH;
-              slices.push({ x: bounds.x, y: curY, w: exportW, h: Math.max(Math.round(viewH * 0.5), h) });
-              curY += h;
-              if (rem <= sliceH * 1.18) break;
-            }
+            pdf.addPage([rendered.fullW, rendered.fullH], isLand ? 'landscape' : 'portrait');
           }
-
-          slices.forEach(sl => {
-            const isLand = sl.w >= sl.h;
-            if (!pdf) {
-              pdf = new jsPDF({ orientation: isLand ? 'landscape' : 'portrait', unit: 'px', format: [sl.w, sl.h] });
-            } else {
-              pdf.addPage([sl.w, sl.h], isLand ? 'landscape' : 'portrait');
-            }
-            const imgData = renderWorldRegionToDataUrl_(idx, sl.x, sl.y, sl.w, sl.h, 'image/jpeg', 0.88);
-            pdf.addImage(imgData, 'JPEG', 0, 0, sl.w, sl.h);
-          });
+          pdf.addImage(rendered.dataUrl, 'JPEG', 0, 0, rendered.fullW, rendered.fullH);
         });
       } finally {
         currentPageIndex = savedIdx;
