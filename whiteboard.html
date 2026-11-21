@@ -3489,10 +3489,54 @@
 
         bar.appendChild(makePdfBtn('<i class="ph ph-caret-right"></i>', 'الصفحة السابقة', () => goPdfPage(pdfEl, pdfEl.pageNum - 1), false));
 
-        const pgSpan = document.createElement('span');
-        pgSpan.textContent = `${pdfEl.pageNum}/${pdfEl.totalPages}`;
-        pgSpan.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;color:#0f172a;padding:0 3px;direction:ltr;';
-        bar.appendChild(pgSpan);
+        const pgBtn = document.createElement('button');
+        pgBtn.type = 'button';
+        pgBtn.textContent = `${pdfEl.pageNum}/${pdfEl.totalPages}`;
+        pgBtn.title = 'الانتقال لصفحة محددة';
+        pgBtn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:12px;font-weight:700;color:#0f172a;padding:3px 7px;border-radius:7px;background:#f8fafc;border:1px solid #e2e8f0;cursor:pointer;direction:ltr;';
+        pgBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'display:flex;align-items:center;gap:3px;direction:ltr;';
+          const inp = document.createElement('input');
+          inp.type = 'number';
+          inp.min = '1';
+          inp.max = String(pdfEl.totalPages);
+          inp.value = String(pdfEl.pageNum);
+          inp.style.cssText = 'width:48px;height:24px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;color:#0f172a;background:#ffffff;border:1.5px solid #0f5d57;border-radius:6px;outline:none;padding:0 2px;';
+          const totalLbl = document.createElement('span');
+          totalLbl.textContent = `/${pdfEl.totalPages}`;
+          totalLbl.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:700;color:#64748b;';
+          wrap.appendChild(inp);
+          wrap.appendChild(totalLbl);
+          pgBtn.replaceWith(wrap);
+          inp.focus();
+          inp.select();
+
+          let committed = false;
+          const commitJump = (cancel) => {
+            if (committed) return;
+            committed = true;
+            const target = parseInt(inp.value, 10);
+            if (!cancel && !isNaN(target)) {
+              const clamped = Math.max(1, Math.min(pdfEl.totalPages, target));
+              if (clamped !== pdfEl.pageNum) {
+                goPdfPage(pdfEl, clamped);
+                return;
+              }
+            }
+            updateOverlayControls();
+          };
+          inp.addEventListener('pointerdown', e2 => e2.stopPropagation());
+          inp.addEventListener('click', e2 => e2.stopPropagation());
+          inp.addEventListener('keydown', (e2) => {
+            e2.stopPropagation();
+            if (e2.key === 'Enter') { e2.preventDefault(); commitJump(false); }
+            else if (e2.key === 'Escape') { e2.preventDefault(); commitJump(true); }
+          });
+          inp.addEventListener('blur', () => commitJump(false));
+        });
+        bar.appendChild(pgBtn);
 
         bar.appendChild(makePdfBtn('<i class="ph ph-caret-left"></i>', 'الصفحة التالية', () => goPdfPage(pdfEl, pdfEl.pageNum + 1), false));
 
