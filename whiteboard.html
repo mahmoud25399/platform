@@ -5489,28 +5489,190 @@
       }));
     }
 
+    function getPageFullContentBounds_(page) {
+      const els = (page && Array.isArray(page.elements)) ? page.elements : [];
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let hasAny = false;
+
+      for (const el of els) {
+        if (!el || el.attach) continue;
+        const b = getBox(el);
+        if (!b) continue;
+        const x1 = Math.min(b.x, b.x + (b.w || 0));
+        const x2 = Math.max(b.x, b.x + (b.w || 0));
+        const y1 = Math.min(b.y, b.y + (b.h || 0));
+        const y2 = Math.max(b.y, b.y + (b.h || 0));
+        if (!isFinite(x1) || !isFinite(x2) || !isFinite(y1) || !isFinite(y2)) continue;
+        hasAny = true;
+        if (x1 < minX) minX = x1;
+        if (x2 > maxX) maxX = x2;
+        if (y1 < minY) minY = y1;
+        if (y2 > maxY) maxY = y2;
+      }
+
+      if (!hasAny) {
+        return { x: 0, y: 0, w: viewW, h: viewH };
+      }
+
+      const pad = 56;
+      minX -= pad;
+      minY -= pad;
+      maxX += pad;
+      maxY += pad;
+
+      let w = maxX - minX;
+      let h = maxY - minY;
+      if (w < viewW) {
+        const diffX = (viewW - w) / 2;
+        minX -= diffX;
+        w = viewW;
+      }
+      if (h < viewH) {
+        h = viewH;
+      }
+      return { x: minX, y: minY, w: w, h: h };
+    }
+
+    function drawBackgroundForExport_(ctx, bgState, rx, ry, rw, rh, scale) {
+      ctx.save();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      const isDark = bgState === 3;
+      ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+      ctx.fillRect(0, 0, rw, rh);
+
+      if (bgState === 1) {
+        const step = 42;
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        const startY = (((-ry) % step) + step) % step;
+        ctx.beginPath();
+        for (let y = startY; y < rh; y += step) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(rw, y);
+        }
+        ctx.stroke();
+      } else if (bgState === 2) {
+        const step = 32;
+        ctx.strokeStyle = '#eef2f6';
+        ctx.lineWidth = 1;
+        const startX = (((-rx) % step) + step) % step;
+        const startY = (((-ry) % step) + step) % step;
+        ctx.beginPath();
+        for (let x = startX; x < rw; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, rh); }
+        for (let y = startY; y < rh; y += step) { ctx.moveTo(0, y); ctx.lineTo(rw, y); }
+        ctx.stroke();
+      } else if (bgState === 3) {
+        const step = 36;
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.16)';
+        const startX = (((-rx) % step) + step) % step;
+        const startY = (((-ry) % step) + step) % step;
+        for (let x = startX; x < rw; x += step) {
+          for (let y = startY; y < rh; y += step) {
+            ctx.fillRect(x, y, 1.5, 1.5);
+          }
+        }
+      }
+      if (customFrameImage) {
+        ctx.drawImage(customFrameImage, 0, 0, rw, rh);
+      }
+      ctx.restore();
+    }
+
+    function renderWorldRegionToDataUrl_(pageIdx, rx, ry, rw, rh, mime, quality) {
+      const maxDim = 2200;
+      const scale = Math.min(1.75, maxDim / Math.max(rw, rh, 1));
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = Math.max(1, Math.round(rw * scale));
+      offCanvas.height = Math.max(1, Math.round(rh * scale));
+      const oCtx = offCanvas.getContext('2d');
+
+      const savedIdx = currentPageIndex;
+      const savedZoom = zoom;
+      const savedPanX = panX;
+      const savedPanY = panY;
+
+      try {
+        currentPageIndex = pageIdx;
+        zoom = 1;
+        panX = -rx;
+        panY = -ry;
+
+        const page = pages[pageIdx];
+        drawBackgroundForExport_(oCtx, page.bgState, rx, ry, rw, rh, scale);
+
+        oCtx.save();
+        oCtx.setTransform(scale, 0, 0, scale, 0, 0);
+        oCtx.translate(-rx, -ry);
+        (page.elements || []).forEach(el => drawElement(oCtx, el));
+        oCtx.restore();
+
+        return offCanvas.toDataURL(mime || 'image/jpeg', quality || 0.88);
+      } finally {
+        currentPageIndex = savedIdx;
+        zoom = savedZoom;
+        panX = savedPanX;
+        panY = savedPanY;
+      }
+    }
+
     function exportCurrentPng() {
       const name = document.getElementById('lesson-name').value.trim() || 'سبورة_الهليهي';
+      const bounds = getPageFullContentBounds_(curPage());
+      const dataUrl = renderWorldRegionToDataUrl_(currentPageIndex, bounds.x, bounds.y, bounds.w, bounds.h, 'image/png', 1.0);
       const a = document.createElement('a');
       a.download = `${name}_صفحة${currentPageIndex + 1}.png`;
-      a.href = staticCanvas.toDataURL('image/png');
+      a.href = dataUrl;
       a.click();
-      showToast('success', 'تم تنزيل صورة الصفحة بدقة عالية');
+      showToast('success', 'تم تنزيل صورة الشرح بالكامل بدقة عالية');
     }
 
     function generateMultiPagePdf() {
       const { jsPDF } = window.jspdf;
-      const isLand = viewW > viewH;
-      const pdf = new jsPDF({ orientation: isLand ? 'landscape' : 'portrait', unit: 'px', format: [viewW, viewH] });
+      let pdf = null;
       const savedIdx = currentPageIndex;
-      pages.forEach((_, idx) => {
-        if (idx > 0) pdf.addPage([viewW, viewH], isLand ? 'landscape' : 'portrait');
-        currentPageIndex = idx;
+
+      try {
+        pages.forEach((page, idx) => {
+          const bounds = getPageFullContentBounds_(page);
+          const exportW = Math.round(bounds.w);
+          const sliceH = Math.max(Math.round(viewH), Math.round(exportW * 0.72));
+
+          // لو المحتوى أطول من شاشة واحدة (بسبب النزول لأسفل في السبورة المتحركة) نقسمه لشرائح متتابعة بدون قص أي حرف
+          const slices = [];
+          if (bounds.h <= sliceH * 1.2) {
+            slices.push({ x: bounds.x, y: bounds.y, w: exportW, h: Math.round(Math.max(viewH, bounds.h)) });
+          } else {
+            let curY = bounds.y;
+            const endY = bounds.y + bounds.h;
+            while (curY < endY - 12) {
+              const rem = endY - curY;
+              const h = (rem <= sliceH * 1.18) ? Math.round(rem) : sliceH;
+              slices.push({ x: bounds.x, y: curY, w: exportW, h: Math.max(Math.round(viewH * 0.5), h) });
+              curY += h;
+              if (rem <= sliceH * 1.18) break;
+            }
+          }
+
+          slices.forEach(sl => {
+            const isLand = sl.w >= sl.h;
+            if (!pdf) {
+              pdf = new jsPDF({ orientation: isLand ? 'landscape' : 'portrait', unit: 'px', format: [sl.w, sl.h] });
+            } else {
+              pdf.addPage([sl.w, sl.h], isLand ? 'landscape' : 'portrait');
+            }
+            const imgData = renderWorldRegionToDataUrl_(idx, sl.x, sl.y, sl.w, sl.h, 'image/jpeg', 0.88);
+            pdf.addImage(imgData, 'JPEG', 0, 0, sl.w, sl.h);
+          });
+        });
+      } finally {
+        currentPageIndex = savedIdx;
         renderStatic();
-        pdf.addImage(staticCanvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, viewW, viewH);
-      });
-      currentPageIndex = savedIdx;
-      renderStatic();
+      }
+
+      if (!pdf) {
+        const isLand = viewW > viewH;
+        pdf = new jsPDF({ orientation: isLand ? 'landscape' : 'portrait', unit: 'px', format: [viewW, viewH] });
+      }
       return pdf;
     }
 
