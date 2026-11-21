@@ -869,6 +869,10 @@
             .content > div[id$="Section"]:not(.hidden) { padding: 1.25rem !important; }
         }
 
+    
+        body.emp-no-delete .btn-danger[onclick*="delete"], body.emp-no-delete button[title*="حذف"] { display: none !important; }
+        body.emp-no-edit button[onclick*="edit"], body.emp-no-edit button[onclick*="Edit"], body.emp-no-edit button[title*="تعديل"] { display: none !important; }
+        body.emp-no-whatsapp .btn-whatsapp, body.emp-no-whatsapp button[onclick*="WhatsApp"] { display: none !important; }
     </style>
 
 <style id="admin-swal-unified-css">
@@ -996,6 +1000,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div class="menu-item" id="nav-hossas" onclick="showSection('hossas', this)" title="الحصص"><i class="fas fa-video"></i><span class="menu-label"> الحصص</span></div>
                             <div class="menu-item" id="nav-liveAttendance" onclick="showSection('liveAttendance', this)" title="الحضور المباشر"><i class="fas fa-user-check"></i><span class="menu-label"> الحضور المباشر</span></div>
                             <div class="menu-item" id="nav-library" onclick="showSection('library', this)" title="المكتبة"><i class="fas fa-book"></i><span class="menu-label"> المكتبة</span></div>
+                            <div class="menu-item" id="nav-adminFiles" onclick="showSection('adminFiles', this)" title="ملفات الإدارة"><i class="fas fa-folder-open"></i><span class="menu-label"> ملفات الإدارة</span></div>
+                            <div class="menu-item" id="nav-scheduledTasks" onclick="showSection('scheduledTasks', this)" title="المهام المجدولة"><i class="fas fa-calendar-check"></i><span class="menu-label"> المهام المجدولة</span></div>
  </div>
  </div>
 
@@ -2247,6 +2253,68 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
  </div>
 
+                <!-- قسم ملفات الإدارة (للمدير رفع/حذف، وللموظف المصرح له عرض وتحميل فقط) -->
+                <div id="adminFilesSection" class="hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                        <div>
+                            <h2 class="section-title" style="padding-bottom:0; border-bottom:none; margin-bottom:4px;"><i class="fas fa-folder-open"></i> ملفات الإدارة</h2>
+                            <p style="margin:0; color:var(--gray); font-size:0.86rem;">مكتبة الملفات والنماذج الإدارية والتعليمية للموظفين (الرفع والحذف للمدير فقط)</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadAdminFilesUI(this)"><i class="fas fa-sync-alt"></i> تحديث الملفات</button>
+                    </div>
+
+                    <!-- نموذج الرفع (يظهر للمدير فقط) -->
+                    <div id="adminFilesUploadCard" class="hidden" style="background:var(--surface); border:1.5px solid rgba(99,102,241,0.22); border-radius:14px; padding:20px; margin-bottom:20px;">
+                        <h4 style="margin:0 0 14px; color:var(--primary); font-weight:800;"><i class="fas fa-cloud-upload-alt"></i> إضافة ملف جديد لملفات الإدارة</h4>
+                        <div class="form-container" style="margin:0; padding:0; box-shadow:none; border:none;">
+                            <div class="form-group">
+                                <label>عنوان الملف</label>
+                                <input type="text" id="adminFileTitle" class="form-control" placeholder="مثال: جدول المراجعة أو نموذج متابعة">
+                            </div>
+                            <div class="form-group">
+                                <label>الموظفون المسموح لهم برؤية هذا الملف</label>
+                                <select id="adminFileTargetEmp" class="form-control">
+                                    <option value="ALL">كل الموظفين المصرح لهم بالقسم</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>رابط مباشر للملف (Google Drive أو أي رابط)</label>
+                                <input type="url" id="adminFileLink" class="form-control" dir="ltr" placeholder="https://...">
+                            </div>
+                            <div class="form-group full-width" style="text-align:center; color:var(--gray); font-weight:bold;">— أو اسحب وأفلت ملفاً من جهازك —</div>
+                            <div class="form-group full-width">
+                                <div id="adminFileDropZone" onclick="document.getElementById('adminFileInput').click()" style="border:2px dashed var(--primary); border-radius:12px; padding:24px; text-align:center; cursor:pointer; background:rgba(99,102,241,0.03); transition:0.2s;">
+                                    <i class="fas fa-file-upload fa-2x" style="color:var(--primary); margin-bottom:8px;"></i>
+                                    <div id="adminFileDropLabel" style="font-weight:700; color:var(--dark);">اضغط لاختيار ملف أو اسحبه هنا (PDF / Word / Excel / صورة)</div>
+                                    <input type="file" id="adminFileInput" style="display:none;" onchange="onAdminFilePicked_(this)">
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="button" class="btn btn-primary" onclick="saveAdminFileUI(this)" style="width:100%; font-weight:800;"><i class="fas fa-save"></i> حفظ ونشر الملف</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قائمة الملفات -->
+                    <div id="adminFilesListContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:14px;"></div>
+                </div>
+
+                <!-- قسم المهام المجدولة (الواجبات والاختبارات المتأخرة الموزعة بالأيام) -->
+                <div id="scheduledTasksSection" class="hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                        <div>
+                            <h2 class="section-title" style="padding-bottom:0; border-bottom:none; margin-bottom:4px;"><i class="fas fa-calendar-check"></i> المهام المجدولة</h2>
+                            <p style="margin:0; color:var(--gray); font-size:0.86rem;">متابعة خطة إنجاز الواجبات والاختبارات المجدولة (تظهر مهام اليوم أولاً في الأعلى)</p>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <select id="stSectionEmpFilter" class="form-control hidden" style="min-width:200px;" onchange="loadScheduledTasksSectionUI()"></select>
+                            <button class="btn btn-sm btn-warning hidden" id="stSectionOpenSchedulerBtn" onclick="openBacklogSchedulerModal(document.getElementById('stSectionEmpFilter')?.value || '')"><i class="fas fa-calendar-alt"></i> تعديل / إنشاء جدولة</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadScheduledTasksSectionUI(this)"><i class="fas fa-sync-alt"></i> تحديث</button>
+                        </div>
+                    </div>
+                    <div id="scheduledTasksContainer"></div>
+                </div>
+
                 <div id="librarySection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-book"></i> المكتبة</h2>
@@ -3080,19 +3148,71 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
                 
                 <div class="form-group" style="grid-column: span 2; background: var(--surface-hover); padding: 15px; border-radius: var(--radius-lg); border: 1.5px solid rgba(99,102,241,0.2);" id="empSectionsWrap">
-                    <label style="font-weight: 800; color: var(--primary); font-size: 0.95rem; margin-bottom: 10px; display: block;"><i class="fas fa-shield-alt"></i> صلاحيات الأقسام المفتوحة له:</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                        <label style="font-weight: 800; color: var(--primary); font-size: 0.95rem; margin: 0;"><i class="fas fa-shield-alt"></i> 1. صلاحيات الأقسام المفتوحة له:</label>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn btn-sm btn-outline-primary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.querySelectorAll('.emp-sec-cb').forEach(c=>c.checked=true)">تحديد الكل</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 8px; font-size:0.75rem;" onclick="document.querySelectorAll('.emp-sec-cb').forEach(c=>c.checked=false)">إلغاء الكل</button>
+                        </div>
+                    </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;" id="empSectionsContainer">
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="students" class="emp-sec-cb"> <span>إدارة الطلاب</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="reports" class="emp-sec-cb"> <span>التقارير والإحصائيات</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="notifications" class="emp-sec-cb"> <span>الإشعارات</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="tasmiya" class="emp-sec-cb"> <span>التسميع</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="wajib" class="emp-sec-cb"> <span>الواجب</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="ikhtibarat" class="emp-sec-cb"> <span>الاختبارات</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="hossas" class="emp-sec-cb"> <span>الحصص</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="schedule" class="emp-sec-cb"> <span>جدول الحصص</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="liveAttendance" class="emp-sec-cb"> <span>الحضور المباشر</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="library" class="emp-sec-cb"> <span>المكتبة</span></label>
- </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="students" class="emp-sec-cb"> <span>إدارة الطلاب</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="wajib" class="emp-sec-cb"> <span>الواجب</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="tasmiya" class="emp-sec-cb"> <span>التسميع</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="ikhtibarat" class="emp-sec-cb"> <span>الاختبارات</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="hossas" class="emp-sec-cb"> <span>الحصص</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="liveAttendance" class="emp-sec-cb"> <span>الحضور المباشر</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="library" class="emp-sec-cb"> <span>المكتبة</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer; color:#0f5d57;"><input type="checkbox" value="adminFiles" class="emp-sec-cb"> <span>ملفات الإدارة (عرض/تحميل)</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer; color:#1d4ed8;"><input type="checkbox" value="scheduledTasks" class="emp-sec-cb"> <span>المهام المجدولة</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="schedule" class="emp-sec-cb"> <span>جدول الحصص</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="notifications" class="emp-sec-cb"> <span>الإشعارات</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="reports" class="emp-sec-cb"> <span>التقارير والإحصائيات</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="leaderboard" class="emp-sec-cb"> <span>لوحة الشرف</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="games" class="emp-sec-cb"> <span>الألعاب التفاعلية</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="whiteboard" class="emp-sec-cb"> <span>السبورة الذكية</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="whatsappSettings" class="emp-sec-cb"> <span>الواتساب والتنبيهات</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="platformSettings" class="emp-sec-cb"> <span>إعدادات المنصة</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="users" class="emp-sec-cb"> <span>إدارة الموظفين</span></label>
+                    </div>
+
+                    <!-- 2. التبويبات الفرعية داخل كل قسم -->
+                    <div style="margin-top:14px; padding-top:12px; border-top:1px dashed rgba(99,102,241,0.25);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                            <label style="font-weight: 800; color: var(--primary-dark); font-size: 0.9rem; margin: 0;"><i class="fas fa-columns"></i> 2. التبويبات الفرعية المسموحة:</label>
+                            <div style="display:flex; gap:6px;">
+                                <button type="button" class="btn btn-sm btn-outline-primary" style="padding:2px 8px; font-size:0.74rem;" onclick="document.querySelectorAll('.emp-tab-cb').forEach(c=>c.checked=true)">كل التبويبات</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 8px; font-size:0.74rem;" onclick="document.querySelectorAll('.emp-tab-cb').forEach(c=>c.checked=false)">إلغاء الكل</button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 6px;" id="empTabsContainer">
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="wajib:add" class="emp-tab-cb" checked> <span>الواجب: إضافة واجب</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="wajib:correct" class="emp-tab-cb" checked> <span>الواجب: تصحيح الواجبات</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="tasmiya:add" class="emp-tab-cb" checked> <span>التسميع: إضافة تسميع</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="tasmiya:reserve" class="emp-tab-cb" checked> <span>التسميع: الحجوزات والتقييم</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="tasmiya:schedule" class="emp-tab-cb" checked> <span>التسميع: مواعيد التسميع</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:manual" class="emp-tab-cb" checked> <span>الاختبارات: إضافة يدوية</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:build" class="emp-tab-cb" checked> <span>الاختبارات: بناء اختبار JSON</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:grade" class="emp-tab-cb" checked> <span>الاختبارات: رصد الدرجات</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="schedule:overview" class="emp-tab-cb" checked> <span>الجدول: عرض المواعيد</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="schedule:editor" class="emp-tab-cb" checked> <span>الجدول: تعديل الجدول</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="schedule:videoMatching" class="emp-tab-cb" checked> <span>الجدول: ربط الفيديوهات</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="notifications:send" class="emp-tab-cb" checked> <span>الإشعارات: إرسال</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="notifications:history" class="emp-tab-cb" checked> <span>الإشعارات: السجل</span></label>
+                        </div>
+                    </div>
+
+                    <!-- 3. صلاحيات الإضافة والتعديل والحذف والتحكم الدقيق -->
+                    <div style="margin-top:14px; padding-top:12px; border-top:1px dashed rgba(239,68,68,0.28);">
+                        <label style="font-weight: 800; color: #b91c1c; font-size: 0.9rem; margin-bottom: 8px; display: block;"><i class="fas fa-key"></i> 3. صلاحيات الإجراءات (الإضافة / التعديل / الحذف):</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px;" id="empSensitiveContainer">
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; cursor:pointer; color:#15803d;"><input type="checkbox" value="perm_add" class="emp-sens-cb" checked> <span>السماح بالإضافة</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; cursor:pointer; color:#1d4ed8;"><input type="checkbox" value="perm_edit" class="emp-sens-cb" checked> <span>السماح بالتعديل</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; cursor:pointer; color:#dc2626;"><input type="checkbox" value="perm_delete" class="emp-sens-cb"> <span>السماح بالحذف</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; cursor:pointer; color:#0f766e;"><input type="checkbox" value="perm_whatsapp" class="emp-sens-cb" checked> <span>إرسال واتساب</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; cursor:pointer; color:#7c3aed;"><input type="checkbox" value="view_audit_log" class="emp-sens-cb"> <span>عرض سجل المراقبة</span></label>
+                        </div>
+                    </div>
  </div>
 
                 <div class="form-group" style="grid-column: span 2; background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(59,130,246,0.03)); padding: 15px; border-radius: var(--radius-lg); border: 1.5px solid rgba(99,102,241,0.2);">
@@ -4467,8 +4587,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             // تحديث رسالة الترحيب كل ما دخل على الرئيسية
             if (id === 'dashboard') {
                 updateAdminMotivation();
-                //  نظبط فلتر الفترة تاني لو محتاج
                 if (typeof initEmpPerfDefaultRange_ === 'function') initEmpPerfDefaultRange_();
+            } else if (id === 'adminFiles') {
+                if (typeof loadAdminFilesUI === 'function') loadAdminFilesUI();
+            } else if (id === 'scheduledTasks') {
+                if (typeof loadScheduledTasksSectionUI === 'function') loadScheduledTasksSectionUI();
             }
 
             // Refresh & Initialize section data (Protected with Try-Catch)
@@ -8022,13 +8145,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function editEmployeeByCode(code) {
-            if (!window.allEmployees) return;
-            const emp = window.allEmployees.find(e => e.code === code);
-            if (emp) {
-                openEmployeeModal(emp);
-            } else {
-                showNotify('error', 'لم يتم العثور على بيانات الموظف');
-            }
+            if (typeof editEmployee === 'function') return editEmployee(code);
         }
 
 
@@ -8933,6 +9050,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     { id: 'hossas', label: 'الحصص', icon: 'fas fa-video' },
                     { id: 'liveAttendance', label: 'الحضور المباشر', icon: 'fas fa-user-check' },
                     { id: 'library', label: 'المكتبة', icon: 'fas fa-book' },
+                    { id: 'adminFiles', label: 'ملفات الإدارة', icon: 'fas fa-folder-open' },
+                    { id: 'scheduledTasks', label: 'المهام المجدولة', icon: 'fas fa-calendar-check' },
                     { id: 'games', label: 'العب وتعلّم', icon: 'fas fa-gamepad' }
                 ]
             },
@@ -11259,6 +11378,27 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 });
                 group.style.display = hasVisibleItem ? 'block' : 'none';
             });
+
+            // تطبيق صلاحيات التبويبات الفرعية (allowedTabs)
+            if (emp.allowedTabs && emp.allowedTabs !== 'ALL' && emp.allowedTabs !== 'الكل') {
+                const allowedTabsList = Array.isArray(emp.allowedTabs) ? emp.allowedTabs : String(emp.allowedTabs).split(',').map(s => s.trim());
+                document.querySelectorAll('[onclick*="switchTab("]').forEach(btn => {
+                    const m = (btn.getAttribute('onclick') || '').match(/switchTab\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]\)/);
+                    if (m) {
+                        const key = m[1] + ':' + m[2];
+                        btn.style.display = allowedTabsList.includes(key) ? '' : 'none';
+                    }
+                });
+            }
+
+            // تطبيق صلاحيات الإضافة / التعديل / الحذف (allowedSensitive)
+            if (emp.allowedSensitive && emp.allowedSensitive !== 'ALL' && emp.allowedSensitive !== 'الكل') {
+                const sensList = Array.isArray(emp.allowedSensitive) ? emp.allowedSensitive : String(emp.allowedSensitive).split(',').map(s => s.trim());
+                document.body.classList.toggle('emp-no-add', !sensList.includes('perm_add'));
+                document.body.classList.toggle('emp-no-edit', !sensList.includes('perm_edit'));
+                document.body.classList.toggle('emp-no-delete', !sensList.includes('perm_delete'));
+                document.body.classList.toggle('emp-no-whatsapp', !sensList.includes('perm_whatsapp'));
+            }
         }
 
         function loadEmployeesManagement() {
@@ -11463,8 +11603,18 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 cb.checked = (secs.includes('ALL') || secs.includes('الكل') || secs.includes(cb.value));
             });
 
+            // استعادة التبويبات الفرعية والصلاحيات الحساسة (إضافة / تعديل / حذف)
+            const tabsArr = Array.isArray(emp.allowedTabs) ? emp.allowedTabs : String(emp.allowedTabs || 'ALL').split(',').map(s => s.trim());
+            const isAllTabs = (emp.allowedTabs === 'ALL' || emp.allowedTabs === 'الكل' || tabsArr.includes('ALL') || tabsArr.includes('الكل'));
+            document.querySelectorAll('.emp-tab-cb').forEach(cb => { cb.checked = isAllTabs || tabsArr.includes(cb.value); });
+
+            const sensArr = Array.isArray(emp.allowedSensitive) ? emp.allowedSensitive : String(emp.allowedSensitive || 'ALL').split(',').map(s => s.trim());
+            const isAllSens = (emp.allowedSensitive === 'ALL' || emp.allowedSensitive === 'الكل' || sensArr.includes('ALL') || sensArr.includes('الكل'));
+            document.querySelectorAll('.emp-sens-cb').forEach(cb => { cb.checked = isAllSens || sensArr.includes(cb.value); });
+
             const perfEnabled = !!emp.perfEnabled;
             document.getElementById('empPerfEnabled').checked = perfEnabled;
+            onEmployeePerfToggle(perfEnabled);
             const perfSecs = Array.isArray(emp.perfSections) ? emp.perfSections : [];
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => { cb.checked = perfSecs.includes(cb.value); });
             const perfTargets = emp.perfTargets || {};
@@ -11481,7 +11631,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (slaW) slaW.value = perfSla.wajib || 48;
             if (slaT) slaT.value = perfSla.tasmiya || 48;
             if (slaI) slaI.value = perfSla.ikhtibarat || 96;
-            onEmployeePerfToggle(perfEnabled);
 
             renderEmployeePermissionsDropdowns(emp);
             openModal('employeeModal');
@@ -11530,6 +11679,16 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             });
             let finalSections = allSecsChecked ? 'ALL' : (selectedSecs.length > 0 ? selectedSecs : 'لا يوجد');
 
+            const tabCbs = document.querySelectorAll('.emp-tab-cb');
+            let selectedTabs = [], allTabsChecked = tabCbs.length > 0;
+            tabCbs.forEach(cb => { if (cb.checked) selectedTabs.push(cb.value); else allTabsChecked = false; });
+            let finalTabs = allTabsChecked ? 'ALL' : (selectedTabs.length > 0 ? selectedTabs : 'لا يوجد');
+
+            const sensCbs = document.querySelectorAll('.emp-sens-cb');
+            let selectedSens = [], allSensChecked = sensCbs.length > 0;
+            sensCbs.forEach(cb => { if (cb.checked) selectedSens.push(cb.value); else allSensChecked = false; });
+            let finalSens = allSensChecked ? 'ALL' : (selectedSens.length > 0 ? selectedSens : 'لا يوجد');
+
             let selectedTypes = [];
             document.querySelectorAll('.emp-type-cb:checked').forEach(cb => selectedTypes.push(cb.value));
 
@@ -11572,6 +11731,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 assignedGroups: selectedGroups,
                 allowedGroups: selectedGroups,
                 allowedSections: finalSections,
+                allowedTabs: finalTabs,
+                allowedSensitive: finalSens,
                 perfEnabled: perfEnabled,
                 perfSections: selectedPerfSecs,
                 perfTargets: perfTargets,
@@ -13422,14 +13583,39 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     return;
                 }
                 let html = '<table class="data-table"><thead><tr><th>التوقيت</th><th>الموظف</th><th>الدور</th><th>الإجراء</th><th>الهدف</th><th>التفاصيل</th></tr></thead><tbody>';
+                const actionArabicMap = {
+                    saveEmployeeProfileGS: 'حفظ / تعديل موظف', deleteEmployeeGS: 'حذف موظف',
+                    saveStudentProfile: 'حفظ / تعديل طالب', modifyStudentState: 'تعديل حالة / حذف طالب',
+                    saveCorrectedWajib: 'تصحيح واجب', saveReservedTasmiyaEvaluation: 'تقييم تسميع',
+                    saveIkhtibaratGrade: 'رصد درجة اختبار', saveBacklogScheduleGS: 'جدولة مهام متأخرة',
+                    deleteBacklogScheduleGS: 'إلغاء جدولة مهام', savePlatformSettings: 'تعديل إعدادات المنصة',
+                    saveAdminFileGS: 'رفع ملف إدارة', deleteAdminFileGS: 'حذف ملف إدارة'
+                };
                 items.forEach(it => {
+                    let actLabel = actionArabicMap[it.action] || it.action || '-';
+                    let tgt = it.target || '-';
+                    let det = it.details || '-';
+                    // تنظيف الصفوف القديمة التي سُجّلت بصيغة JSON خام
+                    if (typeof det === 'string' && (det.trim().startsWith('[') || det.trim().startsWith('{'))) {
+                        const nm = det.match(/"name"\s*:\s*"([^"]+)"/);
+                        const rl = det.match(/"role"\s*:\s*"([^"]+)"/);
+                        const cd = det.match(/"code"\s*:\s*"([^"]+)"/);
+                        const st = det.match(/"student"\s*:\s*"([^"]+)"/);
+                        const ls = det.match(/"lesson"\s*:\s*"([^"]+)"/);
+                        if (tgt === '-' && (nm || st)) tgt = (nm ? nm[1] : st[1]) + (rl ? ' (' + rl[1] + ')' : '');
+                        const cleanParts = [];
+                        if (rl) cleanParts.push('الدور: ' + rl[1]);
+                        if (cd) cleanParts.push('الكود: ' + cd[1]);
+                        if (ls) cleanParts.push('الدرس: ' + ls[1]);
+                        det = cleanParts.length ? cleanParts.join(' | ') : 'عملية تحديث بيانات';
+                    }
                     html += `<tr>
-                        <td style="font-size:0.78rem; white-space:nowrap;">${it.timestamp}</td>
-                        <td style="font-weight:bold;">${it.empName} <small style="color:var(--gray);">(${it.empCode})</small></td>
-                        <td>${it.empRole || '-'}</td>
-                        <td><span style="background:#eff6ff; color:#1d4ed8; padding:2px 8px; border-radius:12px; font-size:0.78rem; font-weight:bold;">${it.action}</span></td>
-                        <td style="font-size:0.82rem;">${it.target || '-'}</td>
-                        <td style="font-size:0.78rem; color:var(--gray); max-width:240px;">${it.details || '-'}</td>
+                        <td style="font-size:0.78rem; white-space:nowrap;">${escapeHtml_(it.timestamp)}</td>
+                        <td style="font-weight:bold;">${escapeHtml_(it.empName)} <small style="color:var(--gray);">(${escapeHtml_(it.empCode)})</small></td>
+                        <td>${escapeHtml_(it.empRole || '-')}</td>
+                        <td><span style="background:#eff6ff; color:#1d4ed8; padding:3px 10px; border-radius:12px; font-size:0.78rem; font-weight:bold; white-space:nowrap;">${escapeHtml_(actLabel)}</span></td>
+                        <td style="font-size:0.84rem; font-weight:700; color:var(--dark);">${escapeHtml_(tgt)}</td>
+                        <td style="font-size:0.8rem; color:#475569; max-width:300px; line-height:1.5;">${escapeHtml_(det)}</td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
@@ -16415,6 +16601,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                             '</div>' +
                         '</div>' +
                         '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
+                            ((emp.activeSchedule && emp.activeSchedule.missedCount > 0) ? ('<span style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; padding:5px 10px; border-radius:10px; font-size:0.76rem; font-weight:800;"><i class="fas fa-exclamation-triangle"></i> متأخر عن الجدولة: ' + emp.activeSchedule.missedCount + ' مهمة</span>') : '') +
                             (isAdmin ? '<button type="button" class="btn btn-sm btn-warning" style="padding:7px 14px; font-size:0.8rem;" onclick="event.stopPropagation(); openBacklogSchedulerModal(\'' + safeCode + '\', \'' + safeName + '\')"><i class="fas fa-calendar-alt"></i> جدولة التراكمات</button>' : '') +
                             '<div style="background:' + c + '1a; border:1px solid ' + c + '44; color:' + c + '; padding:6px 14px; border-radius:12px; font-weight:900; font-size:0.95rem;">' + scoreLabel_(comp) + ' &nbsp;' + (comp !== null ? comp + '/100' : '—') + '</div>' +
                         '</div>' +
@@ -16487,5 +16674,227 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     })();
     </script>
 
+
+    <script>
+    // =========================================================================
+    // 📁 ملفات الإدارة (Admin Files) + 📅 قسم المهام المجدولة (Scheduled Tasks)
+    // =========================================================================
+    window._adminFilePickedObj = null;
+
+    function onAdminFilePicked_(input) {
+        const f = input && input.files && input.files[0];
+        const lbl = document.getElementById('adminFileDropLabel');
+        if (!f) { window._adminFilePickedObj = null; return; }
+        if (lbl) lbl.innerHTML = '<i class="fas fa-check-circle" style="color:#16a34a;"></i> تم اختيار الملف: <b>' + escapeHtml_(f.name) + '</b>';
+        const fr = new FileReader();
+        fr.onload = function(ev) {
+            window._adminFilePickedObj = {
+                base64: String(ev.target.result || '').split(',')[1] || '',
+                name: f.name,
+                mimeType: f.type || 'application/octet-stream'
+            };
+        };
+        fr.readAsDataURL(f);
+    }
+
+    (function initAdminFileDragDrop_() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const dz = document.getElementById('adminFileDropZone');
+            if (!dz) return;
+            ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.background = 'rgba(99,102,241,0.12)'; }));
+            ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.background = 'rgba(99,102,241,0.03)'; }));
+            dz.addEventListener('drop', e => {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length) {
+                    const inp = document.getElementById('adminFileInput');
+                    if (inp) { inp.files = files; onAdminFilePicked_(inp); }
+                }
+            });
+        });
+    })();
+
+    function loadAdminFilesUI(btn) {
+        const listEl = document.getElementById('adminFilesListContainer');
+        const uploadCard = document.getElementById('adminFilesUploadCard');
+        const empSel = document.getElementById('adminFileTargetEmp');
+        const isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
+
+        if (uploadCard) uploadCard.classList.toggle('hidden', !isAdmin);
+        if (isAdmin && empSel && Array.isArray(window.allEmployees)) {
+            empSel.innerHTML = '<option value="ALL">كل الموظفين المصرح لهم بالقسم</option>' +
+                window.allEmployees.map(e => '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name) + ' (' + escapeHtml_(e.role || 'موظف') + ')</option>').join('');
+        }
+        if (!listEl) return;
+        if (btn) toggleLoading(btn, true);
+        listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:8px;">جاري تحميل ملفات الإدارة...</p></div>';
+
+        runGS('getAdminFilesGS').then(res => {
+            if (btn) toggleLoading(btn, false);
+            if (!res || !res.success) {
+                listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:25px; color:#dc2626;">' + escapeHtml_((res && res.message) || 'تعذر التحميل') + '</div>';
+                return;
+            }
+            const files = res.files || [];
+            if (files.length === 0) {
+                listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--gray); background:var(--surface); border-radius:14px; border:1px solid var(--border);"><i class="fas fa-folder-open fa-3x" style="opacity:0.3; margin-bottom:10px;"></i><p style="font-weight:700;">لا توجد ملفات مضافة في ملفات الإدارة حالياً.</p></div>';
+                return;
+            }
+            listEl.innerHTML = files.map(f => `
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+                    <div style="display:flex; align-items:flex-start; gap:12px;">
+                        <div style="width:44px; height:44px; border-radius:12px; background:rgba(15,93,87,0.1); color:#0f5d57; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;"><i class="fas fa-file-alt"></i></div>
+                        <div style="min-width:0; flex:1;">
+                            <div style="font-weight:800; color:var(--dark); font-size:1rem; line-height:1.4;">${escapeHtml_(f.title)}</div>
+                            <div style="font-size:0.78rem; color:var(--gray); margin-top:4px; display:flex; flex-wrap:wrap; gap:6px;">
+                                <span style="background:#f1f5f9; padding:2px 8px; border-radius:6px;">${escapeHtml_(f.fileType || 'ملف')}</span>
+                                ${f.addedDate ? '<span><i class="far fa-calendar-alt"></i> ' + escapeHtml_(f.addedDate) + '</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <a href="${escapeHtml_(f.link)}" target="_blank" class="btn btn-sm btn-primary" style="flex:1; text-align:center; font-weight:700;"><i class="fas fa-external-link-alt"></i> فتح / تحميل</a>
+                        ${res.isAdmin ? '<button type="button" class="btn btn-sm btn-danger" onclick="deleteAdminFileUI(' + f.rowIndex + ', this)" title="حذف الملف"><i class="fas fa-trash"></i></button>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }).catch(err => {
+            if (btn) toggleLoading(btn, false);
+            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:25px; color:#dc2626;">خطأ: ' + escapeHtml_(err.message) + '</div>';
+        });
+    }
+
+    function saveAdminFileUI(btn) {
+        const title = (document.getElementById('adminFileTitle')?.value || '').trim();
+        const link = (document.getElementById('adminFileLink')?.value || '').trim();
+        const targetEmployees = document.getElementById('adminFileTargetEmp')?.value || 'ALL';
+        if (!title) return showNotify('error', 'يرجى إدخال عنوان الملف');
+        if (!link && !window._adminFilePickedObj) return showNotify('error', 'يرجى إدخال رابط الملف أو رفع ملف من جهازك');
+
+        if (btn) toggleLoading(btn, true);
+        runGS('saveAdminFileGS', { title: title, link: link, targetEmployees: targetEmployees, fileData: window._adminFilePickedObj }).then(res => {
+            if (btn) toggleLoading(btn, false);
+            if (res && res.success) {
+                showNotify('success', res.message || 'تم رفع الملف بنجاح');
+                document.getElementById('adminFileTitle').value = '';
+                document.getElementById('adminFileLink').value = '';
+                document.getElementById('adminFileInput').value = '';
+                window._adminFilePickedObj = null;
+                const lbl = document.getElementById('adminFileDropLabel');
+                if (lbl) lbl.textContent = 'اضغط لاختيار ملف أو اسحبه هنا (PDF / Word / Excel / صورة)';
+                loadAdminFilesUI();
+            } else {
+                showNotify('error', (res && res.message) || 'تعذر الحفظ');
+            }
+        }).catch(err => {
+            if (btn) toggleLoading(btn, false);
+            showNotify('error', err.message);
+        });
+    }
+
+    function deleteAdminFileUI(rowIndex, btn) {
+        Swal.fire({
+            title: 'حذف الملف؟',
+            text: 'هل أنت متأكد من حذف هذا الملف من ملفات الإدارة؟',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'نعم، احذف',
+            cancelButtonText: 'إلغاء'
+        }).then(r => {
+            if (!r.isConfirmed) return;
+            if (btn) toggleLoading(btn, true);
+            runGS('deleteAdminFileGS', rowIndex).then(res => {
+                if (btn) toggleLoading(btn, false);
+                if (res && res.success) { showNotify('success', res.message); loadAdminFilesUI(); }
+                else showNotify('error', (res && res.message) || 'فشل الحذف');
+            }).catch(err => { if (btn) toggleLoading(btn, false); showNotify('error', err.message); });
+        });
+    }
+
+    // ── قسم المهام المجدولة (يظهر اليوم الحالي أولاً + يبرز الأيام المتأخرة بالأحمر) ──
+    function goToScheduledTask_(isExam) { var sec = isExam ? 'ikhtibarat' : 'wajib'; var tab = isExam ? 'build' : 'correct'; showSection(sec); setTimeout(function(){ switchTab(sec, tab); }, 80); }
+
+    function loadScheduledTasksSectionUI(btn) {
+        const container = document.getElementById('scheduledTasksContainer');
+        const empFilter = document.getElementById('stSectionEmpFilter');
+        const schedBtn = document.getElementById('stSectionOpenSchedulerBtn');
+        const isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
+
+        if (isAdmin && empFilter) {
+            empFilter.classList.remove('hidden');
+            if (schedBtn) schedBtn.classList.remove('hidden');
+            if (empFilter.options.length === 0 && Array.isArray(window.allEmployees)) {
+                empFilter.innerHTML = window.allEmployees.map(e => '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name) + ' (' + escapeHtml_(e.role || 'موظف') + ')</option>').join('');
+            }
+        }
+        const targetCode = (isAdmin && empFilter && empFilter.value) ? empFilter.value : (window.currentEmployee ? window.currentEmployee.code : '');
+        if (!container) return;
+        if (btn) toggleLoading(btn, true);
+        container.innerHTML = '<div style="text-align:center; padding:35px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">جاري تحميل المهام المجدولة...</p></div>';
+
+        runGS('getBacklogScheduleDataGS', targetCode, 'both', true).then(res => {
+            if (btn) toggleLoading(btn, false);
+            const sched = res && res.savedSchedule;
+            if (!sched || !Array.isArray(sched.days) || sched.days.length === 0) {
+                container.innerHTML = '<div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:40px; text-align:center; color:var(--gray);"><i class="fas fa-calendar-check fa-3x" style="opacity:0.35; margin-bottom:10px;"></i><p style="font-weight:800; margin:0;">لا توجد مهام مجدولة حالياً.</p></div>';
+                return;
+            }
+            const todayStr = getLocalDateString();
+            // ترتيب: اليوم الحالي أولاً في الأعلى، ثم الأيام المتأخرة السابقة، ثم الأيام القادمة
+            const todayDays = sched.days.filter(d => d.date === todayStr);
+            const missedDays = sched.days.filter(d => d.date < todayStr && (d.items || []).some(it => !it.done));
+            const futureDays = sched.days.filter(d => d.date > todayStr);
+            const pastDoneDays = sched.days.filter(d => d.date < todayStr && !(d.items || []).some(it => !it.done));
+            const ordered = [].concat(todayDays, missedDays, futureDays, pastDoneDays);
+
+            let html = '<div style="display:flex; flex-direction:column; gap:14px;">';
+            ordered.forEach(dayObj => {
+                const isToday = dayObj.date === todayStr;
+                const items = dayObj.items || [];
+                const doneCnt = items.filter(it => it.done).length;
+                const isMissed = dayObj.date < todayStr && doneCnt < items.length;
+                const borderCol = isToday ? '#2563eb' : (isMissed ? '#dc2626' : '#e2e8f0');
+                const headBg = isToday ? 'linear-gradient(135deg,#eff6ff,#dbeafe)' : (isMissed ? 'linear-gradient(135deg,#fef2f2,#fee2e2)' : '#f8fafc');
+                const tag = isToday
+                    ? '<span style="background:#2563eb; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;">مهام اليوم</span>'
+                    : (isMissed
+                        ? '<span style="background:#dc2626; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;"><i class="fas fa-exclamation-triangle"></i> متأخر عن الموعد!</span>'
+                        : (doneCnt === items.length ? '<span style="background:#16a34a; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;">مكتمل</span>' : ''));
+
+                html += '<div style="background:var(--surface); border:2px solid ' + borderCol + '; border-radius:14px; overflow:hidden;">' +
+                    '<div style="background:' + headBg + '; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--border);">' +
+                        '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><strong style="font-size:1rem; color:var(--dark);"><i class="fas fa-calendar-day"></i> ' + escapeHtml_(dayObj.dayName || '') + ' (' + escapeHtml_(dayObj.date) + ')</strong>' + tag + '</div>' +
+                        '<span style="font-size:0.82rem; font-weight:800; color:' + (doneCnt === items.length ? '#15803d' : '#1e40af') + ';">المنجز: ' + doneCnt + ' / ' + items.length + '</span>' +
+                    '</div>' +
+                    '<div style="padding:12px 16px; display:flex; flex-direction:column; gap:8px;">';
+
+                items.forEach((it, idx) => {
+                    const isExam = it.type === 'ikhtibarat';
+                    const badge = isExam
+                        ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">اختبار</span>'
+                        : '<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">واجب</span>';
+                    const goBtn = !it.done
+                        ? ('<button type="button" class="btn btn-sm btn-primary" style="padding:4px 10px; font-size:0.76rem;" onclick="goToScheduledTask_(' + (isExam ? 'true' : 'false') + ')">تنفيذ الآن</button>')
+                        : '<span style="color:#16a34a; font-weight:800; font-size:0.82rem;"><i class="fas fa-check-circle"></i> تم الإنجاز</span>';
+                    html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; border-radius:10px; background:' + (it.done ? '#f0fdf4' : '#f8fafc') + '; border:1px solid ' + (it.done ? '#bbf7d0' : '#e2e8f0') + ';">' +
+                        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                            '<span style="color:var(--gray); font-weight:700;">' + (idx + 1) + '.</span>' +
+                            badge +
+                            '<strong style="color:var(--dark);' + (it.done ? 'text-decoration:line-through; opacity:0.65;' : '') + '">' + escapeHtml_(stripCode(it.student)) + '</strong>' +
+                            '<span style="color:var(--gray);">— ' + escapeHtml_(it.lesson || '-') + '</span>' +
+                        '</div>' +
+                        goBtn +
+                    '</div>';
+                });
+                html += '</div></div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }).catch(err => {
+            if (btn) toggleLoading(btn, false);
+            container.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">خطأ: ' + escapeHtml_(err.message) + '</div>';
+        });
+    }
+    </script>
 </body>
 </html>
