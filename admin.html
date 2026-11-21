@@ -13169,21 +13169,31 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }
         }
 
-        // Override openEmployeeModal, editEmployee, saveEmployeeProfile to use the tree
+        // Unified openEmployeeModal, editEmployee, saveEmployeeProfile (includes perfExamDay, perfStartDate, auto-code, tabs & sensitive perms)
         window.openEmployeeModal = function() {
             document.getElementById('editEmployeeOriginalCode').value = '';
             document.getElementById('empName').value = '';
             document.getElementById('empRole').value = 'موظف';
-            document.getElementById('empCode').value = '';
+            if (typeof generateAutoEmpCode_ === 'function') generateAutoEmpCode_();
+            else document.getElementById('empCode').value = '';
             document.getElementById('empTeacherCode').value = '';
             document.getElementById('empPhone').value = '';
-            document.getElementById('employeeModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة موظف جديد';
+            document.getElementById('employeeModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> إضافة موظف / معلم جديد';
             onEmployeeRoleChanged('موظف');
             renderEmployeePermissionsTree('لا يوجد', 'لا يوجد');
+            document.querySelectorAll('#empTabsContainer .emp-tab-cb').forEach(cb => cb.checked = true);
+            document.querySelectorAll('#empSensitiveContainer .emp-sens-cb').forEach(cb => cb.checked = (cb.value === 'perm_add' || cb.value === 'perm_edit' || cb.value === 'perm_whatsapp'));
             document.getElementById('empPerfEnabled').checked = false;
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = false);
             document.getElementById('empPerfTargetWajib').value = '';
             document.getElementById('empPerfTargetIkhtibarat').value = '';
+            var exDayEl = document.getElementById('empPerfExamDay');
+            if (exDayEl) exDayEl.value = '';
+            var sdEl = document.getElementById('empPerfStartDate');
+            if (sdEl) sdEl.value = (typeof getLocalDateString === 'function') ? getLocalDateString() : '';
+            if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = 48;
+            if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = 48;
+            if (document.getElementById('empPerfSlaIkhtibarat')) document.getElementById('empPerfSlaIkhtibarat').value = 96;
             onEmployeePerfToggle(false);
             renderEmployeePermissionsDropdowns(null);
             openModal('employeeModal');
@@ -13201,9 +13211,19 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.getElementById('employeeModalTitle').innerHTML = '<i class="fas fa-user-edit"></i> تعديل بيانات الموظف';
             onEmployeeRoleChanged(emp.role);
             setTimeout(() => { document.getElementById('empTeacherCode').value = emp.teacherCode || ''; }, 100);
-            renderEmployeePermissionsTree(emp.allowedSections || 'ALL', emp.allowedTabs || 'ALL');
+            renderEmployeePermissionsTree(emp.allowedSections || 'ALL', emp.allowedTabs || 'ALL', emp.allowedSensitive || 'ALL');
+
+            const tabsArr = Array.isArray(emp.allowedTabs) ? emp.allowedTabs : String(emp.allowedTabs || 'ALL').split(',').map(s => s.trim());
+            const isAllTabs = (emp.allowedTabs === 'ALL' || emp.allowedTabs === 'الكل' || tabsArr.includes('ALL') || tabsArr.includes('الكل'));
+            document.querySelectorAll('#empTabsContainer .emp-tab-cb').forEach(cb => { cb.checked = isAllTabs || tabsArr.includes(cb.value); });
+
+            const sensArr = Array.isArray(emp.allowedSensitive) ? emp.allowedSensitive : String(emp.allowedSensitive || 'ALL').split(',').map(s => s.trim());
+            const isAllSens = (emp.allowedSensitive === 'ALL' || emp.allowedSensitive === 'الكل' || sensArr.includes('ALL') || sensArr.includes('الكل'));
+            document.querySelectorAll('#empSensitiveContainer .emp-sens-cb').forEach(cb => { cb.checked = isAllSens || sensArr.includes(cb.value); });
+
             const perfEnabled = !!emp.perfEnabled;
             document.getElementById('empPerfEnabled').checked = perfEnabled;
+            onEmployeePerfToggle(perfEnabled);
             const perfSecs = Array.isArray(emp.perfSections) ? emp.perfSections : [];
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => { cb.checked = perfSecs.includes(cb.value); });
             const perfTargets = emp.perfTargets || {};
@@ -13217,7 +13237,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = perfSla.wajib || 48;
             if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = perfSla.tasmiya || 48;
             if (document.getElementById('empPerfSlaIkhtibarat')) document.getElementById('empPerfSlaIkhtibarat').value = perfSla.ikhtibarat || 96;
-            onEmployeePerfToggle(perfEnabled);
             renderEmployeePermissionsDropdowns(emp);
             openModal('employeeModal');
         };
@@ -13225,23 +13244,30 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         window.saveEmployeeProfile = function(btn) {
             const name = document.getElementById('empName').value.trim();
             const role = document.getElementById('empRole').value;
-            const teacherCode = document.getElementById('empTeacherCode').value;
-            const code = document.getElementById('empCode').value.trim();
-            const originalCode = document.getElementById('editEmployeeOriginalCode').value;
+            const teacherCode = (role === 'مساعد معلم') ? (document.getElementById('empTeacherCode').value || '') : '';
+            let code = document.getElementById('empCode').value.trim();
+            const originalCode = document.getElementById('editEmployeeOriginalCode').value.trim();
             const phone = document.getElementById('empPhone').value.trim();
-            if (!name) return showNotify('error', 'يرجى إدخال اسم الموظف');
+            if (!name) return showNotify('error', 'يرجى إدخال اسم الموظف أو المعلم');
+            if (!code) code = originalCode || (typeof generateAutoEmpCode_ === 'function' ? generateAutoEmpCode_() : '');
 
             const secCbs = document.querySelectorAll('#empSectionsContainer .emp-sec-cb');
             const selectedSecs = [];
-            let allSecsChecked = true;
+            let allSecsChecked = secCbs.length > 0;
             secCbs.forEach(cb => { if (cb.checked) selectedSecs.push(cb.value); else allSecsChecked = false; });
             const finalSections = allSecsChecked ? 'ALL' : (selectedSecs.length > 0 ? selectedSecs : 'لا يوجد');
 
-            const tabCbs = document.querySelectorAll('#empSectionsContainer .emp-tab-cb');
+            const tabCbs = document.querySelectorAll('#empTabsContainer .emp-tab-cb, #empSectionsContainer .emp-tab-cb');
             const selectedTabs = [];
-            let allTabsChecked = true;
+            let allTabsChecked = tabCbs.length > 0;
             tabCbs.forEach(cb => { if (cb.checked) selectedTabs.push(cb.value); else allTabsChecked = false; });
             const finalTabs = allTabsChecked ? 'ALL' : (selectedTabs.length > 0 ? selectedTabs : 'لا يوجد');
+
+            const sensCbs = document.querySelectorAll('#empSensitiveContainer .emp-sens-cb, #empSectionsContainer .emp-sens-cb');
+            const selectedSens = [];
+            let allSensChecked = sensCbs.length > 0;
+            sensCbs.forEach(cb => { if (cb.checked) selectedSens.push(cb.value); else allSensChecked = false; });
+            const finalSens = allSensChecked ? 'ALL' : (selectedSens.length > 0 ? selectedSens : 'لا يوجد');
 
             let selectedTypes = [];
             document.querySelectorAll('.emp-type-cb:checked').forEach(cb => selectedTypes.push(cb.value));
@@ -13253,18 +13279,26 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfEnabled = document.getElementById('empPerfEnabled').checked;
             let selectedPerfSecs = [];
             document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
+            if (perfEnabled && selectedPerfSecs.length === 0) selectedPerfSecs = ['wajib', 'tasmiya', 'ikhtibarat'];
+
+            const perfExamDay = document.getElementById('empPerfExamDay') ? document.getElementById('empPerfExamDay').value : '';
+            const perfStartDate = document.getElementById('empPerfStartDate') ? document.getElementById('empPerfStartDate').value : '';
 
             const empData = {
                 originalCode, name, role, code, teacherCode, phone,
                 allowedTypes: selectedTypes,
+                assignedTypes: selectedTypes,
                 assignedGrades: selectedGrades,
                 allowedClasses: selectedGrades,
                 assignedGroups: selectedGroups,
                 allowedGroups: selectedGroups,
                 allowedSections: finalSections,
                 allowedTabs: finalTabs,
+                allowedSensitive: finalSens,
                 perfEnabled,
                 perfSections: selectedPerfSecs,
+                perfExamDay: perfExamDay,
+                perfStartDate: perfStartDate,
                 perfTargets: {
                     wajib: Number(document.getElementById('empPerfTargetWajib')?.value) || 0,
                     tasmiya: 0,
@@ -13282,7 +13316,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 if (res && res.success) {
                     showNotify('success', res.message);
                     closeModal('employeeModal');
+                    try {
+                        Object.keys(localStorage).forEach(k => { if (k.startsWith('cache_emp_perf_')) localStorage.removeItem(k); });
+                    } catch (_e) {}
                     loadEmployeesManagement();
+                    if (typeof loadEmployeesPerformanceDashboard === 'function') {
+                        loadEmployeesPerformanceDashboard(null, null, true);
+                    }
                 } else {
                     showNotify('error', res ? res.message : 'حدث خطأ');
                 }
@@ -13542,23 +13582,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const emp = (window.allEmployees || []).find(e => String(e.code) === String(code));
             if (emp) renderEmployeePermissionsTree(emp.allowedSections || 'ALL', emp.allowedTabs || 'ALL', emp.allowedSensitive || 'ALL');
         };
-        const _origSaveEmpV1 = window.saveEmployeeProfile;
-        window.saveEmployeeProfile = function(btn) {
-            const sensCbs = document.querySelectorAll('#empSectionsContainer .emp-sens-cb');
-            const selectedSens = [];
-            let allSens = true;
-            sensCbs.forEach(c => { if (c.checked) selectedSens.push(c.value); else allSens = false; });
-            window._pendingAllowedSensitive = allSens ? 'ALL' : (selectedSens.length > 0 ? selectedSens : 'لا يوجد');
-            if (typeof _origSaveEmpV1 === 'function') _origSaveEmpV1(btn);
-        };
-        // Patch runGS wrapper for saveEmployeeProfileGS to inject allowedSensitive
-        const _origRunGS = window.runGS;
-        window.runGS = function(funcName) {
-            if (funcName === 'saveEmployeeProfileGS' && arguments[1] && typeof arguments[1] === 'object' && window._pendingAllowedSensitive !== undefined) {
-                arguments[1].allowedSensitive = window._pendingAllowedSensitive;
-            }
-            return _origRunGS.apply(this, arguments);
-        };
+        // (تم دمج حفظ allowedSensitive مباشرة في saveEmployeeProfile أعلاه بدون الحاجة لـ wrapper إضافي)
 
         // Load Audit Log UI
         function loadAuditLogUI(btn) {
