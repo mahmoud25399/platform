@@ -138,8 +138,9 @@
       background: var(--surface);
       backdrop-filter: blur(14px);
       border: 1px solid rgba(203, 213, 225, 0.85);
-      box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.05);
-      border-radius: 18px;
+      box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.10), 0 1px 3px rgba(15, 23, 42, 0.06);
+      border-color: rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
     }
 
     /* Focus Mode Floating Exit Pill */
@@ -151,7 +152,7 @@
       opacity: 0;
       pointer-events: none;
       transform: translateY(-8px);
-      transition: all 0.2s ease;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
     body.focus-mode #focus-exit-btn {
       opacity: 1;
@@ -163,12 +164,12 @@
     .dock-btn {
       width: 38px;
       height: 38px;
-      border-radius: 11px;
+      border-radius: 10px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: #475569;
-      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+      transition: background-color 0.14s cubic-bezier(0.16, 1, 0.3, 1), color 0.14s cubic-bezier(0.16, 1, 0.3, 1), transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
       border: 1px solid transparent;
       flex-shrink: 0;
@@ -178,10 +179,15 @@
       background: #f1f5f9;
       color: #0f172a;
     }
+    .dock-btn:active { transform: scale(0.95); }
+    .dock-btn:focus-visible, .preset-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
     .dock-btn.active {
       background: var(--brand);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(15, 93, 87, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
     }
 
     /* Quick Pen Preset Dots */
@@ -199,7 +205,7 @@
       flex-shrink: 0;
       background: #f8fafc;
     }
-    .preset-btn:hover { transform: scale(1.1); }
+    .preset-btn:hover { border-color: rgba(15, 23, 42, 0.28); } .preset-btn:active { transform: scale(0.94); }
     .preset-btn.active {
       border-color: var(--brand);
       box-shadow: 0 0 0 3px var(--brand-ring);
@@ -220,7 +226,8 @@
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 16px;
-      box-shadow: 0 18px 40px -10px rgba(15, 23, 42, 0.18);
+      box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.06);
+      border-color: rgba(15, 23, 42, 0.08);
       padding: 12px;
       display: none;
       max-width: calc(100vw - 24px);
@@ -243,7 +250,8 @@
       backdrop-filter: blur(14px);
       border: 1px solid var(--border);
       border-radius: 16px;
-      box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.14);
+      box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.10), 0 1px 3px rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.08);
       display: flex;
       flex-direction: column;
       transform: translateX(calc(100% + 24px));
@@ -302,7 +310,7 @@
       white-space: pre;
       min-width: 220px;
       min-height: 54px;
-      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15);
+      box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.06);
     }
 
     /* Modals & Toasts */
@@ -330,7 +338,7 @@
       color: #ffffff;
       font-size: 13px;
       font-weight: 700;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+      box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
       animation: toastIn 0.22s ease forwards;
       max-width: 340px;
     }
@@ -372,8 +380,9 @@
       background: var(--surface);
       backdrop-filter: blur(14px);
       border: 1px solid rgba(203, 213, 225, 0.92);
-      box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.18);
-      border-radius: 18px;
+      box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.06);
+      border-color: rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
       overflow: hidden;
       position: relative;
     }
@@ -387,7 +396,7 @@
       border-radius: 9999px;
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(14px);
-      box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(203, 213, 225, 0.9);
+      box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.10);
       position: relative;
       cursor: grab;
       align-items: center;
@@ -452,6 +461,7 @@
     .timer-resize-handle:hover { opacity: 1; background: #e2e8f0; color: #0f5d57; }
     #timer-drag-handle { cursor: grab; }
     #timer-drag-handle:active { cursor: grabbing; }
+    .timer-digits, #page-indicator, #zoom-label, #top-timer-badge, #pen-size-val, #eraser-size-val { font-variant-numeric: tabular-nums; }
     .timer-digits { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; direction: ltr; }
 
     /* Responsive adjustments */
@@ -493,7 +503,7 @@
           <span class="text-xs font-extrabold text-slate-800">مؤقت الحصة</span>
         </div>
         <div class="flex items-center gap-1">
-          <button id="timer-sound-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="صوت الجرس عند الانتهاء">
+          <button id="timer-sound-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="صوت الجرس">
             <i class="ph ph-bell text-sm"></i>
           </button>
           <button id="timer-close-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center" title="إغلاق">
@@ -554,13 +564,13 @@
       <div class="timer-circle-content">
         <div id="timer-circle-display">03:00</div>
         <div class="timer-circle-actions">
-          <button id="timer-pause-btn" type="button" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-sm" title="إيقاف مؤقت والعودة للنموذج">
+          <button id="timer-pause-btn" type="button" class="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[11px] font-bold flex items-center gap-1 shadow-sm" title="إيقاف مؤقت">
             <i class="ph ph-pause text-xs"></i>
             <span>إيقاف مؤقت</span>
           </button>
         </div>
       </div>
-      <div id="timer-circle-resize" class="timer-resize-handle" title="اسحب لتكبير أو تصغير الدائرة">
+      <div id="timer-circle-resize" class="timer-resize-handle" title="تغيير الحجم">
         <i class="ph ph-arrows-out-simple"></i>
       </div>
     </div>
@@ -572,12 +582,12 @@
   <header id="top-bar">
     <!-- Right: Back + Lesson Name + Grade/Group -->
     <div class="flex items-center gap-2 min-w-0">
-      <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="العودة للوحة التحكم">
+      <button id="btn-home" type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-teal-800 transition-colors flex-shrink-0" title="لوحة التحكم">
         <i class="ph ph-arrow-right text-lg"></i>
       </button>
       <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
       <input type="text" id="lesson-name" placeholder="عنوان الدرس..." dir="rtl"
-        class="bg-transparent hover:bg-slate-50 focus:bg-white border border-transparent focus:border-teal-600 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-extrabold text-slate-800 outline-none w-28 sm:w-44 md:w-52 transition-all truncate">
+        class="bg-transparent hover:bg-slate-50 focus:bg-white border border-transparent focus:border-teal-600 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-semibold text-slate-800 outline-none w-28 sm:w-44 md:w-52 transition-colors truncate">
       <select id="wb-grade-select" dir="rtl"
         class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 outline-none focus:border-teal-600 cursor-pointer max-w-[120px] hidden sm:block">
         <option value="">جاري التحميل...</option>
@@ -590,25 +600,25 @@
 
     <!-- Center: Compact Page Navigator (Arabic RTL: [+] | [Next >] [1 / 1] [< Prev]) -->
     <div class="flex items-center gap-1 bg-slate-100/90 border border-slate-200/80 rounded-xl px-1.5 py-1 flex-shrink-0">
-      <button id="btn-add-page" type="button" class="w-7 h-7 rounded-lg bg-white hover:bg-teal-50 text-teal-800 border border-slate-200 flex items-center justify-center transition-colors" title="إضافة صفحة جديدة">
+      <button id="btn-add-page" type="button" class="w-7 h-7 rounded-lg bg-white hover:bg-teal-50 text-teal-800 border border-slate-200 flex items-center justify-center transition-colors" title="صفحة جديدة">
         <i class="ph ph-plus text-sm font-bold"></i>
       </button>
       <div class="h-4 w-px bg-slate-300 mx-0.5"></div>
-      <button id="btn-next-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة التالية (للأمام)">
+      <button id="btn-next-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة التالية">
         <i class="ph ph-caret-right text-sm font-bold"></i>
       </button>
-      <button id="btn-pages-drawer" type="button" class="px-2 py-0.5 rounded-lg text-xs font-extrabold text-slate-700 hover:bg-white transition-colors flex items-center gap-1" title="عرض كل الصفحات">
+      <button id="btn-pages-drawer" type="button" class="px-2 py-0.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-white transition-colors flex items-center gap-1" title="كل الصفحات">
         <i class="ph ph-squares-four text-sm text-teal-700"></i>
         <span id="page-indicator" class="font-mono">1 / 1</span>
       </button>
-      <button id="btn-prev-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة السابقة (للخلف)">
+      <button id="btn-prev-page" type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-white transition-colors" title="الصفحة السابقة">
         <i class="ph ph-caret-left text-sm font-bold"></i>
       </button>
     </div>
 
     <!-- Left: Timer + Publish CTA + More Menu + Focus Mode -->
     <div class="flex items-center gap-1.5 flex-shrink-0">
-      <button id="btn-timer-toggle" type="button" class="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer" title="مؤقت الحصة للطلاب">
+      <button id="btn-timer-toggle" type="button" class="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer" title="المؤقت">
         <i class="ph ph-timer text-base text-teal-700"></i>
         <span id="top-timer-badge" class="hidden sm:inline">مؤقت</span>
       </button>
@@ -621,7 +631,7 @@
 
       <!-- More Menu Dropdown -->
       <div class="relative" id="more-menu-wrap">
-        <button id="btn-more-menu" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="المزيد من الخيارات">
+        <button id="btn-more-menu" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="خيارات">
           <i class="ph ph-dots-three-vertical text-lg font-bold"></i>
         </button>
         <div id="more-menu-dropdown" class="hidden absolute top-11 left-0 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-1.5 z-50 flex flex-col gap-0.5">
@@ -648,7 +658,7 @@
         </div>
       </div>
 
-      <button id="btn-focus-mode" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="وضع التركيز — إخفاء الأشرطة [Tab]">
+      <button id="btn-focus-mode" type="button" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors" title="وضع التركيز [Tab]">
         <i class="ph ph-arrows-out-simple text-base"></i>
       </button>
     </div>
@@ -688,7 +698,7 @@
     <button id="btn-zoom-out" type="button" class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center justify-center" title="تصغير">
       <i class="ph ph-minus text-sm"></i>
     </button>
-    <button id="btn-zoom-reset" type="button" class="px-1.5 py-0.5 rounded-lg text-xs font-mono font-semibold text-slate-700 hover:bg-slate-100 min-w-[46px] text-center" title="إعادة ضبط الزوم 100%">
+    <button id="btn-zoom-reset" type="button" class="px-1.5 py-0.5 rounded-lg text-xs font-mono font-semibold text-slate-700 hover:bg-slate-100 min-w-[46px] text-center" title="100%">
       <span id="zoom-level">100%</span>
     </button>
     <button id="btn-zoom-in" type="button" class="w-7 h-7 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center justify-center" title="تكبير">
@@ -702,10 +712,10 @@
   <div id="bottom-dock-wrap">
     <div class="glass-dock px-2 py-1.5 flex items-center gap-1 overflow-x-auto slim-scroll">
       <!-- Navigation Tools -->
-      <button id="btn-select" type="button" class="dock-btn" title="تحديد وتحريك العناصر [S]">
+      <button id="btn-select" type="button" class="dock-btn" title="تحديد [S]">
         <i class="ph ph-cursor text-xl"></i>
       </button>
-      <button id="btn-hand" type="button" class="dock-btn" title="تحريك السبورة [M] أو زر القلم الجانبي">
+      <button id="btn-hand" type="button" class="dock-btn" title="تحريك [M]">
         <i class="ph ph-hand-palm text-xl"></i>
       </button>
 
@@ -713,16 +723,16 @@
 
       <!-- 5 Quick Colors (keep pen type & size global across all colors) -->
       <div id="pen-presets-bar" class="flex items-center gap-1 px-1">
-        <button type="button" class="preset-btn active" data-preset="0" title="فحمي [1]">
+        <button type="button" class="preset-btn active" data-preset="0" title="أسود [1]">
           <span class="preset-dot" style="width:15px;height:15px;background:#1e293b;"></span>
         </button>
-        <button type="button" class="preset-btn" data-preset="1" title="قرمزي [2]">
+        <button type="button" class="preset-btn" data-preset="1" title="أحمر [2]">
           <span class="preset-dot" style="width:15px;height:15px;background:#b91c1c;"></span>
         </button>
-        <button type="button" class="preset-btn" data-preset="2" title="أزرق كوبالت [3]">
+        <button type="button" class="preset-btn" data-preset="2" title="أزرق [3]">
           <span class="preset-dot" style="width:15px;height:15px;background:#1d4ed8;"></span>
         </button>
-        <button type="button" class="preset-btn" data-preset="3" title="أخضر الهليهي [4]">
+        <button type="button" class="preset-btn" data-preset="3" title="أخضر [4]">
           <span class="preset-dot" style="width:15px;height:15px;background:#0f5d57;"></span>
         </button>
         <button type="button" class="preset-btn" data-preset="4" title="بنفسجي [5]">
@@ -730,39 +740,39 @@
         </button>
       </div>
 
-      <button id="btn-pen" type="button" class="dock-btn active" title="إعدادات القلم والألوان [P]">
+      <button id="btn-pen" type="button" class="dock-btn active" title="قلم [P]">
         <i class="ph ph-pen-nib text-xl"></i>
       </button>
       <button id="btn-highlighter" type="button" class="dock-btn" title="تظليل [H]">
         <i class="ph ph-highlighter text-xl"></i>
       </button>
-      <button id="btn-eraser" type="button" class="dock-btn" title="ممحاة [E] أو ممحاة ظهر قلم Wacom">
+      <button id="btn-eraser" type="button" class="dock-btn" title="ممحاة [E]">
         <i class="ph ph-eraser text-xl"></i>
       </button>
-      <button id="btn-laser" type="button" class="dock-btn" title="مؤشر ليزر [L]">
+      <button id="btn-laser" type="button" class="dock-btn" title="ليزر [L]">
         <i class="ph ph-crosshair text-xl"></i>
       </button>
 
       <div class="h-6 w-px bg-slate-200 mx-0.5 flex-shrink-0"></div>
 
       <!-- Insert & Teaching Tools -->
-      <button id="btn-text" type="button" class="dock-btn" title="كتابة نص [T]">
+      <button id="btn-text" type="button" class="dock-btn" title="نص [T]">
         <i class="ph ph-text-t text-xl"></i>
       </button>
 
-      <button id="btn-table" type="button" class="dock-btn" title="إدراج جدول عربي (RTL)">
+      <button id="btn-table" type="button" class="dock-btn" title="جدول">
         <i class="ph ph-table text-xl"></i>
       </button>
-      <button id="btn-mindmap" type="button" class="dock-btn" title="إدراج خريطة ذهنية">
+      <button id="btn-mindmap" type="button" class="dock-btn" title="خريطة ذهنية">
         <i class="ph ph-graph text-xl"></i>
       </button>
-      <button id="btn-image" type="button" class="dock-btn" title="إدراج صورة (أو لصق Ctrl+V)">
+      <button id="btn-image" type="button" class="dock-btn" title="صورة">
         <i class="ph ph-image text-xl"></i>
       </button>
-      <button id="btn-pdf" type="button" class="dock-btn" title="إدراج ملف PDF تفاعلي (تحريك وتكبير وتقليب صفحات)">
+      <button id="btn-pdf" type="button" class="dock-btn" title="PDF">
         <i class="ph ph-file-pdf text-xl"></i>
       </button>
-      <button id="btn-stamps" type="button" class="dock-btn" title="طوابع ورموز تحفيزية">
+      <button id="btn-stamps" type="button" class="dock-btn" title="طوابع">
         <i class="ph ph-star text-xl"></i>
       </button>
 
@@ -775,7 +785,7 @@
       <button id="btn-redo" type="button" class="dock-btn" title="إعادة [Ctrl+Y]">
         <i class="ph ph-arrow-clockwise text-xl"></i>
       </button>
-      <button id="btn-clear" type="button" class="dock-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600" title="مسح الصفحة الحالية">
+      <button id="btn-clear" type="button" class="dock-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600" title="مسح الصفحة">
         <i class="ph ph-trash text-xl"></i>
       </button>
     </div>
@@ -807,14 +817,14 @@
 
     <!-- Curated Ergonomic Color Palette -->
     <div class="flex items-center justify-between gap-1.5 mb-3">
-      <button type="button" class="swatch-circle active" data-color="#1e293b" style="background:#1e293b;" title="فحمي"></button>
-      <button type="button" class="swatch-circle" data-color="#b91c1c" style="background:#b91c1c;" title="قرمزي"></button>
-      <button type="button" class="swatch-circle" data-color="#1d4ed8" style="background:#1d4ed8;" title="كوبالت"></button>
-      <button type="button" class="swatch-circle" data-color="#0f5d57" style="background:#0f5d57;" title="تيل الهليهي"></button>
+      <button type="button" class="swatch-circle active" data-color="#1e293b" style="background:#1e293b;" title="أسود"></button>
+      <button type="button" class="swatch-circle" data-color="#b91c1c" style="background:#b91c1c;" title="أحمر"></button>
+      <button type="button" class="swatch-circle" data-color="#1d4ed8" style="background:#1d4ed8;" title="أزرق"></button>
+      <button type="button" class="swatch-circle" data-color="#0f5d57" style="background:#0f5d57;" title="أخضر داكن"></button>
       <button type="button" class="swatch-circle" data-color="#15803d" style="background:#15803d;" title="أخضر"></button>
-      <button type="button" class="swatch-circle" data-color="#b45309" style="background:#b45309;" title="كهرماني"></button>
+      <button type="button" class="swatch-circle" data-color="#b45309" style="background:#b45309;" title="برتقالي"></button>
       <button type="button" class="swatch-circle" data-color="#6d28d9" style="background:#6d28d9;" title="بنفسجي"></button>
-      <button type="button" class="swatch-circle" data-color="#f8fafc" style="background:#f8fafc;" title="أبيض (للسبورة الداكنة)"></button>
+      <button type="button" class="swatch-circle" data-color="#f8fafc" style="background:#f8fafc;" title="أبيض"></button>
       <label class="w-7 h-7 rounded-full border-2 border-dashed border-slate-300 hover:border-teal-600 flex items-center justify-center cursor-pointer text-slate-500" title="لون مخصص">
         <i class="ph ph-eyedropper text-sm"></i>
         <input type="color" id="custom-color-input" value="#1e293b" class="sr-only">
@@ -912,11 +922,11 @@
         <div>
           <label class="block text-xs font-extrabold text-slate-700 mb-2">خلفية الصفحة الحالية</label>
           <div class="grid grid-cols-3 gap-2">
-            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-all" data-bg="0">أبيض نقي</button>
-            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-all" data-bg="1">مسطّر</button>
-            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-all" data-bg="2">شبكة مربعات</button>
-            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-white bg-slate-900 hover:border-teal-400 transition-all" data-bg="3">سبورة ليلية</button>
-            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-teal-900 bg-teal-50 hover:border-teal-600 transition-all col-span-2" data-bg="4">أسطر الخط العربي</button>
+            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-colors" data-bg="0">أبيض نقي</button>
+            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-colors" data-bg="1">مسطّر</button>
+            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 bg-white hover:border-teal-600 transition-colors" data-bg="2">شبكة مربعات</button>
+            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-white bg-slate-900 hover:border-teal-400 transition-colors" data-bg="3">سبورة ليلية</button>
+            <button type="button" class="bg-opt-btn border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-teal-900 bg-teal-50 hover:border-teal-600 transition-colors col-span-2" data-bg="4">أسطر الخط العربي</button>
           </div>
         </div>
 
@@ -2036,33 +2046,54 @@
       ctx.strokeRect(box.x - 4 / zoom, box.y - 4 / zoom, box.w + 8 / zoom, box.h + 8 / zoom);
       ctx.setLineDash([]);
 
-      if (isPrimary && !el.locked && (el.type === 'image' || el.type === 'pdf' || el.type === 'rect' || el.type === 'circle')) {
+      if (isPrimary && !el.locked) {
         const hs = 9 / zoom;
         ctx.fillStyle = '#ffffff';
         ctx.strokeStyle = '#0f5d57';
         ctx.lineWidth = 2 / zoom;
-        [
-          { x: box.x - 4 / zoom, y: box.y - 4 / zoom },
-          { x: box.x + box.w + 4 / zoom, y: box.y - 4 / zoom },
-          { x: box.x - 4 / zoom, y: box.y + box.h + 4 / zoom },
-          { x: box.x + box.w + 4 / zoom, y: box.y + box.h + 4 / zoom }
-        ].forEach(h => {
-          ctx.fillRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
-          ctx.strokeRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
-        });
+        if (el.type === 'line' || el.type === 'arrow') {
+          [{ x: el.x1, y: el.y1 }, { x: el.x2, y: el.y2 }].forEach(h => {
+            ctx.beginPath();
+            ctx.arc(h.x, h.y, hs * 0.62, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+        } else if (['image', 'pdf', 'rect', 'circle', 'triangle'].includes(el.type)) {
+          const pad = 4 / zoom;
+          const x0 = box.x - pad, x1 = box.x + box.w + pad, xm = (x0 + x1) * 0.5;
+          const y0 = box.y - pad, y1 = box.y + box.h + pad, ym = (y0 + y1) * 0.5;
+          [
+            { x: x0, y: y0 }, { x: xm, y: y0 }, { x: x1, y: y0 },
+            { x: x1, y: ym },
+            { x: x1, y: y1 }, { x: xm, y: y1 }, { x: x0, y: y1 },
+            { x: x0, y: ym }
+          ].forEach(h => {
+            ctx.fillRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
+            ctx.strokeRect(h.x - hs / 2, h.y - hs / 2, hs, hs);
+          });
+        }
       }
       ctx.restore();
     }
 
     function hitTestResizeHandle(coords, el) {
-      if (!el || el.locked || !['image', 'pdf', 'rect', 'circle'].includes(el.type)) return null;
-      const box = getBox(el);
+      if (!el || el.locked) return null;
       const tol = 14 / zoom;
+      if (el.type === 'line' || el.type === 'arrow') {
+        if (Math.hypot(coords.x - el.x1, coords.y - el.y1) <= tol) return 'p1';
+        if (Math.hypot(coords.x - el.x2, coords.y - el.y2) <= tol) return 'p2';
+        return null;
+      }
+      if (!['image', 'pdf', 'rect', 'circle', 'triangle'].includes(el.type)) return null;
+      const box = getBox(el);
+      const pad = 4 / zoom;
+      const x0 = box.x - pad, x1 = box.x + box.w + pad, xm = (x0 + x1) * 0.5;
+      const y0 = box.y - pad, y1 = box.y + box.h + pad, ym = (y0 + y1) * 0.5;
       const handles = [
-        { id: 'tl', x: box.x - 4 / zoom, y: box.y - 4 / zoom },
-        { id: 'tr', x: box.x + box.w + 4 / zoom, y: box.y - 4 / zoom },
-        { id: 'bl', x: box.x - 4 / zoom, y: box.y + box.h + 4 / zoom },
-        { id: 'br', x: box.x + box.w + 4 / zoom, y: box.y + box.h + 4 / zoom }
+        { id: 'tl', x: x0, y: y0 }, { id: 'tm', x: xm, y: y0 }, { id: 'tr', x: x1, y: y0 },
+        { id: 'mr', x: x1, y: ym },
+        { id: 'br', x: x1, y: y1 }, { id: 'bm', x: xm, y: y1 }, { id: 'bl', x: x0, y: y1 },
+        { id: 'ml', x: x0, y: ym }
       ];
       for (const h of handles) {
         if (Math.abs(coords.x - h.x) <= tol && Math.abs(coords.y - h.y) <= tol) return h.id;
@@ -2185,6 +2216,7 @@
             activeCanvas.style.cursor = 'default';
           }
         }
+        else if (currentTool === 'stamp') activeCanvas.style.cursor = 'pointer';
         else activeCanvas.style.cursor = 'crosshair';
       }
     }
@@ -2268,11 +2300,10 @@
       if (currentTool === 'stamp') {
         pushUndoSnapshot();
         curElements().push({ type: 'stamp', emoji: currentStamp, x: coords.x, y: coords.y, size: 48, color: brushColor });
-        if (['أحسنت!', 'ممتاز', 'الله ينور', 'رائع', 'مبدع', 'بطل'].includes(currentStamp)) {
+        if (['أحسنت!', 'ممتاز', 'الله ينور', 'رائع', 'مبدع', 'بطل', 'excellent', 'star'].includes(currentStamp)) {
           spawnConfetti(coords.x, coords.y);
-          playStampSound('celebration');
-        } else if (currentStamp === 'check') playStampSound('check');
-        else if (currentStamp === 'wrong') playStampSound('wrong');
+        }
+        playStampSound(currentStamp);
         renderStatic();
         return;
       }
@@ -2292,11 +2323,13 @@
           const handleId = hitTestResizeHandle(coords, selectedElement);
           if (handleId) {
             pushUndoSnapshot();
+            const sb = getBox(selectedElement);
             activeResizeState = {
               handle: handleId,
               el: selectedElement,
               startCoords: coords,
-              startPos: { x: selectedElement.x, y: selectedElement.y, w: selectedElement.w, h: selectedElement.h }
+              startPos: { x: sb.x, y: sb.y, w: Math.max(1, sb.w), h: Math.max(1, sb.h) },
+              startVerts: selectedElement.verts ? selectedElement.verts.map(v => ({ x: v.x, y: v.y })) : null
             };
             return;
           }
@@ -2516,15 +2549,32 @@
       }
 
       if (activeResizeState) {
-        const { handle, el, startCoords, startPos } = activeResizeState;
+        const { handle, el, startCoords, startPos, startVerts } = activeResizeState;
+        if (el.type === 'line' || el.type === 'arrow') {
+          if (handle === 'p1') { el.x1 = coords.x; el.y1 = coords.y; }
+          else if (handle === 'p2') { el.x2 = coords.x; el.y2 = coords.y; }
+          renderStatic();
+          renderActive();
+          return;
+        }
         const dx = coords.x - startCoords.x, dy = coords.y - startCoords.y;
         const isMedia = (el.type === 'pdf' || el.type === 'image');
         const minW = isMedia ? 100 : 24;
         const minH = isMedia ? 70  : 24;
-        if (handle === 'br') { el.w = Math.max(minW, startPos.w + dx); el.h = Math.max(minH, startPos.h + dy); }
-        else if (handle === 'bl') { const nw = Math.max(minW, startPos.w - dx); el.x = startPos.x + (startPos.w - nw); el.w = nw; el.h = Math.max(minH, startPos.h + dy); }
-        else if (handle === 'tr') { const nh = Math.max(minH, startPos.h - dy); el.y = startPos.y + (startPos.h - nh); el.w = Math.max(minW, startPos.w + dx); el.h = nh; }
-        else if (handle === 'tl') { const nw = Math.max(minW, startPos.w - dx); const nh = Math.max(minH, startPos.h - dy); el.x = startPos.x + (startPos.w - nw); el.y = startPos.y + (startPos.h - nh); el.w = nw; el.h = nh; }
+        let nx = startPos.x, ny = startPos.y, nw = startPos.w, nh = startPos.h;
+        if (handle.includes('r')) { nw = Math.max(minW, startPos.w + dx); }
+        if (handle.includes('l')) { nw = Math.max(minW, startPos.w - dx); nx = startPos.x + (startPos.w - nw); }
+        if (handle.includes('b')) { nh = Math.max(minH, startPos.h + dy); }
+        if (handle.includes('t')) { nh = Math.max(minH, startPos.h - dy); ny = startPos.y + (startPos.h - nh); }
+
+        if (el.type === 'triangle' && startVerts) {
+          el.verts = startVerts.map(v => ({
+            x: nx + ((v.x - startPos.x) / startPos.w) * nw,
+            y: ny + ((v.y - startPos.y) / startPos.h) * nh
+          }));
+        } else {
+          el.x = nx; el.y = ny; el.w = nw; el.h = nh;
+        }
         if (isMedia) {
           clampPdfView(el);
           if (el.type === 'pdf') schedulePdfHiResRender(el);
@@ -2635,7 +2685,7 @@
             pts.push({ x: smoothX, y: smoothY, p: smoothP });
             if (smartShapesEnabled && currentTool === 'pen' && currentElement.penMode !== 'magic') {
               if (holdShapeTimer) clearTimeout(holdShapeTimer);
-              holdShapeTimer = setTimeout(() => trySnapHoldToShape(), 420);
+              holdShapeTimer = setTimeout(() => trySnapHoldToShape(), 260);
             }
           }
         }
@@ -2668,33 +2718,31 @@
       const diag = Math.hypot(bw, bh);
       if (pathLen < 36 / zoom) return null;
 
-      // 1. Straight Line (with horizontal/vertical snap within 6°)
-      if (directDist / pathLen >= 0.90 && directDist >= 36 / zoom) {
-        let x2 = last.x, y2 = last.y;
-        const angle = Math.abs(Math.atan2(y2 - first.y, x2 - first.x) * 180 / Math.PI);
-        if (angle < 6 || angle > 174) y2 = first.y;
-        else if (Math.abs(angle - 90) < 6) x2 = first.x;
-        return { type: 'line', color, size: Math.max(2, size), x1: first.x, y1: first.y, x2, y2 };
-      }
-
-      // 1B. Smart Arrow (straight shaft + sharp barb/hook at tip)
+      // 1A. Smart Arrow (supports BOTH single-hook and 2-wing arrowhead drawn in one stroke!)
       let tipIdx = 0, maxFromStart = 0;
       for (let i = 1; i < pts.length; i++) {
         const d = Math.hypot(pts[i].x - first.x, pts[i].y - first.y);
         if (d > maxFromStart) { maxFromStart = d; tipIdx = i; }
       }
-      if (tipIdx >= Math.floor(pts.length * 0.45) && tipIdx <= pts.length - 3 && maxFromStart >= 42 / zoom) {
+      if (tipIdx >= 3 && tipIdx <= pts.length - 3 && maxFromStart >= 36 / zoom) {
         let shaftLen = 0;
         for (let i = 1; i <= tipIdx; i++) shaftLen += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
         const tip = pts[tipIdx];
         const headLen = pathLen - shaftLen;
-        const endToTip = Math.hypot(last.x - tip.x, last.y - tip.y);
-        // Shaft must be straight (>= 0.87) and barb must fold back cleanly at tip
-        if (maxFromStart / Math.max(1, shaftLen) >= 0.87 && headLen >= 10 / zoom && headLen <= shaftLen * 0.55 && endToTip >= 6 / zoom) {
+        if (maxFromStart / Math.max(1, shaftLen) >= 0.80 && headLen >= 10 / zoom && headLen <= shaftLen * 0.90) {
           const svx = (tip.x - first.x) / maxFromStart, svy = (tip.y - first.y) / maxFromStart;
-          const bvx = (last.x - tip.x) / endToTip,      bvy = (last.y - tip.y) / endToTip;
-          const dot = svx * bvx + svy * bvy; // < -0.2 means turning backward > 102°
-          if (dot < -0.2) {
+          let maxBackProj = 0, maxSideDev = 0, maxFromTip = 0;
+          for (let i = tipIdx + 1; i < pts.length; i++) {
+            const rx = pts[i].x - tip.x, ry = pts[i].y - tip.y;
+            const dTip = Math.hypot(rx, ry);
+            if (dTip > maxFromTip) maxFromTip = dTip;
+            const backProj = -(rx * svx + ry * svy); // positive when folding back along shaft
+            const sideDev  = Math.abs(rx * (-svy) + ry * svx);
+            if (backProj > maxBackProj) maxBackProj = backProj;
+            if (sideDev > maxSideDev) maxSideDev = sideDev;
+          }
+          // Head must fold backward along the shaft with visible barb width and stay near the tip
+          if (maxBackProj >= 6 / zoom && maxSideDev >= 4 / zoom && maxFromTip <= maxFromStart * 0.58) {
             let x2 = tip.x, y2 = tip.y;
             const angle = Math.abs(Math.atan2(y2 - first.y, x2 - first.x) * 180 / Math.PI);
             if (angle < 6 || angle > 174) y2 = first.y;
@@ -2704,94 +2752,139 @@
         }
       }
 
-      // 2. Closed Shapes: Corner-first classification (Triangle vs Rectangle/Square vs Circle/Ellipse)
-      if (directDist <= Math.max(55 / zoom, pathLen * 0.32) && bw >= 24 / zoom && bh >= 24 / zoom) {
-        const cx = (minX + maxX) * 0.5, cy = (minY + maxY) * 0.5;
-        const rx = bw * 0.5, ry = bh * 0.5;
+      // 1B. Straight Line (with horizontal/vertical snap within 6°)
+      if (directDist / pathLen >= 0.92 && directDist >= 36 / zoom) {
+        let x2 = last.x, y2 = last.y;
+        const angle = Math.abs(Math.atan2(y2 - first.y, x2 - first.x) * 180 / Math.PI);
+        if (angle < 6 || angle > 174) y2 = first.y;
+        else if (Math.abs(angle - 90) < 6) x2 = first.x;
+        return { type: 'line', color, size: Math.max(2, size), x1: first.x, y1: first.y, x2, y2 };
+      }
 
-        // Polygon fill ratio vs bounding box
-        let polyArea = 0;
-        for (let i = 0; i < pts.length; i++) {
-          const a = pts[i], b = pts[(i + 1) % pts.length];
-          polyArea += (a.x * b.y - b.x * a.y);
+      // 2. Closed Shapes: Exact Minimum-Error Geometric Model Fitting (Circle/Ellipse vs Rectangle/Square vs Triangle)
+      if (directDist <= Math.max(60 / zoom, pathLen * 0.34) && bw >= 24 / zoom && bh >= 24 / zoom) {
+        // Resample stroke to 64 evenly spaced perimeter points so pen speed never biases any side
+        const N = 64;
+        const cumD = [0];
+        for (let k = 1; k < pts.length; k++) {
+          cumD.push(cumD[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
         }
-        polyArea = Math.abs(polyArea) * 0.5;
-        const fillRatio = polyArea / Math.max(1, bw * bh);
-
-        // Simplify polygon to count true geometric corners
-        const simp = simplifyStrokePoints(pts, Math.max(bw, bh) * 0.085);
-        // Merge start/end if closed loop
-        const poly = simp.slice();
-        if (poly.length > 2 && Math.hypot(poly[0].x - poly[poly.length - 1].x, poly[0].y - poly[poly.length - 1].y) < Math.max(bw, bh) * 0.22) {
-          poly.pop();
-        }
-        let sharpCorners = 0;
-        for (let i = 0; i < poly.length; i++) {
-          const prev = poly[(i - 1 + poly.length) % poly.length];
-          const curr = poly[i];
-          const next = poly[(i + 1) % poly.length];
-          const v1x = prev.x - curr.x, v1y = prev.y - curr.y;
-          const v2x = next.x - curr.x, v2y = next.y - curr.y;
-          const d1 = Math.hypot(v1x, v1y), d2 = Math.hypot(v2x, v2y);
-          if (d1 > 0 && d2 > 0) {
-            const cosA = Math.max(-1, Math.min(1, (v1x * v2x + v1y * v2y) / (d1 * d2)));
-            const deg = Math.acos(cosA) * 180 / Math.PI;
-            if (deg < 132) sharpCorners++;
-          }
+        const totalD = cumD[cumD.length - 1];
+        const rp = [];
+        const step = totalD / N;
+        let segIdx = 0;
+        for (let k = 0; k < N; k++) {
+          const target = k * step;
+          while (segIdx < cumD.length - 2 && cumD[segIdx + 1] < target) segIdx++;
+          const segLen = cumD[segIdx + 1] - cumD[segIdx];
+          const t = segLen > 1e-6 ? (target - cumD[segIdx]) / segLen : 0;
+          rp.push({
+            x: pts[segIdx].x + t * (pts[segIdx + 1].x - pts[segIdx].x),
+            y: pts[segIdx].y + t * (pts[segIdx + 1].y - pts[segIdx].y)
+          });
         }
 
-        // Normalized radial standard deviation (true circle/ellipse has very low stdR AND smooth perimeter)
-        let sumR = 0, sumR2 = 0;
-        for (const p of pts) {
-          const rn = Math.hypot((p.x - cx) / Math.max(1, rx), (p.y - cy) / Math.max(1, ry));
-          sumR += rn; sumR2 += rn * rn;
+        // Compute centroid and bbox of resampled perimeter
+        let sumX = 0, sumY = 0;
+        let rMinX = Infinity, rMaxX = -Infinity, rMinY = Infinity, rMaxY = -Infinity;
+        for (const p of rp) {
+          sumX += p.x; sumY += p.y;
+          if (p.x < rMinX) rMinX = p.x;
+          if (p.x > rMaxX) rMaxX = p.x;
+          if (p.y < rMinY) rMinY = p.y;
+          if (p.y > rMaxY) rMaxY = p.y;
         }
-        const meanR = sumR / pts.length;
-        const stdR = Math.sqrt(Math.max(0, sumR2 / pts.length - meanR * meanR));
+        const cx = sumX / N, cy = sumY / N;
+        const rbw = Math.max(1, rMaxX - rMinX), rbh = Math.max(1, rMaxY - rMinY);
+        const scale = Math.hypot(rbw, rbh);
 
-        // A. Triangle: 3 corners OR classic triangle fillRatio (0.32–0.62)
-        if ((poly.length === 3 && sharpCorners >= 2) || (fillRatio >= 0.32 && fillRatio <= 0.61 && sharpCorners >= 2)) {
-          let verts = poly.length === 3 ? poly.map(v => ({ x: v.x, y: v.y })) : null;
-          if (!verts) {
-            let v1 = pts[0], bestD1 = -1;
-            for (const p of pts) { const d = Math.hypot(p.x - cx, p.y - cy); if (d > bestD1) { bestD1 = d; v1 = p; } }
-            let v2 = pts[0], bestD2 = -1;
-            for (const p of pts) { const d = Math.hypot(p.x - v1.x, p.y - v1.y); if (d > bestD2) { bestD2 = d; v2 = p; } }
-            let v3 = pts[0], bestA = -1;
-            for (const p of pts) {
-              const area = Math.abs((v2.x - v1.x) * (p.y - v1.y) - (v2.y - v1.y) * (p.x - v1.x));
-              if (area > bestA) { bestA = area; v3 = p; }
+        // Model A: Circle / Ellipse residual RMS error
+        const rx = rbw * 0.5, ry = rbh * 0.5;
+        const avgR = (rx + ry) * 0.5;
+        let sumSqCirc = 0;
+        for (const p of rp) {
+          const d = (Math.hypot((p.x - cx) / rx, (p.y - cy) / ry) - 1) * avgR;
+          sumSqCirc += d * d;
+        }
+        const errCircle = Math.sqrt(sumSqCirc / N) / scale;
+
+        // Model B: Axis-aligned Rectangle / Square residual RMS error
+        let sumSqRect = 0;
+        for (const p of rp) {
+          const dx = Math.min(Math.abs(p.x - rMinX), Math.abs(p.x - rMaxX));
+          const dy = Math.min(Math.abs(p.y - rMinY), Math.abs(p.y - rMaxY));
+          const d = Math.min(dx, dy);
+          sumSqRect += d * d;
+        }
+        const errRect = Math.sqrt(sumSqRect / N) / scale;
+
+        // Model C: Optimal Max-Area Inscribed Triangle residual RMS error
+        const triArea = (a, b, c) => Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) * 0.5;
+        const ptSegDist = (px, py, ax, ay, bx, by) => {
+          const vx = bx - ax, vy = by - ay;
+          const l2 = vx * vx + vy * vy;
+          if (l2 < 1e-6) return Math.hypot(px - ax, py - ay);
+          const t = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2));
+          return Math.hypot(px - (ax + t * vx), py - (ay + t * vy));
+        };
+
+        let i1 = 0, bestD1 = -1;
+        for (let k = 0; k < N; k++) {
+          const d = Math.hypot(rp[k].x - cx, rp[k].y - cy);
+          if (d > bestD1) { bestD1 = d; i1 = k; }
+        }
+        let i2 = 0, bestD2 = -1;
+        for (let k = 0; k < N; k++) {
+          const d = Math.hypot(rp[k].x - rp[i1].x, rp[k].y - rp[i1].y);
+          if (d > bestD2) { bestD2 = d; i2 = k; }
+        }
+        let i3 = 0, bestA = -1;
+        for (let k = 0; k < N; k++) {
+          const a = triArea(rp[i1], rp[i2], rp[k]);
+          if (a > bestA) { bestA = a; i3 = k; }
+        }
+        // 2-pass coordinate ascent for exact global maximum-area triangle
+        for (let pass = 0; pass < 2; pass++) {
+          let bA = -1;
+          for (let k = 0; k < N; k++) { const a = triArea(rp[k], rp[i2], rp[i3]); if (a > bA) { bA = a; i1 = k; } }
+          bA = -1;
+          for (let k = 0; k < N; k++) { const a = triArea(rp[i1], rp[k], rp[i3]); if (a > bA) { bA = a; i2 = k; } }
+          bA = -1;
+          for (let k = 0; k < N; k++) { const a = triArea(rp[i1], rp[i2], rp[k]); if (a > bA) { bA = a; i3 = k; } }
+        }
+        const v1 = rp[i1], v2 = rp[i2], v3 = rp[i3];
+        let sumSqTri = 0;
+        for (const p of rp) {
+          const d = Math.min(
+            ptSegDist(p.x, p.y, v1.x, v1.y, v2.x, v2.y),
+            ptSegDist(p.x, p.y, v2.x, v2.y, v3.x, v3.y),
+            ptSegDist(p.x, p.y, v3.x, v3.y, v1.x, v1.y)
+          );
+          sumSqTri += d * d;
+        }
+        const errTri = Math.sqrt(sumSqTri / N) / scale;
+
+        // Pick the exact lowest-error geometric model (ignore random non-shape squiggles > 0.088)
+        const bestErr = Math.min(errCircle, errRect, errTri);
+        if (bestErr <= 0.088) {
+          const ratio = rbw / rbh;
+          if (bestErr === errCircle) {
+            let w = rbw, h = rbh, x = rMinX, y = rMinY;
+            if (ratio >= 0.80 && ratio <= 1.25) {
+              const d = (rbw + rbh) * 0.5;
+              w = d; h = d; x = cx - d * 0.5; y = cy - d * 0.5;
             }
-            verts = [{ x: v1.x, y: v1.y }, { x: v2.x, y: v2.y }, { x: v3.x, y: v3.y }];
+            return { type: 'circle', color, size: Math.max(2, size), x, y, w, h };
           }
-          return { type: 'triangle', color, size: Math.max(2, size), verts };
-        }
-
-        // B. Rectangle / Square: 4 sharp corners OR high box fillRatio (>= 0.835)
-        if ((poly.length === 4 && sharpCorners >= 3) || (sharpCorners >= 4 && fillRatio >= 0.68) || fillRatio >= 0.835) {
-          const ratio = bw / Math.max(1, bh);
-          let w = bw, h = bh, x = minX, y = minY;
-          if (ratio >= 0.84 && ratio <= 1.18) {
-            const side = (bw + bh) * 0.5;
-            w = side; h = side; x = cx - side * 0.5; y = cy - side * 0.5;
+          if (bestErr === errRect) {
+            let w = rbw, h = rbh, x = rMinX, y = rMinY;
+            if (ratio >= 0.82 && ratio <= 1.22) {
+              const side = (rbw + rbh) * 0.5;
+              w = side; h = side; x = (rMinX + rMaxX) * 0.5 - side * 0.5; y = (rMinY + rMaxY) * 0.5 - side * 0.5;
+            }
+            return { type: 'rect', color, size: Math.max(2, size), x, y, w, h };
           }
-          return { type: 'rect', color, size: Math.max(2, size), x, y, w, h };
-        }
-
-        // C. Circle / Ellipse: smooth loop (not 3 or 4 sharp corners), fillRatio around pi/4 (0.785), low radial variance
-        if (stdR < 0.135 && fillRatio >= 0.62 && fillRatio < 0.86) {
-          const ratio = bw / Math.max(1, bh);
-          let w = bw, h = bh, x = minX, y = minY;
-          if (ratio >= 0.82 && ratio <= 1.22) {
-            const d = (bw + bh) * 0.5;
-            w = d; h = d; x = cx - d * 0.5; y = cy - d * 0.5;
-          }
-          return { type: 'circle', color, size: Math.max(2, size), x, y, w, h };
-        }
-
-        // D. Fallback for rough hand-drawn rectangles/boxes
-        if (fillRatio >= 0.64 && diag > 40 / zoom) {
-          return { type: 'rect', color, size: Math.max(2, size), x: minX, y: minY, w: bw, h: bh };
+          return { type: 'triangle', color, size: Math.max(2, size), verts: [{ x: v1.x, y: v1.y }, { x: v2.x, y: v2.y }, { x: v3.x, y: v3.y }] };
         }
       }
       return null;
@@ -2802,6 +2895,7 @@
       if (!isDrawing || !currentElement || currentElement.type !== 'pen') return;
       const snapped = recognizeSmartShape(currentElement.points, currentElement.color, currentElement.size);
       if (snapped) {
+        snapped._rawStroke = currentElement;
         currentElement = snapped;
         requestActiveRender();
       }
@@ -2853,6 +2947,21 @@
           if (currentElement.penMode === 'magic') {
             magicStrokes.push({ el: currentElement, createdAt: performance.now() });
             ensureAnimLoop();
+          } else if (currentElement._rawStroke) {
+            const raw = currentElement._rawStroke;
+            delete currentElement._rawStroke;
+            raw.points = raw.points.map(pt => ({
+              x: Math.round(pt.x * 10) / 10,
+              y: Math.round(pt.y * 10) / 10,
+              p: Math.round((pt.p !== undefined ? pt.p : 0.55) * 100) / 100
+            }));
+            // Step 1: snapshot before drawing
+            pushUndoSnapshot();
+            curElements().push(raw);
+            // Step 2: snapshot with raw hand-drawn stroke so 1st Ctrl+Z reverts shape -> raw stroke!
+            pushUndoSnapshot();
+            curElements()[curElements().length - 1] = currentElement;
+            renderStatic();
           } else {
             pushUndoSnapshot();
             curElements().push(currentElement);
@@ -3681,8 +3790,8 @@
     document.getElementById('btn-text').addEventListener('click', () => { closeAllPopovers(); setTool('text'); });
     document.getElementById('btn-pen').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (currentTool !== 'pen') setTool('pen');
-      togglePopover('popover-pen');
+      if (currentTool !== 'pen') { setTool('pen'); closeAllPopovers(); }
+      else togglePopover('popover-pen');
     });
     document.getElementById('btn-eraser').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -4218,121 +4327,166 @@
       return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
     }
 
+    let _reverbNode = null;
+    let _noiseBufCache = null;
+
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function getNoiseBuffer() {
+      const ctx = ensureAudio();
+      if (_noiseBufCache && _noiseBufCache.sampleRate === ctx.sampleRate) return _noiseBufCache;
+      const len = Math.floor(ctx.sampleRate * 1.5);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      _noiseBufCache = buf;
+      return buf;
+    }
+
+    function getRoomReverb() {
+      const ctx = ensureAudio();
+      if (_reverbNode) return _reverbNode;
+      const dur = 0.45;
+      const len = Math.floor(ctx.sampleRate * dur);
+      const imp = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = imp.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          const env = Math.pow(1 - i / len, 2.8);
+          d[i] = (Math.random() * 2 - 1) * env * 0.42;
+        }
+      }
+      const conv = ctx.createConvolver();
+      conv.buffer = imp;
+      conv.connect(ctx.destination);
+      _reverbNode = conv;
+      return conv;
+    }
+
     function playTimerTick(secLeft) {
       if (!timerSoundOn) return;
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
-        const isEven = (secLeft % 2 === 0);
+        const ctx = ensureAudio();
+        const now = ctx.currentTime;
+        const isTick = (secLeft % 2 === 0);
         const urgent = secLeft <= 10;
+        const vol = urgent ? 0.55 : 0.38;
 
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        // Real mechanical wooden wall-clock tick-tock (filtered noise impulse + wood resonance, zero beep)
+        const src = ctx.createBufferSource();
+        src.buffer = getNoiseBuffer();
 
-        // Crisp alternating clock tick-tock click
-        osc.type = 'triangle';
-        const baseFreq = urgent ? (isEven ? 1420 : 1120) : (isEven ? 1150 : 880);
-        osc.frequency.setValueAtTime(baseFreq, now);
-        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.45, now + 0.032);
+        const clickBP = ctx.createBiquadFilter();
+        clickBP.type = 'bandpass';
+        clickBP.frequency.setValueAtTime(isTick ? 2450 : 1850, now);
+        clickBP.Q.setValueAtTime(5.5, now);
 
-        const vol = urgent ? 0.16 : 0.1;
-        gain.gain.setValueAtTime(vol, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.038);
+        const bodyBP = ctx.createBiquadFilter();
+        bodyBP.type = 'bandpass';
+        bodyBP.frequency.setValueAtTime(isTick ? 690 : 520, now);
+        bodyBP.Q.setValueAtTime(3.8, now);
 
-        osc.start(now);
-        osc.stop(now + 0.04);
+        const gClick = ctx.createGain();
+        gClick.gain.setValueAtTime(0.001, now);
+        gClick.gain.linearRampToValueAtTime(vol, now + 0.0015);
+        gClick.gain.exponentialRampToValueAtTime(0.0008, now + 0.017);
+
+        const gBody = ctx.createGain();
+        gBody.gain.setValueAtTime(0.001, now);
+        gBody.gain.linearRampToValueAtTime(vol * 0.65, now + 0.002);
+        gBody.gain.exponentialRampToValueAtTime(0.0008, now + 0.024);
+
+        src.connect(clickBP); clickBP.connect(gClick); gClick.connect(ctx.destination);
+        src.connect(bodyBP);  bodyBP.connect(gBody);   gBody.connect(ctx.destination);
+
+        src.start(now, Math.random() * 0.4, 0.03);
       } catch (_) {}
     }
 
     function playTimerBell() {
       if (!timerSoundOn) return;
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const now = audioCtx.currentTime;
+        const ctx = ensureAudio();
+        const now = ctx.currentTime;
 
-        // Authentic classic electric school bell (metallic dome partials + rapid hammer strikes)
-        const master = audioCtx.createGain();
-        master.gain.setValueAtTime(0.24, now);
-        master.connect(audioCtx.destination);
+        // Authentic single classic brass/steel school bell ring with hallway reverb
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.setValueAtTime(-16, now);
+        comp.ratio.setValueAtTime(4, now);
 
-        // Two classic school-bell bursts: ring 1.15s, short gap 0.26s, ring 1.25s + metallic tail
-        const bursts = [
-          { start: 0.00, dur: 1.15 },
-          { start: 1.41, dur: 1.25 }
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.34, now);
+        master.connect(comp);
+        comp.connect(ctx.destination);
+
+        const wet = ctx.createGain();
+        wet.gain.setValueAtTime(0.28, now);
+        comp.connect(wet);
+        wet.connect(getRoomReverb());
+
+        const ringDur = 1.55;
+        const tailDur = 1.15;
+        const tEnd = now + ringDur;
+        const tTail = tEnd + tailDur;
+
+        // Acoustic brass dome modal partials (with subtle detuned shimmer pairs)
+        const f0 = 880;
+        const modes = [
+          { r: 1.000, amp: 0.36, det: 2.2 },
+          { r: 1.506, amp: 0.28, det: 3.1 },
+          { r: 2.012, amp: 0.24, det: 3.8 },
+          { r: 2.756, amp: 0.18, det: 4.5 },
+          { r: 3.620, amp: 0.12, det: 5.2 },
+          { r: 4.580, amp: 0.07, det: 6.0 }
         ];
 
-        // Inharmonic metallic bell dome partials
-        const partials = [
-          { freq: 1140, amp: 0.40, type: 'triangle' },
-          { freq: 1715, amp: 0.34, type: 'sine' },
-          { freq: 2320, amp: 0.28, type: 'sine' },
-          { freq: 3180, amp: 0.22, type: 'sine' },
-          { freq: 4290, amp: 0.14, type: 'sine' },
-          { freq: 5760, amp: 0.08, type: 'sine' }
-        ];
+        // Rapid mechanical clapper hits (~16 strikes/sec, slight natural mechanical jitter)
+        let t = now;
+        let strikeIdx = 0;
+        while (t < tEnd) {
+          const step = 0.058 + ((strikeIdx * 17) % 7) * 0.0014;
+          const isLast = (t + step >= tEnd);
+          const strikeDecay = isLast ? tailDur : 0.22;
 
-        bursts.forEach(b => {
-          const t0 = now + b.start;
-          const tEnd = t0 + b.dur;
-          const tTail = tEnd + 0.42;
+          // Tiny metallic clapper impact transient (filtered noise, 4ms)
+          const nSrc = ctx.createBufferSource();
+          nSrc.buffer = getNoiseBuffer();
+          const nHP = ctx.createBiquadFilter();
+          nHP.type = 'bandpass';
+          nHP.frequency.setValueAtTime(3400 + (strikeIdx % 3) * 260, t);
+          nHP.Q.setValueAtTime(2.5, t);
+          const nG = ctx.createGain();
+          nG.gain.setValueAtTime(0.001, t);
+          nG.gain.linearRampToValueAtTime(0.22, t + 0.0015);
+          nG.gain.exponentialRampToValueAtTime(0.001, t + 0.011);
+          nSrc.connect(nHP); nHP.connect(nG); nG.connect(master);
+          nSrc.start(t, Math.random() * 0.5, 0.015);
 
-          // Burst envelope with natural metallic ring-out after striker stops
-          const burstGain = audioCtx.createGain();
-          burstGain.gain.setValueAtTime(0.001, t0);
-          burstGain.gain.linearRampToValueAtTime(1.0, t0 + 0.015);
-          burstGain.gain.setValueAtTime(1.0, tEnd);
-          burstGain.gain.exponentialRampToValueAtTime(0.001, tTail);
-          burstGain.connect(master);
-
-          // Hammer-strike AM modulation (~21 Hz rapid metallic clatter)
-          const strikeGain = audioCtx.createGain();
-          strikeGain.gain.setValueAtTime(0.55, t0);
-          strikeGain.connect(burstGain);
-
-          const lfo = audioCtx.createOscillator();
-          const lfoDepth = audioCtx.createGain();
-          lfo.type = 'sawtooth';
-          lfo.frequency.setValueAtTime(21, t0);
-          lfoDepth.gain.setValueAtTime(0.45, t0);
-          lfoDepth.gain.setValueAtTime(0.45, tEnd);
-          lfoDepth.gain.linearRampToValueAtTime(0.0, tEnd + 0.05);
-          lfo.connect(lfoDepth);
-          lfoDepth.connect(strikeGain.gain);
-          lfo.start(t0);
-          lfo.stop(tEnd + 0.06);
-
-          // Metallic dome oscillators
-          partials.forEach(p => {
-            const osc = audioCtx.createOscillator();
-            const pGain = audioCtx.createGain();
-            osc.type = p.type;
-            osc.frequency.setValueAtTime(p.freq, t0);
-            pGain.gain.setValueAtTime(p.amp, t0);
-            osc.connect(pGain);
-            pGain.connect(strikeGain);
-            osc.start(t0);
-            osc.stop(tTail + 0.02);
+          // Excite the metal dome partials on every strike
+          modes.forEach((m, mi) => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = 'sine';
+            const freq = f0 * m.r + (strikeIdx % 2 === 0 ? m.det : -m.det) * 0.35;
+            osc.frequency.setValueAtTime(freq, t);
+            const partialDecay = strikeDecay * (1 / (1 + mi * 0.28));
+            const peak = m.amp * (isLast ? 0.85 : 0.42);
+            g.gain.setValueAtTime(0.0005, t);
+            g.gain.linearRampToValueAtTime(peak, t + 0.0025);
+            g.gain.exponentialRampToValueAtTime(0.0008, t + partialDecay);
+            osc.connect(g);
+            g.connect(master);
+            osc.start(t);
+            osc.stop(t + partialDecay + 0.02);
           });
 
-          // Crisp percussive striker clicks during the burst
-          const clickInterval = 1 / 21;
-          for (let ct = t0; ct < tEnd; ct += clickInterval) {
-            const cOsc = audioCtx.createOscillator();
-            const cGain = audioCtx.createGain();
-            cOsc.type = 'square';
-            cOsc.frequency.setValueAtTime(3400 + ((ct * 1000) % 240), ct);
-            cGain.gain.setValueAtTime(0.09, ct);
-            cGain.gain.exponentialRampToValueAtTime(0.001, ct + 0.014);
-            cOsc.connect(cGain);
-            cGain.connect(burstGain);
-            cOsc.start(ct);
-            cOsc.stop(ct + 0.016);
-          }
-        });
+          t += step;
+          strikeIdx++;
+        }
       } catch (_) {}
     }
 
@@ -4797,7 +4951,7 @@
       pages.forEach((p, idx) => {
         const card = document.createElement('div');
         const active = idx === currentPageIndex;
-        card.className = `rounded-xl border-2 p-2 cursor-pointer transition-all ${active ? 'border-[#0f5d57] bg-teal-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`;
+        card.className = `rounded-xl border-2 p-2 cursor-pointer transition-colors ${active ? 'border-[#0f5d57] bg-teal-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`;
         card.innerHTML = `
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-xs font-extrabold ${active ? 'text-teal-800' : 'text-slate-700'}">صفحة ${idx + 1}</span>
@@ -4848,26 +5002,220 @@
       updateMuteIcon();
     });
 
-    function playStampSound(type) {
+    function playStampSound(stampKey) {
       if (isSoundMuted) return;
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        const t = audioCtx.currentTime;
-        if (type === 'check') {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(440, t); osc.frequency.exponentialRampToValueAtTime(880, t + 0.12);
-          gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
-          osc.start(t); osc.stop(t + 0.12);
-        } else if (type === 'wrong') {
-          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(280, t); osc.frequency.exponentialRampToValueAtTime(140, t + 0.18);
-          gain.gain.setValueAtTime(0.08, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
-          osc.start(t); osc.stop(t + 0.18);
-        } else {
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(440, t); osc.frequency.setValueAtTime(660, t + 0.08); osc.frequency.setValueAtTime(880, t + 0.16);
-          gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.28);
-          osc.start(t); osc.stop(t + 0.28);
+        const ctx = ensureAudio();
+        const now = ctx.currentTime;
+        const rev = getRoomReverb();
+
+        // Acoustic helper: warm plucked / mallet note (marimba, harp, celesta, bell)
+        const playTone = (freq, start, dur, vol, opts = {}) => {
+          const t0 = now + start;
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const g = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+
+          osc.type = opts.wave || 'sine';
+          osc2.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t0);
+          osc2.frequency.setValueAtTime(freq * (opts.harmonic || 2), t0);
+          if (opts.endFreq) osc.frequency.exponentialRampToValueAtTime(opts.endFreq, t0 + dur * 0.65);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(opts.cutoff || 3800, t0);
+          filter.frequency.exponentialRampToValueAtTime(Math.max(400, (opts.cutoff || 3800) * 0.35), t0 + dur);
+
+          const g2 = ctx.createGain();
+          g2.gain.setValueAtTime(opts.hMix || 0.22, t0);
+
+          g.gain.setValueAtTime(0.0005, t0);
+          g.gain.linearRampToValueAtTime(vol, t0 + (opts.attack || 0.006));
+          g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
+
+          osc.connect(filter);
+          osc2.connect(g2); g2.connect(filter);
+          filter.connect(g);
+          g.connect(ctx.destination);
+          if (opts.reverb) {
+            const wg = ctx.createGain();
+            wg.gain.setValueAtTime(opts.reverb, t0);
+            g.connect(wg); wg.connect(rev);
+          }
+
+          osc.start(t0); osc2.start(t0);
+          osc.stop(t0 + dur + 0.03); osc2.stop(t0 + dur + 0.03);
+        };
+
+        // Acoustic helper: organic classroom applause (layered hand-clap noise bursts)
+        const playApplause = (startOffset, clapsCount, spanSec, vol) => {
+          for (let i = 0; i < clapsCount; i++) {
+            const ct = now + startOffset + (i / clapsCount) * spanSec + (Math.random() * 0.06);
+            const src = ctx.createBufferSource();
+            src.buffer = getNoiseBuffer();
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass';
+            bp.frequency.setValueAtTime(950 + Math.random() * 900, ct);
+            bp.Q.setValueAtTime(1.4 + Math.random() * 1.1, ct);
+            const g = ctx.createGain();
+            const envPeak = vol * (0.55 + Math.random() * 0.55) * Math.sin(Math.min(1, (i + 2) / clapsCount) * Math.PI * 0.85);
+            g.gain.setValueAtTime(0.001, ct);
+            g.gain.linearRampToValueAtTime(Math.max(0.02, envPeak), ct + 0.004);
+            g.gain.exponentialRampToValueAtTime(0.001, ct + 0.055 + Math.random() * 0.04);
+            src.connect(bp); bp.connect(g);
+            g.connect(ctx.destination);
+            const wg = ctx.createGain();
+            wg.gain.setValueAtTime(0.35, ct);
+            g.connect(wg); wg.connect(rev);
+            src.start(ct, Math.random() * 0.8, 0.11);
+          }
+        };
+
+        // Acoustic helper: filtered noise foley burst (paper, tack, popper, zap, dart)
+        const playNoise = (start, dur, freq, q, vol, type = 'bandpass', endFreq = null) => {
+          const t0 = now + start;
+          const src = ctx.createBufferSource();
+          src.buffer = getNoiseBuffer();
+          const flt = ctx.createBiquadFilter();
+          flt.type = type;
+          flt.frequency.setValueAtTime(freq, t0);
+          if (endFreq) flt.frequency.exponentialRampToValueAtTime(endFreq, t0 + dur);
+          flt.Q.setValueAtTime(q, t0);
+          const g = ctx.createGain();
+          g.gain.setValueAtTime(0.001, t0);
+          g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.006, dur * 0.2));
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+          src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+          src.start(t0, Math.random() * 0.6, dur + 0.02);
+        };
+
+        switch (stampKey) {
+          case 'check': // ✅ Warm acoustic marimba confirmation
+            playTone(784,  0.00, 0.22, 0.22, { harmonic: 3, hMix: 0.12, cutoff: 3200, reverb: 0.22 });
+            playTone(1046, 0.08, 0.34, 0.26, { harmonic: 3, hMix: 0.14, cutoff: 3600, reverb: 0.28 });
+            break;
+
+          case 'wrong': // ❌ Soft respectful wooden double-knock (low marimba/woodblock)
+            playTone(294, 0.00, 0.14, 0.22, { wave: 'triangle', harmonic: 1.5, hMix: 0.08, cutoff: 950, reverb: 0.12 });
+            playTone(220, 0.11, 0.22, 0.24, { wave: 'triangle', harmonic: 1.5, hMix: 0.08, cutoff: 800, reverb: 0.15 });
+            break;
+
+          case 'star': // ⭐ Sparkling celesta / glockenspiel arpeggio
+            [1046, 1318, 1568, 2093].forEach((f, idx) => {
+              playTone(f, idx * 0.055, 0.36, 0.16, { harmonic: 2.75, hMix: 0.18, cutoff: 5200, reverb: 0.35 });
+            });
+            break;
+
+          case 'thumbsup': // 👍 Organic crisp pop + warm upbeat tap
+            playTone(260, 0.00, 0.08, 0.28, { endFreq: 680, hMix: 0.05, cutoff: 2400 });
+            playNoise(0.00, 0.02, 1800, 2.0, 0.14);
+            playTone(880, 0.05, 0.18, 0.16, { harmonic: 2, hMix: 0.10, cutoff: 3000, reverb: 0.18 });
+            break;
+
+          case 'excellent': // 💯 Energetic xylophone fanfare + bright chord
+            [523, 659, 784, 1046].forEach((f, idx) => {
+              playTone(f, idx * 0.065, 0.32, 0.20, { wave: 'triangle', harmonic: 3, hMix: 0.18, cutoff: 4200, reverb: 0.28 });
+            });
+            playTone(1318, 0.26, 0.45, 0.18, { harmonic: 2, hMix: 0.16, cutoff: 4600, reverb: 0.32 });
+            break;
+
+          case 'love': // ❤️ Warm gentle acoustic harp chord
+            [349, 440, 523, 698].forEach((f, idx) => {
+              playTone(f, idx * 0.055, 0.52, 0.15, { harmonic: 2, hMix: 0.24, cutoff: 2800, reverb: 0.36 });
+            });
+            break;
+
+          case 'أحسنت!': // 🎉 Party popper + warm classroom applause
+            playNoise(0.00, 0.05, 1100, 0.9, 0.42, 'bandpass', 320);
+            playTone(190, 0.00, 0.07, 0.28, { endFreq: 75, hMix: 0.05, cutoff: 700 });
+            playApplause(0.05, 22, 0.95, 0.16);
+            playTone(880, 0.08, 0.35, 0.15, { harmonic: 2, hMix: 0.15, cutoff: 3400, reverb: 0.28 });
+            break;
+
+          case 'ممتاز': // ⭐ Golden celesta & chime achievement
+            [523, 659, 784, 988, 1046].forEach((f, idx) => {
+              playTone(f, idx * 0.06, 0.48, 0.16, { harmonic: 2.5, hMix: 0.18, cutoff: 4800, reverb: 0.38 });
+            });
+            break;
+
+          case 'الله ينور': // 🌟 Radiant warm harp sweep + bell shimmer
+            [392, 494, 587, 784, 988, 1175].forEach((f, idx) => {
+              playTone(f, idx * 0.05, 0.55, 0.14, { harmonic: 2, hMix: 0.20, cutoff: 3600, reverb: 0.40 });
+            });
+            break;
+
+          case 'رائع': // 🏆 Classroom applause + proud triumphant chord
+            playApplause(0.02, 26, 1.1, 0.18);
+            [523, 659, 784].forEach((f, idx) => {
+              playTone(f, 0.04 + idx * 0.04, 0.52, 0.14, { wave: 'triangle', harmonic: 2, hMix: 0.22, cutoff: 2600, reverb: 0.32 });
+            });
+            break;
+
+          case 'مبدع': // 💎 Crystalline diamond glass-harp shimmer
+            [1318, 1661, 1975, 2637].forEach((f, idx) => {
+              playTone(f, idx * 0.05, 0.52, 0.12, { harmonic: 2.01, hMix: 0.28, cutoff: 6200, reverb: 0.45 });
+            });
+            break;
+
+          case 'بطل': // 🦸 Heroic warm brass cadence + crisp drum tap
+            playNoise(0.00, 0.04, 2200, 1.5, 0.18);
+            [392, 523, 659, 784].forEach((f, idx) => {
+              playTone(f, idx * 0.08, idx === 3 ? 0.55 : 0.22, 0.18, { wave: 'triangle', harmonic: 2, hMix: 0.30, cutoff: 2400, reverb: 0.30 });
+            });
+            break;
+
+          case '❓': // Playful rising pizzicato question pluck
+            playTone(587, 0.00, 0.12, 0.18, { harmonic: 2, hMix: 0.14, cutoff: 2600, reverb: 0.18 });
+            playTone(784, 0.09, 0.22, 0.20, { endFreq: 880, harmonic: 2, hMix: 0.14, cutoff: 3000, reverb: 0.22 });
+            break;
+
+          case '❗': // Crisp brass desk-bell attention ding
+            playTone(1318, 0.00, 0.45, 0.20, { harmonic: 2.756, hMix: 0.22, cutoff: 5200, reverb: 0.32 });
+            playNoise(0.00, 0.012, 4200, 3.0, 0.16);
+            break;
+
+          case '💡': // Bright lightbulb idea chime
+            playTone(880,  0.00, 0.20, 0.16, { harmonic: 2, hMix: 0.15, cutoff: 4200, reverb: 0.26 });
+            playTone(1318, 0.06, 0.42, 0.20, { harmonic: 2.5, hMix: 0.18, cutoff: 5000, reverb: 0.34 });
+            break;
+
+          case '📌': // Real thumbtack / pushpin snap into board
+            playNoise(0.00, 0.018, 2800, 3.2, 0.34);
+            playTone(320, 0.00, 0.035, 0.22, { endFreq: 140, hMix: 0.05, cutoff: 900 });
+            break;
+
+          case '🎯': // Dart air whoosh + cork bullseye thud
+            playNoise(0.00, 0.06, 2600, 2.2, 0.14, 'bandpass', 900);
+            playTone(175, 0.05, 0.09, 0.32, { endFreq: 72, hMix: 0.08, cutoff: 650 });
+            playNoise(0.05, 0.025, 1100, 2.0, 0.22);
+            break;
+
+          case '📚': // Realistic paper page flip
+            playNoise(0.00, 0.14, 1600, 1.4, 0.24, 'bandpass', 3600);
+            playNoise(0.05, 0.09, 2400, 1.8, 0.14, 'highpass');
+            break;
+
+          case '⚡': // Crisp quick electric spark zip
+            playNoise(0.00, 0.09, 4800, 1.6, 0.26, 'bandpass', 1400);
+            playTone(1400, 0.00, 0.08, 0.14, { endFreq: 320, wave: 'triangle', cutoff: 4000 });
+            break;
+
+          case '🔴': // Soft low tactile droplet pop
+            playTone(340, 0.00, 0.075, 0.24, { endFreq: 520, hMix: 0.06, cutoff: 1800 });
+            break;
+
+          case '🟡': // Soft mid tactile droplet pop
+            playTone(480, 0.00, 0.075, 0.24, { endFreq: 720, hMix: 0.06, cutoff: 2200 });
+            break;
+
+          case '🟢': // Soft bright tactile droplet pop
+            playTone(620, 0.00, 0.075, 0.24, { endFreq: 920, hMix: 0.06, cutoff: 2600 });
+            break;
+
+          default: // Fallback soft acoustic pop
+            playTone(520, 0.00, 0.09, 0.20, { endFreq: 780, hMix: 0.08, cutoff: 2400 });
+            break;
         }
       } catch (_) {}
     }
