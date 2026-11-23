@@ -2,7 +2,7 @@
 <html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1185,6 +1185,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         }
     }
 </script>
+<link rel="stylesheet" href="./platform-ui.css">
 </head>
 
 <body>
@@ -1857,6 +1858,16 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
   </div>
 
   <script>
+function recitationOutcome(grade, bookingStatus) {
+    const absence = /^(?:غائب|غايب|غياب|لم يتم التسميع|لم يسمع)$/;
+    const status = String(bookingStatus ?? '').trim();
+    const value = String(grade ?? '').trim();
+    if (absence.test(status)) return 'absent';
+    if (status === 'تم التسميع') return 'completed';
+    if (absence.test(value)) return 'absent';
+    return value ? 'completed' : 'pending';
+}
+
     // ضع رابط نشر تطبيق جوجل سكريبت (Web App URL) هنا عند استضافة المنصة على Cloudflare
     window.GAS_API_URL = "https://script.google.com/macros/s/AKfycbwhe5Ytj8rQie0i4nJGlHVpvoz9JOo6531dhbxKpRtbSOPPe94WJ7eOk6HvrrQ0r044NA/exec"; // نفس رابط مشروع الأدمن الموحّد
     // ═══════ GLOBAL ERROR DIAGNOSTICS ═══════
@@ -2914,7 +2925,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         const pendEx = data.pendingExams || 0;
         
         const totalComp = compHw + compRec + compEx;
-        const totalTasks = totalComp + pendHw + pendRec + pendEx;
+        const totalTasks = totalComp + pendHw + pendRec + pendEx + (data.absentRecitations || 0);
         const percent = totalTasks > 0 ? Math.round((totalComp / totalTasks) * 100) : 0;
         
         const progressPercentEl = document.getElementById('progressPercent');
@@ -3297,8 +3308,11 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 }
             }
             else if (type === 'التسميع') {
-                if (row.grade && row.grade !== "") {
-                    isCompleted = true; gradeDisplay = row.grade; statusLabel = 'درجة التسميع:';
+                const outcome = row.recitationOutcome || recitationOutcome(row.grade);
+                if (outcome === 'absent') {
+                    isCompleted = false; gradeDisplay = 'لم يتم التسميع'; statusLabel = 'حالة التسميع:';
+                } else if (outcome === 'completed') {
+                    isCompleted = true; gradeDisplay = String(row.grade ?? '').trim() || 'تم التسميع'; statusLabel = 'درجة التسميع:';
                 } else if (row.pages && row.pages !== "") {
                     isCompleted = false; gradeDisplay = row.pages; statusLabel = 'المطلوب تسميعه:';
                 } else {
@@ -3324,7 +3338,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 finalDeadlineStr = deadlineStr;
 
                 if (deadlineStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const todayStr = new Date().toISOString().split('T')[0];
+                    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
                     if (!isCompleted && deadlineStr < todayStr) {
                         isExpired = true;
                     }
@@ -3385,14 +3399,15 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                     if (isExpired && !row.isUploaded) {
                         html += downloadBtn + `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
                     } else if (row.isUploaded) {
-                        html += downloadBtn + `<button class="btn btn-danger" onclick="deleteAssignment('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-trash"></i> حذف الواجب</button>`;
+                        html += downloadBtn + `<button class="btn btn-danger" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> استبدال الواجب</button>`;
                     } else {
                         html += downloadBtn + `<button class="btn" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     }
                 }
             }
             else if(type === 'التسميع') {
-                if(row.grade) html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم التسميع</button>`;
+                if ((row.recitationOutcome || recitationOutcome(row.grade)) === 'absent') html += `<button class="btn" onclick="openBookingModal('${row.lesson}', '')">حجز موعد جديد</button>`;
+                else if(isCompleted) html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم التسميع</button>`;
                 else if(row.isBooked) {
                     const safeLesson = row.lesson ? row.lesson.replace(/'/g, "\\'") : '';
                     const safeDate = row.bookingDate ? row.bookingDate.replace(/'/g, "\\'") : '';
@@ -3412,7 +3427,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                         html += `<button class="btn btn-secondary" style="background:#cbd5e1; color:#475569; flex:1; justify-content:center; cursor:not-allowed; box-shadow:none;" disabled><i class="fas fa-lock"></i> دخول التسميع</button>`;
                     }
                     
-                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" onclick="cancelRecitationBooking('${safeLesson}', '${safeDate}', '${safeTime}', '${safePages}')" title="إلغاء الحجز"><i class="fas fa-times"></i></button>`;
+                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" onclick="openBookingModal('${safeLesson}', '${safePages}')" title="تغيير الموعد">تغيير الموعد</button>`;
                     html += `</div>`;
                 } else if(isExpired) {
                     html += `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> الحجز مغلق (انتهت المدة)</button>`;
@@ -3962,7 +3977,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                         iframe.srcdoc = inj + res.content;
                         iframe.style.display = 'block';
                     } else { Swal.fire('خطأ', res.error, 'error'); closeExamModal(); }
-                }).getCustomExamContent(link);
+                }).getCustomExamContent(link, currentUser.password);
             } else {
                 iframe.src = link.includes('viewform') && !link.includes('embedded') ? link + '?embedded=true' : link;
                 iframe.onload = () => { loader.style.display = 'none'; iframe.style.display = 'block'; };
@@ -4076,7 +4091,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                     Swal.fire('خطأ', res.error || 'تعذر جلب ملف الاختبار', 'error');
                     closeCustomJsonExam();
                 }
-            }).getCustomExamContent(fileLink);
+            }).getCustomExamContent(fileLink, currentUser.password);
         }
 
         function handleAntiCheat(e) {
@@ -5000,25 +5015,17 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
     function isClassActiveNow(day, timeStr, duration) {
         try {
             const egyptNow = getEgyptDayAndMinutes();
-            if (egyptNow.day !== day) return false;
+            const normD = s => String(s || '').trim().replace(/[أإآ]/g, 'ا').replace(/\s+/g, '');
+            if (normD(egyptNow.day) !== normD(day)) return false;
 
-            const cleanTime = timeStr.trim().replace(/([0-9])([مص])/g, '$1 $2').replace(/\s+/g, ' ');
-            const parts = cleanTime.split(' ');
-            if (parts.length < 2) return false;
+            const startMinutes = parseScheduleTimeMinutes_(timeStr);
+            if (startMinutes === null) return false;
 
-            const timeParts = parts[0].split(':');
-            let hour = parseInt(timeParts[0]);
-            let minute = parseInt(timeParts[1] || '0');
-            const period = parts[1]; // م or ص
-
-            if (period.includes('م') && hour < 12) hour += 12;
-            if (period.includes('ص') && hour === 12) hour = 0;
-
-            const startMinutes = hour * 60 + minute;
-            const durationMinutes = parseInt(duration) || 60;
+            const durationMinutes = parseInt(duration, 10) || 60;
             const currentMinutes = egyptNow.minutes;
 
-            return currentMinutes >= (startMinutes - 15) && currentMinutes <= (startMinutes + durationMinutes + 15);
+            // السماح بالدخول قبل الحصة بـ 15 دقيقة وحتى بعد نهايتها بـ 30 دقيقة (بتوقيت مصر دائماً)
+            return currentMinutes >= (startMinutes - 15) && currentMinutes <= (startMinutes + durationMinutes + 30);
         } catch (e) {
             console.error("Error checking class active status:", e);
             return false;
@@ -5154,20 +5161,11 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
             daySlots.forEach(slot => {
                 let isActiveNow = false;
                 if (isToday && slot.link) {
-                    const timeMatch = slot.time.match(/(\d+):(\d+)\s*(م|ص)/);
-                    if (timeMatch) {
-                        let hours = parseInt(timeMatch[1]);
-                        const minutes = parseInt(timeMatch[2]);
-                        const ampm = timeMatch[3];
-                        
-                        if (ampm === "م" && hours < 12) hours += 12;
-                        if (ampm === "ص" && hours === 12) hours = 0;
-                        
-                        const start = hours * 60 + minutes;
-                        const duration = parseInt(slot.duration || 60);
+                    const start = parseScheduleTimeMinutes_(slot.time);
+                    if (start !== null) {
+                        const duration = parseInt(slot.duration || 60, 10);
                         const end = start + duration;
-                        
-                        if (currentMinutesTotal >= (start - 30) && currentMinutesTotal < end) {
+                        if (currentMinutesTotal >= (start - 15) && currentMinutesTotal <= (end + 30)) {
                             isActiveNow = true;
                         }
                     }
@@ -5241,8 +5239,8 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 const duration = parseInt(item.duration || 120, 10);
                 const schedMinutesEnd = schedMinutesStart + duration;
                 
-                // إظهار شريط الدخول قبل بداية الحصة بـ 15 دقيقة وحتى نهايتها
-                if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal < schedMinutesEnd) {
+                // إظهار شريط الدخول قبل بداية الحصة بـ 15 دقيقة وحتى بعد نهايتها بـ 30 دقيقة (بتوقيت مصر)
+                if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal <= (schedMinutesEnd + 30)) {
                     activeLesson = item;
                     activeLessonStartsIn = Math.max(0, schedMinutesStart - currentMinutesTotal);
                     if (currentMinutesTotal === schedMinutesStart) {

@@ -1,0 +1,23 @@
+:root {
+  --platform-focus: #16785b;
+  --platform-control-radius: .75rem;
+  --platform-dialog-radius: 1rem;
+}
+button, input, select, textarea { font-family: inherit; }
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--platform-focus);
+  outline-offset: 3px;
+}
+.btn, .form-control { border-radius: var(--platform-control-radius); }
+.modal-content {
+  box-sizing: border-box;
+  max-inline-size: calc(100vw - 1rem);
+  max-block-size: calc(100dvh - 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--platform-dialog-radius);
+}
+@media (pointer: coarse) {
+  .btn, .form-control { min-height: 44px; }
+  input:not([type]), input:is([type=text], [type=search], [type=password], [type=email], [type=tel], [type=number]), select, textarea { font-size: max(1rem, 16px); }
+}
