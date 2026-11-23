@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#176349">
   <meta name="application-name" content="منصة الهليهي">
   <meta name="apple-mobile-web-app-title" content="منصة الهليهي">
   
@@ -1186,6 +1186,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
     }
 </script>
 <link rel="stylesheet" href="./platform-ui.css">
+<script src="./task-input.js"></script>
 </head>
 
 <body>
@@ -1491,7 +1492,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
                 <i class="fas fa-chart-line"></i>
               </div>
               <div>
-                <div class="stat-title" style="color: rgba(255, 255, 255, 0.85); font-weight: bold; font-size: 0.85rem;">نسبة إنجازك الأسبوعي</div>
+                <div class="stat-title" style="color: rgba(255, 255, 255, 0.85); font-weight: bold; font-size: 0.85rem;">نسبة إنجاز المهام</div>
                 <div class="stat-value" id="progressPercent" style="color: white; font-size: 1.8rem; font-weight: 800;">0%</div>
               </div>
             </div>
@@ -2304,7 +2305,7 @@ function recitationOutcome(grade, bookingStatus) {
 
         // 2. نسبة الإنجاز الأسبوعي
         const progressEl = document.querySelector('#weeklyProgressDashboardCard');
-        if (isVisible(progressEl)) tourSteps.push({ element: progressEl, title: 'مؤشر التقدم', intro: 'الشريط ده بيحسب نسبة إنجازك الأسبوعي، حاول دايماً تخليه يوصل لـ 100%!', position: 'top' });
+        if (isVisible(progressEl)) tourSteps.push({ element: progressEl, title: 'مؤشر التقدم', intro: 'الشريط ده بيحسب نسبة إنجاز المهام، حاول دايماً تخليه يوصل لـ 100%!', position: 'top' });
 
         // 3. لوحة الشرف
         const leaderboardEl = document.querySelector('#leaderboardSection');
@@ -2938,7 +2939,7 @@ function recitationOutcome(grade, bookingStatus) {
             
             let encouragement = "واصل يا بطل! يمكنك تحقيق المزيد.";
             if (percent === 100 && totalTasks > 0) {
-                encouragement = "أنت خارق! لقد أكملت جميع مهامك الأسبوعية بالكامل. 🌟";
+                encouragement = "أنت خارق! لقد أكملت جميع المهام المعروضة بالكامل. 🌟";
             } else if (percent >= 75) {
                 encouragement = "إنجاز رائع! اقتربت من إنهاء جميع المهام الأسبوعية. 🔥";
             } else if (percent >= 50) {
@@ -3399,14 +3400,14 @@ function recitationOutcome(grade, bookingStatus) {
                     if (isExpired && !row.isUploaded) {
                         html += downloadBtn + `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
                     } else if (row.isUploaded) {
-                        html += downloadBtn + `<button class="btn btn-danger" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> استبدال الواجب</button>`;
+                        html += downloadBtn + `<button class="btn btn-danger" data-lesson="${taskAttribute(row.lesson)}" onclick="openUploadModal(this.dataset.lesson)" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> استبدال الواجب</button>`;
                     } else {
-                        html += downloadBtn + `<button class="btn" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> رفع الواجب</button>`;
+                        html += downloadBtn + `<button class="btn" data-lesson="${taskAttribute(row.lesson)}" onclick="openUploadModal(this.dataset.lesson)" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     }
                 }
             }
             else if(type === 'التسميع') {
-                if ((row.recitationOutcome || recitationOutcome(row.grade)) === 'absent') html += `<button class="btn" onclick="openBookingModal('${row.lesson}', '')">حجز موعد جديد</button>`;
+                if ((row.recitationOutcome || recitationOutcome(row.grade)) === 'absent') html += `<button class="btn" data-lesson="${taskAttribute(row.lesson)}" onclick="openBookingModal(this.dataset.lesson, '')">حجز موعد جديد</button>`;
                 else if(isCompleted) html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم التسميع</button>`;
                 else if(row.isBooked) {
                     const safeLesson = row.lesson ? row.lesson.replace(/'/g, "\\'") : '';
@@ -3427,14 +3428,14 @@ function recitationOutcome(grade, bookingStatus) {
                         html += `<button class="btn btn-secondary" style="background:#cbd5e1; color:#475569; flex:1; justify-content:center; cursor:not-allowed; box-shadow:none;" disabled><i class="fas fa-lock"></i> دخول التسميع</button>`;
                     }
                     
-                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" onclick="openBookingModal('${safeLesson}', '${safePages}')" title="تغيير الموعد">تغيير الموعد</button>`;
+                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" data-lesson="${taskAttribute(row.lesson)}" data-pages="${taskAttribute(row.pages)}" onclick="openBookingModal(this.dataset.lesson, this.dataset.pages)" title="تغيير الموعد">تغيير الموعد</button>`;
                     html += `</div>`;
                 } else if(isExpired) {
                     html += `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> الحجز مغلق (انتهت المدة)</button>`;
                 } else {
                     const safeLesson = row.lesson ? row.lesson.replace(/'/g, "\\'") : '';
                     const safePages = row.pages ? row.pages.replace(/'/g, "\\'") : '';
-                    html += `<button class="btn" style="background:var(--secondary); width:100%; justify-content:center;" onclick="openBookingModal('${safeLesson}', '${safePages}')"><i class="fas fa-calendar-plus"></i> حجز تسميع</button>`;
+                    html += `<button class="btn" style="background:var(--secondary); width:100%; justify-content:center;" data-lesson="${taskAttribute(row.lesson)}" data-pages="${taskAttribute(row.pages)}" onclick="openBookingModal(this.dataset.lesson, this.dataset.pages)"><i class="fas fa-calendar-plus"></i> حجز تسميع</button>`;
                 }
             }
             else if(type === 'الاختبارات والامتحانات') {
@@ -4390,7 +4391,7 @@ function recitationOutcome(grade, bookingStatus) {
         document.getElementById('uploadBtn').disabled = true;
     }
     
-    function executeUpload() {
+    async function executeUpload() {
         if(!selectedFiles.length) return;
         
         const btn = document.getElementById('uploadBtn');
@@ -4403,15 +4404,18 @@ function recitationOutcome(grade, bookingStatus) {
         document.getElementById('uploadProgress').style.display = 'block';
         status.textContent = 'جاري تحضير الملفات...';
         
-        let processed = 0;
         const filesData = [];
-        selectedFiles.forEach(file => {
-           const reader = new FileReader();
-           reader.onload = (e) => {
-               filesData.push({ name: file.name, mimeType: file.type, data: e.target.result.split(',')[1] });
-               processed++;
-               progressBar.style.width = (processed / selectedFiles.length * 50) + '%';
-               if(processed === selectedFiles.length) {
+        try {
+            for (const file of selectedFiles) {
+                filesData.push(await prepareHomeworkImage(file));
+                progressBar.style.width = (filesData.length / selectedFiles.length * 50) + '%';
+            }
+        } catch (error) {
+            status.textContent = error.message;
+            btn.disabled = false;
+            btn.textContent = 'تأكيد وإرسال';
+            return;
+        }
                    status.textContent = 'جاري الرفع إلى السيرفر...';
                    google.script.run.withSuccessHandler(res => {
                        progressBar.style.width = '100%';
@@ -4438,10 +4442,6 @@ function recitationOutcome(grade, bookingStatus) {
                         btn.disabled = false;
                         btn.innerHTML = 'تأكيد وإرسال';
                    }).processFiles(filesData, currentUser.password, lesson);
-               }
-           };
-           reader.readAsDataURL(file);
-        });
     }
     
     function deleteAssignment(lesson) {
@@ -5489,7 +5489,7 @@ function recitationOutcome(grade, bookingStatus) {
             navigator.serviceWorker.ready.then(reg => {
                 reg.showNotification("بدء الحصة المباشرة الآن! ⚠️", {
                     body: `حصتك المباشرة بدأت الآن. انقر هنا للانضمام فوراً.`,
-                    icon: "https://g.top4top.io/p_3313pmxec1.png",
+                    icon: "./icon.png",
                     vibrate: [200, 100, 200, 100, 200, 100, 200],
                     tag: "class-start-alarm",
                     requireInteraction: true,
