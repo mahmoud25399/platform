@@ -21,3 +21,29 @@ button, input, select, textarea { font-family: inherit; }
   .btn, .form-control { min-height: 44px; }
   input:not([type]), input:is([type=text], [type=search], [type=password], [type=email], [type=tel], [type=number]), select, textarea { font-size: max(1rem, 16px); }
 }
+
+:root {
+  --platform-green: #176349;
+  --platform-green-deep: #104b39;
+  --platform-green-soft: #e9f3ed;
+  --platform-focus: #287e60;
+  --brand: var(--platform-green);
+  --brand-hover: var(--platform-green-deep);
+  --brand-soft: var(--platform-green-soft);
+}
+:root:not([data-theme="dark"]):not(.dark) {
+  --primary: var(--platform-green);
+  --primary-dark: var(--platform-green-deep);
+  --secondary: #28775a;
+}
+#loginBtn, .btn-primary, button.bg-blue-600, .bg-blue-600.text-white {
+  background: var(--platform-green);
+  color: white;
+}
+#loginBtn:hover, .btn-primary:hover, button.bg-blue-600:hover {
+  background: var(--platform-green-deep);
+}
+.hero-section { background: linear-gradient(135deg, #f6faf7, #dfefe5); }
+[data-theme="dark"] .hero-section {
+  background: linear-gradient(135deg, #10261e, #17392d) !important;
+}
