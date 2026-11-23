@@ -1185,6 +1185,7 @@ body::after { background: rgba(6,182,212,0.1); bottom: -100px; right: -100px; an
         }
     }
 </script>
+<link rel="stylesheet" href="./platform-ui.css">
 </head>
 
 <body>
@@ -2924,7 +2925,7 @@ function recitationOutcome(grade, bookingStatus) {
         const pendEx = data.pendingExams || 0;
         
         const totalComp = compHw + compRec + compEx;
-        const totalTasks = totalComp + pendHw + pendRec + pendEx;
+        const totalTasks = totalComp + pendHw + pendRec + pendEx + (data.absentRecitations || 0);
         const percent = totalTasks > 0 ? Math.round((totalComp / totalTasks) * 100) : 0;
         
         const progressPercentEl = document.getElementById('progressPercent');

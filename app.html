@@ -508,6 +508,7 @@
     .introjs-arrow.top { border-bottom-color: #ffffff !important; }
     .introjs-arrow.bottom { border-top-color: #ffffff !important; }
         </style>
+<link rel="stylesheet" href="./platform-ui.css">
 </head>
 <body>
     <script>
@@ -1766,7 +1767,7 @@ function recitationOutcome(grade, bookingStatus) {
             const pendEx = dash.pendingExams || 0;
             
             const totalComp = compHw + compRec + compEx;
-            const totalTasks = totalComp + pendHw + pendRec + pendEx;
+            const totalTasks = totalComp + pendHw + pendRec + pendEx + (dash.absentRecitations || 0);
             const percent = totalTasks > 0 ? Math.round((totalComp / totalTasks) * 100) : 0;
             
             const progressPercentEl = document.getElementById('progressPercent');
