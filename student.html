@@ -3399,14 +3399,14 @@ function recitationOutcome(grade, bookingStatus) {
                     if (isExpired && !row.isUploaded) {
                         html += downloadBtn + `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
                     } else if (row.isUploaded) {
-                        html += downloadBtn + `<button class="btn btn-danger" onclick="deleteAssignment('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-trash"></i> حذف الواجب</button>`;
+                        html += downloadBtn + `<button class="btn btn-danger" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> استبدال الواجب</button>`;
                     } else {
                         html += downloadBtn + `<button class="btn" onclick="openUploadModal('${row.lesson}')" style="width:100%; justify-content:center;"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     }
                 }
             }
             else if(type === 'التسميع') {
-                if ((row.recitationOutcome || recitationOutcome(row.grade)) === 'absent') html += '<span>لم يتم التسميع</span>';
+                if ((row.recitationOutcome || recitationOutcome(row.grade)) === 'absent') html += `<button class="btn" onclick="openBookingModal('${row.lesson}', '')">حجز موعد جديد</button>`;
                 else if(isCompleted) html += `<button class="btn btn-outline" disabled style="border-color:var(--secondary); color:var(--secondary); width:100%; justify-content:center;"><i class="fas fa-check-circle"></i> تم التسميع</button>`;
                 else if(row.isBooked) {
                     const safeLesson = row.lesson ? row.lesson.replace(/'/g, "\\'") : '';
@@ -3427,7 +3427,7 @@ function recitationOutcome(grade, bookingStatus) {
                         html += `<button class="btn btn-secondary" style="background:#cbd5e1; color:#475569; flex:1; justify-content:center; cursor:not-allowed; box-shadow:none;" disabled><i class="fas fa-lock"></i> دخول التسميع</button>`;
                     }
                     
-                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" onclick="cancelRecitationBooking('${safeLesson}', '${safeDate}', '${safeTime}', '${safePages}')" title="إلغاء الحجز"><i class="fas fa-times"></i></button>`;
+                    html += `<button class="btn btn-danger" style="padding: 0.5rem 1rem; flex: 0 0 auto; width: auto; justify-content:center;" onclick="openBookingModal('${safeLesson}', '${safePages}')" title="تغيير الموعد">تغيير الموعد</button>`;
                     html += `</div>`;
                 } else if(isExpired) {
                     html += `<button class="btn btn-secondary" disabled style="opacity:0.6; cursor:not-allowed; width:100%; justify-content:center;"><i class="fas fa-lock"></i> الحجز مغلق (انتهت المدة)</button>`;

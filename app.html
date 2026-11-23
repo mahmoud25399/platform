@@ -2055,11 +2055,11 @@ function recitationOutcome(grade, bookingStatus) {
                         }
                         if(item.correctionLink) html += `<button onclick="window.open('${item.correctionLink}')" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold text-sm"><i class="fas fa-eye"></i> مشاهدة التصحيح</button>`;
                         else if(isExpired && !item.isUploaded) html += downloadBtn + `<button disabled class="w-full bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
-                        else if(item.isUploaded) html += downloadBtn + `<button onclick="deleteUpload('${item.lesson}')" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm"><i class="fas fa-trash"></i> حذف المرفوع</button>`;
+                        else if(item.isUploaded) html += downloadBtn + `<button onclick="openUploadUI('${item.lesson}')" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm"><i class="fas fa-trash"></i> استبدال الواجب</button>`;
                         else html += downloadBtn + `<button onclick="openUploadUI('${item.lesson}')" class="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-blue-200"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     } else if (targetType === 'التسميع') {
                         if ((item.recitationOutcome || recitationOutcome(item.grade)) === 'absent') {
-                            html += '<div class="text-center">لم يتم التسميع</div>';
+                            html += `<button class="w-full" onclick="openBookingUI('${item.lesson}')">حجز موعد جديد</button>`;
                         } else if(isDone) {
                             html += `<div class="w-full text-center bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-2 rounded-xl font-bold text-sm border border-green-200 dark:border-green-800"><i class="fas fa-check-circle"></i> تم التسميع</div>`;
                         } else if (item.isBooked) {
@@ -2076,7 +2076,7 @@ function recitationOutcome(grade, bookingStatus) {
                                 html += `<button disabled class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> دخول التسميع</button>`;
                             }
                             
-                            html += `<button onclick="cancelBooking('${item.lesson}')" class="w-auto px-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm" title="إلغاء الموعد"><i class="fas fa-times"></i></button>
+                            html += `<button onclick="openBookingUI('${item.lesson}')" class="w-auto px-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm" title="تغيير الموعد">تغيير الموعد</button>
                             </div>`;
                         }
                         else if(isExpired) html += `<button disabled class="w-full bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> الحجز مغلق (انتهت المدة)</button>`;
