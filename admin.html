@@ -3,24 +3,24 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منصة الإدارة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>مِنَصَّةُ الهِلِّيهِي — لوحة الإدارة</title>
     <link rel="icon" href="icon.png" type="image/png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#6366f1">
+    <meta name="theme-color" content="#0B6E4F">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
         .swal2-container { z-index: 999999 !important; }
-        :root { --primary: #2563eb; --primary-light: #60a5fa; --primary-dark: #1e40af; --secondary: #10b981; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --light: #ffffff; --dark: #1e293b; --gray: #64748b; --border: rgba(148,163,184,0.25); --bg-body: #f8fafc; --surface: #ffffff; --surface-hover: #f1f5f9; --content-bg: rgba(255,255,255,0.95); --menu-bg: rgba(255,255,255,0.95); --text-primary: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8; --shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-md: 0 4px 16px rgba(0,0,0,0.08); --shadow-lg: 0 8px 32px rgba(0,0,0,0.12); --shadow-glow: 0 0 40px rgba(99,102,241,0.12); --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px; --transition: all 0.3s cubic-bezier(0.4,0,0.2,1); --primary-glow: rgba(37,99,235,0.25); }
-        [data-theme="dark"] { --bg-body: #0f172a; --surface: #1e293b; --surface-hover: #334155; --content-bg: rgba(30,41,59,0.95); --menu-bg: rgba(30,41,59,0.95); --dark: #f1f5f9; --gray: #94a3b8; --border: rgba(148,163,184,0.12); --shadow-md: 0 4px 16px rgba(0,0,0,0.25); --shadow-lg: 0 8px 32px rgba(0,0,0,0.35); }
-        body { background: var(--bg-body); color: var(--dark); min-height: 100vh; position: relative; overflow-x: hidden; transition: background 0.4s, color 0.4s; }
+        :root { --primary: #0B6E4F; --primary-light: #16A34A; --primary-dark: #065F46; --accent: #B45309; --info: #2563EB; --secondary: #16A34A; --success: #16A34A; --warning: #B45309; --danger: #DC2626; --light: #FFFFFF; --dark: #111827; --gray: #4B5563; --border: #BFE6D3; --bg-body: #F4F9F6; --surface: #FFFFFF; --surface-hover: #DCF1E6; --content-bg: #FFFFFF; --menu-bg: #FFFFFF; --text-primary: #111827; --text-secondary: #4B5563; --text-muted: #6B7280; --shadow-sm: 0 1px 3px rgba(6,95,70,0.06); --shadow-md: 0 4px 16px rgba(6,95,70,0.08); --shadow-lg: 0 8px 32px rgba(6,95,70,0.12); --shadow-glow: 0 0 36px rgba(11,110,79,0.15); --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --transition: all 0.25s cubic-bezier(0.4,0,0.2,1); --primary-glow: rgba(11,110,79,0.22); }
+        [data-theme="dark"] { --primary: #34D399; --primary-light: #6EE7B7; --primary-dark: #0B6E4F; --accent: #FBBF24; --info: #60A5FA; --success: #34D399; --warning: #FBBF24; --danger: #F87171; --bg-body: #071A14; --surface: #0D2820; --surface-hover: #13382D; --content-bg: #0D2820; --menu-bg: #0D2820; --dark: #F1F5F9; --text-primary: #F1F5F9; --gray: #94A3B8; --text-secondary: #CBD5E1; --border: rgba(52,211,153,0.18); --shadow-md: 0 4px 16px rgba(0,0,0,0.34); --shadow-lg: 0 8px 32px rgba(0,0,0,0.46); }
+        body { background: var(--bg-body); color: var(--dark); min-height: 100vh; min-height: 100dvh; position: relative; overflow-x: hidden; transition: background 0.4s, color 0.4s; }
         @keyframes floatOrb { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(60px,80px) scale(1.15)} }
         .login-card { background: var(--content-bg); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: var(--transition); }
         .header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 0.8rem 2rem; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; transition: var(--transition); }
@@ -47,8 +47,8 @@
         .sidebar.collapsed .nav-sub-menu .menu-item i { margin: 0 !important; font-size: 1.1rem !important; }
         body.sidebar-collapsed .content { margin-right: 76px !important; width: calc(100% - 76px) !important; }
         .mobile-menu-btn { display: none; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 1.2rem; color: var(--dark); cursor: pointer; padding: 8px 10px; }
-        .main-content { display: block; min-height: calc(100vh - 70px); position: relative; }
-        .sidebar { width: 270px; background: var(--white, #ffffff); box-shadow: -2px 0 15px rgba(0, 0, 0, 0.05); overflow-y: auto; -webkit-overflow-scrolling: touch; position: fixed; top: 70px; right: 0; height: calc(100vh - 70px); z-index: 950; border-left: 1px solid #e2e8f0; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 4px; }
+        .main-content { display: block; min-height: calc(100vh - 70px); height: calc(100dvh - 70px); min-height: calc(100dvh - 70px); position: relative; }
+        .sidebar { width: 270px; background: var(--white, #ffffff); box-shadow: -2px 0 15px rgba(0, 0, 0, 0.05); overflow-y: auto; -webkit-overflow-scrolling: touch; position: fixed; top: 70px; right: 0; height: calc(100vh - 70px); height: calc(100dvh - 70px); z-index: 950; border-left: 1px solid #e2e8f0; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 4px; }
         [data-theme="dark"] .sidebar { background: var(--surface); border-color: var(--border); }
         body.sidebar-locked { overflow: hidden; }
         .content { flex: 1; margin-right: 270px; padding: 2rem; background: transparent; width: calc(100% - 270px); overflow-x: hidden; min-width: 0; transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -695,7 +695,7 @@
         .content {
             background: #f1f5f9 !important;
             padding: 1.75rem 2rem !important;
-            min-height: calc(100vh - 70px);
+            min-height: calc(100vh - 70px); height: calc(100dvh - 70px); min-height: calc(100dvh - 70px);
         }
         [data-theme="dark"] .content {
             background: #0f172a !important;
@@ -2606,17 +2606,23 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
  </div>
 
-                            <div id="waLogStatsBar" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:16px;"></div>
+                            <div id="waLogStatsBar" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:14px;"></div>
+
+                            <div id="waLogEmployeeStatsBar" style="display:none; margin-bottom:14px; padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:var(--surface-hover);"></div>
 
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
-                                <select id="waLogStatusFilter" class="form-control" style="max-width:190px;" onchange="loadWhatsAppLogUI()">
-                                    <option value="ALL">كل الحالات</option>
-                                    <option value="SENT">تم الإرسال </option>
-                                    <option value="FAILED">فشل الإرسال </option>
-                                    <option value="PENDING">قيد الانتظار </option>
+                                <select id="waLogEmployeeFilter" class="form-control" style="max-width:240px;" onchange="loadWhatsAppLogUI()">
+                                    <option value="ALL">كل المرسلين (تلقائي + موظفين)</option>
+                                    <option value="EMPLOYEES_ONLY">رسائل الموظفين السريعة فقط</option>
                                 </select>
-                                <input type="text" id="waLogSearchInput" class="form-control" style="flex:1; min-width:200px;" placeholder=" بحث باسم الطالب أو الرقم أو نص الرسالة..." oninput="clearTimeout(window._waLogTimer); window._waLogTimer=setTimeout(()=>loadWhatsAppLogUI(), 350);">
- </div>
+                                <select id="waLogStatusFilter" class="form-control" style="max-width:170px;" onchange="loadWhatsAppLogUI()">
+                                    <option value="ALL">كل الحالات</option>
+                                    <option value="SENT">تم الإرسال</option>
+                                    <option value="FAILED">فشل الإرسال</option>
+                                    <option value="PENDING">قيد الانتظار</option>
+                                </select>
+                                <input type="text" id="waLogSearchInput" class="form-control" style="flex:1; min-width:200px;" placeholder="بحث باسم الموظف أو الطالب أو الدرس أو نص الرسالة..." oninput="clearTimeout(window._waLogTimer); window._waLogTimer=setTimeout(()=>loadWhatsAppLogUI(), 350);">
+                            </div>
 
                             <div id="waLogTableContainer" class="table-responsive">
                                 <div style="text-align:center; padding:25px; color:var(--gray);">جاري تحميل السجل...</div>
@@ -2788,7 +2794,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                                 <h3 style="color: var(--primary); font-size: 1.1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-layer-group"></i> الصفوف الدراسية</h3>
                                 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                                    <input type="text" id="newGradeInput" class="form-control" placeholder="إضافة صف (مثل: الأول الثانوي)...">
+                                    <input type="text" id="newGradeInput" class="form-control" placeholder="إضافة صف (مثل: الثالث الإعدادي)...">
                                     <button class="btn btn-primary" onclick="addSettingItem('grades', 'newGradeInput')"><i class="fas fa-plus"></i></button>
  </div>
                                 <div id="gradesList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
@@ -3629,14 +3635,15 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 <small id="quickWaTargetsStatus" style="color:var(--gray); font-size:0.78rem; display:block; margin-top:8px; line-height:1.65;"></small>
  </div>
 
+            <div id="quickWaAutoHeaderPreview" class="elhelihey-wa-preview" style="margin-bottom:12px; padding:10px 14px; border-radius:10px; border:1px solid var(--border); border-right:4px solid var(--primary); background:var(--surface-hover); font-size:0.85rem; line-height:1.7; color:var(--dark);">
+                <div style="font-weight:800; color:var(--primary); margin-bottom:2px;"><i class="fas fa-magic"></i> يُدرج تلقائياً أعلى الرسالة (بدون متغيرات):</div>
+                <div id="quickWaAutoHeaderText" style="white-space:pre-line; font-weight:600;"></div>
+            </div>
+
             <div class="form-group" style="margin-bottom:12px;">
-                <label style="font-weight:bold; font-size:0.85rem; margin-bottom:6px; display:block;">نص الرسالة</label>
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
-                    <button type="button" onclick="insertQuickWaVar('(اسم_الطالب)')" class="btn btn-sm" style="font-size:0.75rem; padding:3px 10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; font-family:monospace;">+ (اسم_الطالب)</button>
-                    <button type="button" onclick="insertQuickWaVar('(اسم_الدرس)')" class="btn btn-sm" style="font-size:0.75rem; padding:3px 10px; background:#f0fdf4; color: var(--gray); border:1px solid #bbf7d0; border-radius:6px; font-family:monospace;">+ (اسم_الدرس)</button>
- </div>
-                <textarea id="quickWaMessageBody" class="form-control" rows="5" placeholder="اكتب رسالتك هنا..." style="direction:rtl; resize:vertical;"></textarea>
- </div>
+                <label style="font-weight:bold; font-size:0.85rem; margin-bottom:6px; display:block;">نص الرسالة <span style="font-weight:400; color:var(--gray); font-size:0.78rem;">(اكتب رسالتك للطالب مباشرة)</span></label>
+                <textarea id="quickWaMessageBody" class="form-control" rows="5" placeholder="مثال: تم مراجعة الواجب ويوجد ملاحظة في السؤال الثالث يرجى تعديلها..." style="direction:rtl; resize:vertical;"></textarea>
+            </div>
 
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-success" id="quickWaSendBtn" onclick="sendQuickWaMessage(this)" style="flex:2; background:linear-gradient(135deg,#25D366,#128C7E); border:none;">
@@ -4111,47 +4118,6 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             const savedCode = localStorage.getItem('adminCode');
             if (savedCode) {
-                document.getElementById('loginScreen').style.display = 'none';
-                try {
-                    const cachedEmp = JSON.parse(localStorage.getItem('cachedAdminEmp') || 'null');
-                    if (cachedEmp && cachedEmp.name) {
-                        window.currentEmployee = cachedEmp;
-                        applyEmployeePermissions();
-                        document.getElementById('userName').innerText = cachedEmp.name;
-                        const welcomeNameEl = document.getElementById('dashWelcomeEmpName');
-                        const welcomeRoleEl = document.getElementById('dashWelcomeEmpRole');
-                        if (welcomeNameEl) welcomeNameEl.innerText = cachedEmp.name;
-                        if (welcomeRoleEl) welcomeRoleEl.innerText = cachedEmp.role;
-                        updateAdminMotivation();
-                        const allowedSecs = cachedEmp.allowedSections || '';
-                        const isAllAllowed = allowedSecs === 'ALL' || allowedSecs === 'الكل' || cachedEmp.role === 'مالك المنصة' || cachedEmp.role === 'مدير';
-                        const cardWajib = document.getElementById('dashCardWajib');
-                        const cardTasmiya = document.getElementById('dashCardTasmiya');
-                        const cardExams = document.getElementById('dashCardExams');
-                        if (cardWajib) cardWajib.style.display = (isAllAllowed || allowedSecs.includes('wajib')) ? 'flex' : 'none';
-                        if (cardTasmiya) cardTasmiya.style.display = (isAllAllowed || allowedSecs.includes('tasmiya')) ? 'flex' : 'none';
-                        if (cardExams) cardExams.style.display = (isAllAllowed || allowedSecs.includes('ikhtibarat')) ? 'flex' : 'none';
-                        const cachedStats = JSON.parse(localStorage.getItem('cachedAdminStats') || 'null');
-                        if (cachedStats) {
-                            const wEl = document.getElementById('statWajib');
-                            const tEl = document.getElementById('statTasmiya');
-                            const eEl = document.getElementById('statExams');
-                            if (wEl) wEl.innerText = cachedStats.pendingWajib || 0;
-                            if (tEl) tEl.innerText = cachedStats.pendingTasmiya || 0;
-                            if (eEl) eEl.innerText = cachedStats.pendingExams || 0;
-                            window.__dashStatsLoaded = true;
-                        }
-                        if (typeof isPlatformAdmin === 'function' && isPlatformAdmin(cachedEmp)) {
-                            const perfWrap = document.getElementById('employeePerformanceSection');
-                            const perfCont = document.getElementById('employeePerformanceContainer');
-                            if (perfWrap) perfWrap.classList.remove('hidden');
-                            if (perfCont && !perfCont.innerHTML.trim() && typeof getEmpPerfSkeletonHtml === 'function') {
-                                perfCont.innerHTML = getEmpPerfSkeletonHtml();
-                            }
-                        }
-                        document.getElementById('mainApp').style.display = 'block';
-                    }
-                } catch (e) {}
                 performLogin(savedCode, true);
             } else {
                 handleHashRouting();
@@ -4227,6 +4193,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             performLogin(code, false);
         }
 
+        function adminCacheKey_(key) {
+            const emp=window.currentEmployee;
+            return 'staff_v2_'+encodeURIComponent(emp && emp.code || localStorage.getItem('adminCode') || '')+'_'+key;
+        }
+        function clearStaffCache_() {
+            for (const key of Object.keys(localStorage)) if (/^(staff_v2_|fast_cache_|cache_emp_perf_|my_emp_perf_|cachedAdmin)/.test(key)) localStorage.removeItem(key);
+        }
         function performLogin(code, isAuto) {
             const btn = document.getElementById('loginBtn');
             if(!isAuto && btn) toggleLoading(btn, true);
@@ -4234,8 +4207,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             runGS('verifyEmployeeCode', code)
             .then(res => {
                 if(res.success) {
+                    if (localStorage.getItem('adminCode') !== String(code) || !localStorage.getItem('staff_cache_schema_2')) {
+                        clearStaffCache_(); localStorage.setItem('staff_cache_schema_2','1');
+                    }
                     localStorage.setItem('adminCode', code);
-                    try { localStorage.setItem('cachedAdminEmp', JSON.stringify(res.employee)); } catch(e) {}
+                    try { localStorage.setItem(adminCacheKey_('cachedAdminEmp'), JSON.stringify(res.employee)); } catch(e) {}
                     window.currentEmployee = res.employee;
                     try { applyEmployeePermissions(); } catch (_pe) { console.error('applyEmployeePermissions error:', _pe); }
                     document.getElementById('loginScreen').style.display = 'none';
@@ -4301,10 +4277,12 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 cancelButtonText: 'لا'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    clearStaffCache_();
                     localStorage.removeItem('adminCode');
-                    localStorage.removeItem('cachedAdminEmp');
-                    localStorage.removeItem('cachedAdminStats');
+                    localStorage.removeItem(adminCacheKey_('cachedAdminEmp'));
+                    localStorage.removeItem(adminCacheKey_('cachedAdminStats'));
                     window.pendingRedirect = null;
+                    window.currentEmployee = null;
                     window.location.hash = '';
                     document.getElementById('mainApp').style.display = 'none';
                     document.getElementById('loginScreen').style.display = 'flex';
@@ -4315,11 +4293,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function loadInitialData() {
-            try { localStorage.removeItem('cachedAdminMenuOrder'); } catch(e){}
+            try { localStorage.removeItem(adminCacheKey_('cachedAdminMenuOrder')); } catch(e){}
 
             // ── 0. عرض فوري من الكاش المحلي لمنع تعليق البيانات وشريط الحصة عند الفتح ──
             try {
-                var cachedStats = JSON.parse(localStorage.getItem('cachedAdminStats') || 'null');
+                var cachedStats = JSON.parse(localStorage.getItem(adminCacheKey_('cachedAdminStats')) || 'null');
                 if (cachedStats) {
                     var wEl = document.getElementById('statWajib');
                     var tEl = document.getElementById('statTasmiya');
@@ -4332,7 +4310,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             } catch(e) {}
 
             try {
-                var cachedSched = JSON.parse(localStorage.getItem('cachedAdminSchedule_v1') || 'null');
+                var cachedSched = JSON.parse(localStorage.getItem(adminCacheKey_('cachedAdminSchedule_v1')) || 'null');
                 if (Array.isArray(cachedSched) && cachedSched.length > 0) {
                     allScheduleData = cachedSched;
                     window.allScheduleData = cachedSched;
@@ -4343,7 +4321,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             } catch(e) {}
 
             try {
-                var cachedSettings = JSON.parse(localStorage.getItem('cachedAdminPlatformSettings_v1') || 'null');
+                var cachedSettings = JSON.parse(localStorage.getItem(adminCacheKey_('cachedAdminPlatformSettings_v1')) || 'null');
                 if (cachedSettings && typeof cachedSettings === 'object') {
                     window.currentPlatformSettings = cachedSettings;
                     applyAdminMenuOrderToSidebar();
@@ -4358,7 +4336,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     allScheduleData = items;
                     window.allScheduleData  = items;
                     window.__rawScheduleItems = items;
-                    try { localStorage.setItem('cachedAdminSchedule_v1', JSON.stringify(items)); } catch(e) {}
+                    try { localStorage.setItem(adminCacheKey_('cachedAdminSchedule_v1'), JSON.stringify(items)); } catch(e) {}
                     if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(items);
                     if (typeof updateDashboardUpcomingLessonBanner === 'function') updateDashboardUpcomingLessonBanner();
                 }).catch(function(err) {
@@ -4372,7 +4350,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             runGS('getPlatformSettings').then(function(settings) {
                 window.currentPlatformSettings = settings || {};
-                try { localStorage.setItem('cachedAdminPlatformSettings_v1', JSON.stringify(window.currentPlatformSettings)); } catch(e) {}
+                try { localStorage.setItem(adminCacheKey_('cachedAdminPlatformSettings_v1'), JSON.stringify(window.currentPlatformSettings)); } catch(e) {}
                 applyAdminMenuOrderToSidebar();
                 populateAllGradeAndGroupSelects();
                 loadWhatsAppSettingsUI();
@@ -5121,6 +5099,22 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         // Load pending wajib corrections
+        function reviewClaimButton_(item,type) {
+            if (item.owner) return '<span class="emp-perf-chip">' + (item.owner === window.currentEmployee.code ? 'في عهدتي' : 'استلمها موظف آخر') + '</span>';
+            return '<button type="button" class="btn btn-sm" data-claim="' + type + '" data-record="' + Number(item.serial) + '">استلام المهمة</button>';
+        }
+        document.addEventListener('click', async function(event) {
+            const button = event.target.closest('[data-claim]');
+            if (!button || button.disabled) return;
+            button.disabled = true;
+            try {
+                const type = button.dataset.claim;
+                const result = await runGS('claimReviewTaskGS',type,Number(button.dataset.record));
+                if (!result || !result.success) throw new Error(result && result.message || 'تعذر الاستلام');
+                (type === 'wajib' ? loadPendingWajib : loadTasmiyaReservations)();
+                showNotify('success',result.message);
+            } catch (error) { showNotify('error',error.message); button.disabled=false; }
+        });
         function loadPendingWajib() {
             var containerAll = document.getElementById('wajibPendingList'); 
             var containerToday = document.getElementById('wajibTodayList');
@@ -5173,7 +5167,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         html += '<td style="padding:12px;">' + (item.pages ? ('<span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:8px; font-weight:700; font-size:0.82rem;">' + escapeHtml_(item.pages) + '</span>') : '<span style="color:var(--gray);">—</span>') + '</td>';
                         html += '<td style="padding:12px;"><a href="' + (item.downloadLink || '#') + '" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> تحميل</a></td>';
                         // الزرار يعتمد على item.serial ومفيش أي تغيير فيه لضمان عمل الحفظ بشكل سليم
-                        html += '<td style="padding:12px;"><div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-sm btn-success" onclick="openCorrectionModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', ' + item.serial + ')"><i class="fas fa-check"></i> تصحيح</button><button class="btn btn-sm" onclick="openQuickWhatsAppModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', \'واجب\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;" title="إرسال رسالة واتساب"><i class="fab fa-whatsapp"></i> واتساب</button><button class="btn btn-sm btn-danger" onclick="deletePendingWajib(' + item.serial + ')" title="حذف الواجب"><i class="fas fa-trash"></i></button></div></td>';
+                        html += '<td style="padding:12px;"><div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">' + reviewClaimButton_(item,"wajib") + '<button class="btn btn-sm btn-success" onclick="openCorrectionModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', ' + item.serial + ')"><i class="fas fa-check"></i> تصحيح</button><button class="btn btn-sm" onclick="openQuickWhatsAppModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', \'واجب\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;" title="إرسال رسالة واتساب"><i class="fab fa-whatsapp"></i> واتساب</button><button class="btn btn-sm btn-danger" onclick="deletePendingWajib(' + item.serial + ')" title="حذف الواجب"><i class="fas fa-trash"></i></button></div></td>';
                         html += '</tr>';
                     });
                     html += '</tbody></table></div>';
@@ -5243,7 +5237,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         html += '<td style="padding:12px;">' + (item.reserveDate || '-') + '</td>';
                         html += '<td style="padding:12px;"><span style="background:var(--primary-glow); color:var(--primary-dark); padding:4px 10px; border-radius:12px; font-weight:bold;">' + (item.appointment || '-') + '</span></td>';
                         // الأزرار هنا كما هي
-                        html += '<td style="padding:12px;"><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-primary" onclick="openTasmiyaMeetSession()" title="دخول جلسة التسميع (Google Meet)"><i class="fas fa-video"></i> دخول الجلسة</button><button class="btn btn-sm btn-success" onclick="openTasmiyaEvalModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', ' + item.serial + ')"><i class="fas fa-check"></i> تقييم</button><button class="btn btn-sm" onclick="openQuickWhatsAppModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', \'تسميع\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;" title="إرسال رسالة واتساب"><i class="fab fa-whatsapp"></i> واتساب</button><button class="btn btn-sm btn-danger" onclick="deleteTasmiyaReservation(' + item.serial + ')" title="حذف الحجز"><i class="fas fa-trash"></i></button></div></td>';
+                        html += '<td style="padding:12px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">' + reviewClaimButton_(item,"tasmiya") + '<button class="btn btn-sm btn-primary" onclick="openTasmiyaMeetSession()" title="دخول جلسة التسميع (Google Meet)"><i class="fas fa-video"></i> دخول الجلسة</button><button class="btn btn-sm btn-success" onclick="openTasmiyaEvalModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', ' + item.serial + ')"><i class="fas fa-check"></i> تقييم</button><button class="btn btn-sm" onclick="openQuickWhatsAppModal(\'' + (item.student || '').replace(/'/g, "\\'") + '\', \'' + (item.lesson || '').replace(/'/g, "\\'") + '\', \'تسميع\')" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;" title="إرسال رسالة واتساب"><i class="fab fa-whatsapp"></i> واتساب</button><button class="btn btn-sm btn-danger" onclick="deleteTasmiyaReservation(' + item.serial + ')" title="حذف الحجز"><i class="fas fa-trash"></i></button></div></td>';
                         html += '</tr>';
                     });
                     html += '</tbody></table></div>';
@@ -5762,7 +5756,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             // Fallback 3: Defaults so dropdowns are NEVER empty
             if (relations.length === 0) {
-                const defaultGrades = ['الأول الإعدادي', 'الثاني الإعدادي', 'الثالث الإعدادي', 'الأول الثانوي', 'الثاني الثانوي', 'الثالث الثانوي'];
+                const defaultGrades = ['الرابع الابتدائي', 'الخامس الابتدائي', 'السادس الابتدائي', 'الأول الإعدادي', 'الثاني الإعدادي', 'الثالث الإعدادي'];
                 const defaultGroups = ['مجموعة (1)', 'مجموعة (2)', 'مجموعة (3)'];
                 defaultGrades.forEach(g => {
                     defaultGroups.forEach(gr => {
@@ -5879,11 +5873,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         function populateAllGradeAndGroupSelects() {
             const settings = window.currentPlatformSettings || {
                 studyTypes: ["منهج", "كورس"],
-                grades: ["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي"],
+                grades: ["الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي", "الأول الإعدادي", "الثاني الإعدادي", "الثالث الإعدادي"],
                 groups: ["مجموعة أ", "مجموعة ب", "أونلاين"]
             };
 
-            const grades = settings.grades || ["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي"];
+            const grades = settings.grades || ["الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي", "الأول الإعدادي", "الثاني الإعدادي", "الثالث الإعدادي"];
             const groups = settings.groups || ["مجموعة أ", "مجموعة ب", "أونلاين"];
 
             // 1. Populate all Grade selects
@@ -6506,69 +6500,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         async function testWhatsAppHFConnection() {
-            Swal.fire({
-                title: 'اختبار اتصال الواتساب',
-                text: 'أدخل رقم هاتف لاستقبال رسالة تجريبية من النظام:',
-                input: 'text',
-                inputPlaceholder: '010xxxxxxxxx أو 2010xxxxxxxxx',
-                showCancelButton: true,
-                confirmButtonText: 'إرسال الاختبار',
-                cancelButtonText: 'إلغاء'
-            }).then(async result => {
-                if (result.isConfirmed && result.value) {
-                    Swal.fire({ title: 'جاري الاختبار...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-                    
-                    let endpoint = (document.getElementById('hfEndpointInput') ? document.getElementById('hfEndpointInput').value.trim() : '') || 
-                                   (window.currentPlatformSettings && window.currentPlatformSettings.whatsapp && window.currentPlatformSettings.whatsapp.hfEndpoint ? window.currentPlatformSettings.whatsapp.hfEndpoint.trim() : '');
-                    
-                    let token = (document.getElementById('hfTokenInput') ? document.getElementById('hfTokenInput').value.trim() : '') || 
-                                (window.currentPlatformSettings && window.currentPlatformSettings.whatsapp && window.currentPlatformSettings.whatsapp.hfToken ? window.currentPlatformSettings.whatsapp.hfToken.trim() : '');
-
-                    if (!endpoint) {
-                        Swal.fire('خطأ ', 'برجاء كتابة الرابط الأساسي أولاً وحفظ الإعدادات.', 'error');
-                        return;
-                    }
-
-                    // تصحيح الرابط للخدمة الجديدة
-                    if (!endpoint.endsWith('/messages/send')) {
-                        endpoint = endpoint.endsWith('/') ? endpoint + 'messages/send' : endpoint + '/messages/send';
-                    }
-
-                    let phone = result.value.trim();
-                    try {
-                        const headers = { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        };
-                        if (token) {
-                            headers['Authorization'] = 'Bearer ' + token;
-                            headers['token'] = token;
-                        }
-
-                        const directRes = await fetch(endpoint, {
-                            method: 'POST',
-                            headers: headers,
-                            body: JSON.stringify({
-                                phones: [phone],
-                                message: 'رسالة تجريبية من منصة الهليهي لاختبار بوابة الواتساب الجديدة '
-                            })
-                        });
-                        
-                        const data = await directRes.json();
-                        
-                        if (directRes.ok) {
-                            Swal.fire('نجح الاتصال! ', 'تم إرسال الرسالة التجريبية بنجاح إلى هاتفك.', 'success');
-                        } else {
-                            // لو في مشكلة في الاشتراك أو ربط الرقم هيبان هنا
-                            Swal.fire('رد من السيرفر ', data.message || 'السيرفر رفض الطلب. تأكد من تفعيل الباقة وربط الباركود.', 'warning');
-                        }
-                    } catch(e) {
-                        Swal.fire('فشل الاتصال ', 'حدث خطأ في الاتصال بالخادم، تأكد من صحة الرابط: ' + e.message, 'error');
-                    }
-                }
-            });
+          const result = await Swal.fire({title:'اختبار واتساب',input:'tel',inputLabel:'رقم المستلم بالصيغة الدولية',showCancelButton:true});
+          if (!result.isConfirmed || !result.value) return;
+          try {
+            const response = await runGS('testHuggingFaceConnection',result.value);
+            showNotify(response && response.success ? 'success':'error', response.message || 'تعذر تأكيد الإرسال');
+          } catch(error) { showNotify('error',error.message); }
         }
-
         function loadWhatsAppSettingsUI() {
             const settings = window.currentPlatformSettings || {};
             const wa = settings.whatsapp || {};
@@ -6614,12 +6552,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     gradedHomework:   { label: 'تسجيل درجة واجب',    icon: 'fas fa-star',       color: '#d97706', immediate: false },
                     gradedTasmiya:    { label: 'تسجيل درجة تسميع',   icon: 'fas fa-star',       color: '#d97706', immediate: false },
                     gradedIkhtibarat: { label: 'تسجيل درجة اختبار',  icon: 'fas fa-star',       color: '#d97706', immediate: false },
-                    deadline24h:      { label: 'تذكير 24 ساعة قبل انتهاء المهمة', icon: 'fas fa-clock', color: '#f59e0b', immediate: false },
-                    deadlineExpired:  { label: 'إشعار انتهاء المهمة بدون تسليم', icon: 'fas fa-exclamation-triangle', color: '#ef4444', immediate: false },
                     pdfReport:        { label: 'إرسال تقرير PDF',     icon: 'fas fa-chart-bar',  color: '#6366f1', immediate: false },
                     preHossa5m:       { label: 'تذكير قبل موعد الحصة بـ 5 دقائق (جدول الحصص)', icon: 'fas fa-stopwatch', color: '#ec4899', immediate: true },
-                    liveAttendancePresent: { label: 'إشعار حضور الحصة المباشرة (بعد ساعة)', icon: 'fas fa-user-check', color: '#10b981', immediate: false },
-                    liveAttendanceAbsent:  { label: 'إشعار غياب الحصة المباشرة + تسجيل المنصة (بعد ساعة)', icon: 'fas fa-user-times', color: '#ef4444', immediate: false },
                     preTasmiyaBooking5m:   { label: 'تذكير قبل موعد التسميع المحجوز بـ 5 دقائق', icon: 'fas fa-stopwatch', color: '#ec4899', immediate: true },
                     dailyTasksSummary:     { label: 'ملخص المهام اليومية للموظفين (تسميع + واجب)', icon: 'fas fa-clipboard-list', color: '#0891b2', immediate: false, isEmployeeSummary: true },
                     lateTasksSummary:      { label: 'تنبيه المهام المتأخرة للموظفين (تراكمات)', icon: 'fas fa-exclamation-triangle', color: '#dc2626', immediate: false, isEmployeeSummary: true, isLateSummary: true }
@@ -7126,7 +7060,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 if (!window.currentPlatformSettings) window.currentPlatformSettings = {};
                 if (!window.currentPlatformSettings.whatsapp) window.currentPlatformSettings.whatsapp = {};
                 if (!window.currentPlatformSettings.whatsapp.events) window.currentPlatformSettings.whatsapp.events = {};
-                const events = window.currentPlatformSettings.whatsapp.events;                const eventKeys = ['studentRegistered', 'bookingConfirmed','newHomework','newTasmiya','newIkhtibarat','newHossa','newLibrary','gradedHomework','gradedTasmiya','gradedIkhtibarat','deadline24h','deadlineExpired','pdfReport','preHossa5m','preTasmiyaBooking5m','liveAttendancePresent','liveAttendanceAbsent','dailyTasksSummary','lateTasksSummary'];
+                const events = window.currentPlatformSettings.whatsapp.events;                const eventKeys = ['studentRegistered', 'bookingConfirmed','newHomework','newTasmiya','newIkhtibarat','newHossa','newLibrary','gradedHomework','gradedTasmiya','gradedIkhtibarat','pdfReport','preHossa5m','preTasmiyaBooking5m','dailyTasksSummary','lateTasksSummary'];
                 
                 eventKeys.forEach(function(ek) {
                     if (!events[ek]) events[ek] = {}; // إصلاح: تهيئة الكائن قبل استخدامه
@@ -8753,9 +8687,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     const eventLabels = {
                         newHomework: 'واجب جديد', newTasmiya: 'تسميع جديد مطلوب', newIkhtibarat: 'اختبار جديد',
                         newHossa: 'حصة جديدة مرفوعة', newLibrary: 'ملف مكتبة جديد', gradedHomework: 'تسجيل درجة واجب',
-                        gradedTasmiya: 'تسجيل درجة تسميع', gradedIkhtibarat: 'تسجيل درجة اختبار', deadline24h: 'تذكير 24 ساعة قبل انتهاء المهمة',
-                        deadlineExpired: 'إشعار انتهاء المهمة بدون تسليم', pdfReport: 'إرسال تقرير PDF', preHossa5m: 'تذكير قبل الحصة بـ 5 دقائق',
-                        liveAttendancePresent: 'إشعار حضور الحصة المباشرة', liveAttendanceAbsent: 'إشعار غياب الحصة المباشرة'
+                        gradedTasmiya: 'تسجيل درجة تسميع', gradedIkhtibarat: 'تسجيل درجة اختبار', pdfReport: 'إرسال تقرير PDF', preHossa5m: 'تذكير قبل الحصة بـ 5 دقائق'
                     };
                     rule = {
                         id: ruleId,
@@ -8884,7 +8816,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 showNotify('warning', 'يرجى إدخال نص قالب الرسالة');
                 return;
             }
-            const builtInKeys = ['studentRegistered', 'bookingConfirmed','newHomework','newTasmiya','newIkhtibarat','newHossa','newLibrary','gradedHomework','gradedTasmiya','gradedIkhtibarat','deadline24h','deadlineExpired','pdfReport','preHossa5m','preTasmiyaBooking5m','liveAttendancePresent','liveAttendanceAbsent'];
+            const builtInKeys = ['studentRegistered', 'bookingConfirmed','newHomework','newTasmiya','newIkhtibarat','newHossa','newLibrary','gradedHomework','gradedTasmiya','gradedIkhtibarat','pdfReport','preHossa5m','preTasmiyaBooking5m'];
             
             if (id && builtInKeys.includes(id)) {
                 if (!window.currentPlatformSettings) window.currentPlatformSettings = {};
@@ -10525,34 +10457,6 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             }
         }
 
-        function _legacyBrokenSaveLiveAttendanceRecord(btn) {
-            const type = document.getElementById('liveAttendanceType').value;
-            const grade = document.getElementById('liveAttendanceGrade').value;
-            const group = document.getElementById('liveAttendanceGroup').value;
-            const sessionTime = document.getElementById('liveAttendanceSessionTime').value;
-
-            if (!grade) return showNotify('error', 'يرجى اختيار الصف');
-            if (!sessionTime) return showNotify('error', 'يرجى تحديد وقت الحصة');
-
-            const cards = document.querySelectorAll('.live-att-card');
-            if (cards.length === 0) return showNotify('warning', 'لا يوجد طلاب لعرضهم');
-
-            const records = [];
-            cards.forEach(card => {
-                records.push({ name: card.dataset.name, attended: card.classList.contains('present') });
-            });
-
-            if (btn) toggleLoading(btn, true);
-            runGS('saveLiveAttendanceGS', type, grade, group, sessionTime, JSON.stringify(records))
-                .then(res => {
-                    try {
-                        const data = (typeof res === 'string') ? JSON.parse(res) : res;
-                        showNotify(data && data.success ? 'success' : 'error', data ? data.message : 'حدث خطأ غير معروف');
-                    } catch(e) { showNotify('error', res || 'خطأ في الاستجابة'); }
-                })
-                .catch(err => showNotify('error', err.message))
-                .finally(() => { if (btn) toggleLoading(btn, false); });
-        }
         // دالة تحميل إحصائيات الرئيسية
 function loadDashboardStats() {
     const wajibEl = document.getElementById('statWajib');
@@ -10566,19 +10470,19 @@ function loadDashboardStats() {
     runGS('getAdminDashboardStats').then(res => {
         window.__dashStatsLoaded = true;
         if (res && res.success) {
-            try { localStorage.setItem('cachedAdminStats', JSON.stringify(res.stats)); } catch(e) {}
+            try { localStorage.setItem(adminCacheKey_('cachedAdminStats'), JSON.stringify(res.stats)); } catch(e) {}
             if(wajibEl) wajibEl.innerText = res.stats.pendingWajib || 0;
             if(tasmiyaEl) tasmiyaEl.innerText = res.stats.pendingTasmiya || 0;
             if(examsEl) examsEl.innerText = res.stats.pendingExams || 0;
         } else {
-            if(wajibEl) wajibEl.innerText = '0';
-            if(tasmiyaEl) tasmiyaEl.innerText = '0';
-            if(examsEl) examsEl.innerText = '0';
+            if(wajibEl) wajibEl.innerText = 'تعذر التحميل';
+            if(tasmiyaEl) tasmiyaEl.innerText = 'تعذر التحميل';
+            if(examsEl) examsEl.innerText = 'تعذر التحميل';
         }
     }).catch(err => {
-        if(wajibEl) wajibEl.innerText = '0';
-        if(tasmiyaEl) tasmiyaEl.innerText = '0';
-        if(examsEl) examsEl.innerText = '0';
+        if(wajibEl) wajibEl.innerText = 'تعذر التحميل';
+        if(tasmiyaEl) tasmiyaEl.innerText = 'تعذر التحميل';
+        if(examsEl) examsEl.innerText = 'تعذر التحميل';
     });
 
     if (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee)) {
@@ -10721,7 +10625,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
             } else if (secKey === 'tasmiya') {
                 const respRate = (k.responseRate != null) ? k.responseRate : 100;
                 metricsGridHtml =
-                    miniStatBox_('الحجوزات المقيّمة', (k.evaluatedTotal || k.totalAchievements || 0) + ' / ' + (k.targetTotal || k.totalAchievements || 0), 'var(--dark)') +
+                    miniStatBox_('الحجوزات المقيّمة', (k.evaluatedTotal ?? k.totalAchievements ?? 0) + ' / ' + (k.targetTotal ?? k.totalAchievements ?? 0), 'var(--dark)') +
                     miniStatBox_('معدل الاستجابة', respRate + '%', scoreColor(respRate)) +
                     miniStatBox_('الالتزام بالوقت', (k.timeliness != null ? k.timeliness + '%' : '—'), scoreColor(k.timeliness)) +
                     miniStatBox_('المعلق حالياً', (backlog.total || 0), (backlog.total > 0 ? '#ef4444' : '#10b981'));
@@ -11064,7 +10968,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
     wrap.classList.remove('hidden');
     const now = Date.now();
-    const rangeKey = from + '_' + to;
+    const rangeKey = adminCacheKey_(from + '_' + to);
     const lsKey = 'cache_emp_perf_' + rangeKey;
     const forceRefresh = (arguments.length >= 3 && arguments[2] === true);
 
@@ -11703,7 +11607,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             let selectedPerfSecs = [];
             document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
             if (perfEnabled && selectedPerfSecs.length === 0) {
-                selectedPerfSecs = ['wajib', 'tasmiya', 'ikhtibarat'];
+                return showNotify('error','اختر أقسام العمل المكلف بها الموظف قبل تفعيل التقييم');
             }
             const perfTargets = {
                 wajib: Number(document.getElementById('empPerfTargetWajib')?.value) || 0,
@@ -12490,8 +12394,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         <option value="gradedIkhtibarat">عند رصد درجة الاختبار (تلقائيًا بعد التسليم من الطالب)</option>
                         <option value="preHossa5m">قبل الحصة المباشرة بـ 5 دقائق</option>
                         <option value="preTasmiyaBooking5m">قبل موعد التسميع المحجوز بـ 5 دقائق</option>
-                        <option value="liveAttendancePresent">إشعار حضور الحصة المباشرة</option>
-                        <option value="liveAttendanceAbsent">إشعار غياب الحصة المباشرة</option>
                         <option value="custom">حدث مخصص / ميزة جديدة</option>
                     </select>
  </div>
@@ -13287,7 +13189,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const perfEnabled = document.getElementById('empPerfEnabled').checked;
             let selectedPerfSecs = [];
             document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
-            if (perfEnabled && selectedPerfSecs.length === 0) selectedPerfSecs = ['wajib', 'tasmiya', 'ikhtibarat'];
+            if (perfEnabled && selectedPerfSecs.length === 0) return showNotify('error','اختر أقسام العمل المكلف بها الموظف قبل تفعيل التقييم');
 
             const perfExamDay = document.getElementById('empPerfExamDay') ? document.getElementById('empPerfExamDay').value : '';
             const perfStartDate = document.getElementById('empPerfStartDate') ? document.getElementById('empPerfStartDate').value : '';
@@ -13408,7 +13310,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 windowEnabled: !!document.getElementById('waWindowEnabled')?.checked,
                 startTime: document.getElementById('waWindowStart')?.value || '09:00',
                 endTime: document.getElementById('waWindowEnd')?.value || '22:00',
-                maxMessagesPerWindow: parseInt(document.getElementById('waMaxPerWindow')?.value, 10) || 0,
+                maxMessagesPerWindow: Math.max(0, parseInt(document.getElementById('waMaxPerWindow')?.value, 10) || 0),
                 batchSize: parseInt(document.getElementById('waBatchSize')?.value, 10) || 15,
                 delaySeconds: parseInt(document.getElementById('waDelaySeconds')?.value, 10) || 3
             };
@@ -13437,45 +13339,110 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (document.getElementById('waDelaySeconds')) document.getElementById('waDelaySeconds').value = rules.delaySeconds || 3;
         };
 
+        function viewFullWaLogMessage(encodedMsg, senderName, recipientName, lessonName) {
+            const msg = decodeURIComponent(encodedMsg || '');
+            Swal.fire({
+                title: 'نص رسالة الواتساب الكامل',
+                html: `
+                    <div style="text-align:right; font-size:0.9rem; line-height:1.8;">
+                        <div style="margin-bottom:8px; padding:8px 12px; border-radius:8px; background:var(--surface-hover); border:1px solid var(--border);">
+                            <div><strong>المرسل:</strong> ${senderName || 'النظام (تلقائي)'}</div>
+                            <div><strong>المستلم:</strong> ${recipientName || '-'}</div>
+                            ${lessonName ? `<div><strong>الدرس:</strong> ${lessonName}</div>` : ''}
+                        </div>
+                        <div style="white-space:pre-wrap; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); max-height:50dvh; overflow-y:auto;">${msg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                    </div>
+                `,
+                confirmButtonText: 'إغلاق',
+                confirmButtonColor: '#0B6E4F'
+            });
+        }
+
+        function filterWaLogByEmployee(empCode) {
+            const sel = document.getElementById('waLogEmployeeFilter');
+            if (sel) {
+                sel.value = empCode;
+                loadWhatsAppLogUI();
+            }
+        }
+
         function loadWhatsAppLogUI(btn) {
             const statusFilter = document.getElementById('waLogStatusFilter')?.value || 'ALL';
+            const employeeFilter = document.getElementById('waLogEmployeeFilter')?.value || 'ALL';
             const searchQuery = document.getElementById('waLogSearchInput')?.value || '';
             const container = document.getElementById('waLogTableContainer');
             const statsBar = document.getElementById('waLogStatsBar');
+            const empStatsBar = document.getElementById('waLogEmployeeStatsBar');
             if (!container) return;
             if (btn) toggleLoading(btn, true);
             container.innerHTML = '<div style="text-align:center; padding:25px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل السجل...</div>';
 
-            runGS('getWhatsAppMessageLogGS', statusFilter, searchQuery).then(res => {
+            runGS('getWhatsAppMessageLogGS', statusFilter, searchQuery, employeeFilter).then(res => {
                 if (btn) toggleLoading(btn, false);
                 if (!res || !res.success) {
-                    container.innerHTML = '<p style="text-align:center; color:red;">' + ((res && res.message) || 'فشل التحميل') + '</p>';
+                    container.innerHTML = '<p style="text-align:center; color:var(--danger);">' + ((res && res.message) || 'فشل التحميل') + '</p>';
                     return;
                 }
                 const c = res.counts || {};
                 const r = res.rules || {};
+                const empStats = res.employeeStats || [];
+
+                // تحديث قائمة فلتر الموظفين للمدير
+                const empSelect = document.getElementById('waLogEmployeeFilter');
+                if (empSelect && empStats.length > 0) {
+                    const prevVal = empSelect.value;
+                    let opts = '<option value="ALL">كل المرسلين (تلقائي + موظفين)</option><option value="EMPLOYEES_ONLY">رسائل الموظفين السريعة فقط (' + (c.employeeSentTotal || 0) + ')</option>';
+                    empStats.forEach(es => {
+                        opts += `<option value="${es.code}">${es.name} — اليوم: ${es.today} | الإجمالي: ${es.total}</option>`;
+                    });
+                    empSelect.innerHTML = opts;
+                    if ([...empSelect.options].some(o => o.value === prevVal)) empSelect.value = prevVal;
+                }
+
+                // شريط مراقبة رسائل الموظفين (للمدير)
+                if (empStatsBar) {
+                    if (res.isAdmin && empStats.length > 0) {
+                        empStatsBar.style.display = 'block';
+                        let chips = empStats.map(es => {
+                            const activeStyle = employeeFilter === es.code ? 'border-color:var(--primary); background:var(--primary); color:#fff;' : 'border-color:var(--border); background:var(--surface); color:var(--dark);';
+                            return `<button type="button" onclick="filterWaLogByEmployee('${es.code}')" style="padding:6px 12px; border-radius:8px; border:1.5px solid; cursor:pointer; font-size:0.82rem; font-weight:700; ${activeStyle}">
+                                <i class="fas fa-user-tie"></i> ${es.name} (اليوم: ${es.today} / الكل: ${es.total})
+                            </button>`;
+                        }).join('');
+                        empStatsBar.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                                <strong style="color:var(--primary); font-size:0.9rem;"><i class="fas fa-eye"></i> مراقبة رسائل الموظفين السريعة (اليوم: ${c.employeeSentToday || 0} | الإجمالي: ${c.employeeSentTotal || 0})</strong>
+                                <button type="button" onclick="filterWaLogByEmployee('EMPLOYEES_ONLY')" class="btn btn-sm btn-primary" style="font-size:0.78rem; padding:4px 10px;">عرض رسائل الموظفين فقط</button>
+                            </div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">${chips}</div>
+                        `;
+                    } else {
+                        empStatsBar.style.display = 'none';
+                    }
+                }
+
                 if (statsBar) {
                     statsBar.innerHTML = `
-                        <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border); text-align:center;">
+                        <div class="elhelihey-stat-tile" style="background:var(--surface); padding:12px; border-radius:10px; border:1px solid var(--border); text-align:center;">
                             <div style="font-size:1.3rem; font-weight:900; color:var(--dark);">${c.total || 0}</div>
                             <div style="font-size:0.78rem; color:var(--gray);">إجمالي الرسائل</div>
- </div>
-                        <div style="background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0; text-align:center;">
-                            <div style="font-size:1.3rem; font-weight:900; color:#16a34a;">${c.sent || 0}</div>
-                            <div style="font-size:0.78rem; color:#166534;">تم الإرسال </div>
- </div>
-                        <div style="background:#fef2f2; padding:12px; border-radius:10px; border:1px solid #fecaca; text-align:center;">
-                            <div style="font-size:1.3rem; font-weight:900; color:#dc2626;">${c.failed || 0}</div>
-                            <div style="font-size:0.78rem; color:#991b1b;">فشل الإرسال </div>
- </div>
-                        <div style="background:#fffbeb; padding:12px; border-radius:10px; border:1px solid #fde68a; text-align:center;">
-                            <div style="font-size:1.3rem; font-weight:900; color:#d97706;">${c.pending || 0}</div>
-                            <div style="font-size:0.78rem; color:#92400e;">قيد الانتظار </div>
- </div>
-                        <div style="background:#eff6ff; padding:12px; border-radius:10px; border:1px solid #bfdbfe; text-align:center;">
-                            <div style="font-size:1.1rem; font-weight:900; color:#1d4ed8;">${c.sentToday || 0} / ${r.maxMessagesPerWindow > 0 ? r.maxMessagesPerWindow : '∞'}</div>
-                            <div style="font-size:0.75rem; color:#1e40af;">مرسل اليوم / الحد الأقصى</div>
- </div>`;
+                        </div>
+                        <div class="elhelihey-stat-tile" style="background:var(--surface); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:3px solid var(--success); text-align:center;">
+                            <div style="font-size:1.3rem; font-weight:900; color:var(--success);">${c.sent || 0}</div>
+                            <div style="font-size:0.78rem; color:var(--gray);">تم الإرسال</div>
+                        </div>
+                        <div class="elhelihey-stat-tile" style="background:var(--surface); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:3px solid var(--danger); text-align:center;">
+                            <div style="font-size:1.3rem; font-weight:900; color:var(--danger);">${c.failed || 0}</div>
+                            <div style="font-size:0.78rem; color:var(--gray);">فشل الإرسال</div>
+                        </div>
+                        <div class="elhelihey-stat-tile" style="background:var(--surface); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:3px solid var(--accent); text-align:center;">
+                            <div style="font-size:1.3rem; font-weight:900; color:var(--accent);">${c.employeeSentToday || 0}</div>
+                            <div style="font-size:0.78rem; color:var(--gray);">رسائل الموظفين اليوم</div>
+                        </div>
+                        <div class="elhelihey-stat-tile" style="background:var(--surface); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:3px solid var(--primary); text-align:center;">
+                            <div style="font-size:1.1rem; font-weight:900; color:var(--primary);">${c.sentToday || 0} / ${r.maxMessagesPerWindow > 0 ? r.maxMessagesPerWindow : '∞'}</div>
+                            <div style="font-size:0.75rem; color:var(--gray);">مرسل اليوم / الحد الأقصى</div>
+                        </div>`;
                 }
 
                 const items = res.items || [];
@@ -13483,34 +13450,39 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--gray);">لا توجد رسائل مطابقة في السجل.</div>';
                     return;
                 }
-                let html = '<table class="data-table"><thead><tr><th>التاريخ</th><th>الحدث</th><th>المستلم</th><th>الرقم</th><th>الرسالة</th><th>الحالة</th><th>سبب الفشل</th><th>إجراء</th></tr></thead><tbody>';
+                let html = '<table class="data-table"><thead><tr><th>التاريخ</th><th>المرسل (الموظف)</th><th>المصدر / الدرس</th><th>المستلم</th><th>الرسالة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>';
                 items.forEach(it => {
                     let badge = '';
-                    if (it.status === 'SENT') badge = '<span style="background:#eff6ff; color:var(--primary); padding:3px 10px; border-radius:20px; font-weight:bold; font-size:0.76rem;">تم الإرسال </span>';
-                    else if (it.status === 'FAILED') badge = '<span style="background:#fee2e2; color:#991b1b; padding:3px 10px; border-radius:20px; font-weight:bold; font-size:0.76rem;">فشل الإرسال </span>';
-                    else badge = '<span style="background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:20px; font-weight:bold; font-size:0.76rem;">قيد الانتظار </span>';
+                    if (it.status === 'SENT') badge = '<span style="background:rgba(21,128,61,0.14); color:var(--success); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">تم الإرسال</span>';
+                    else if (it.status === 'FAILED') badge = '<span style="background:rgba(185,28,28,0.14); color:var(--danger); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">فشل الإرسال</span>';
+                    else badge = '<span style="background:rgba(180,83,9,0.14); color:var(--accent); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">قيد الانتظار</span>';
 
-                    const shortMsg = (it.message || '').length > 55 ? it.message.substring(0, 55) + '...' : (it.message || '');
+                    const senderCell = it.senderName
+                        ? `<span style="font-weight:800; color:var(--primary);"><i class="fas fa-user-tie"></i> ${it.senderName}</span>`
+                        : '<span style="color:var(--gray); font-size:0.8rem;">تلقائي (النظام)</span>';
+                    const sourceLesson = (it.source || it.eventType || '-') + (it.lessonName ? ('<br><small style="color:var(--gray);">' + it.lessonName + '</small>') : '');
+                    const shortMsg = (it.message || '').length > 65 ? it.message.substring(0, 65) + '...' : (it.message || '');
+                    const encMsg = encodeURIComponent(it.message || '');
+                    const viewBtn = `<button type="button" class="btn btn-sm btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="viewFullWaLogMessage('${encMsg}', '${(it.senderName || '').replace(/'/g, '')}', '${(it.recipientName || '').replace(/'/g, '')}', '${(it.lessonName || '').replace(/'/g, '')}')"><i class="fas fa-eye"></i> عرض</button>`;
                     const retryBtn = (it.status === 'FAILED')
-                        ? `<button class="btn btn-sm btn-warning" onclick="retryWhatsAppMessageUI('${it.id}', this)"><i class="fas fa-redo"></i> إعادة إرسال</button>`
-                        : '<span style="color:var(--gray); font-size:0.78rem;">—</span>';
+                        ? ` <button class="btn btn-sm btn-warning" style="padding:4px 8px; font-size:0.75rem;" onclick="retryWhatsAppMessageUI('${it.id}', this)"><i class="fas fa-redo"></i></button>`
+                        : '';
 
                     html += `<tr>
                         <td style="font-size:0.78rem; white-space:nowrap;">${it.createdAt || '-'}</td>
-                        <td style="font-size:0.8rem;">${it.eventType || '-'}</td>
-                        <td style="font-weight:600;">${it.recipientName || '-'}</td>
-                        <td dir="ltr" style="text-align:right; font-family:monospace; font-size:0.8rem;">${it.phone || '-'}</td>
-                        <td style="max-width:220px; font-size:0.8rem;" title="${(it.message || '').replace(/"/g, '&quot;')}">${shortMsg}</td>
+                        <td style="font-size:0.82rem; white-space:nowrap;">${senderCell}</td>
+                        <td style="font-size:0.8rem;">${sourceLesson}</td>
+                        <td style="font-weight:600; font-size:0.82rem;">${it.recipientName || '-'}<br><small dir="ltr" style="color:var(--gray); font-family:monospace;">${it.phone || ''}</small></td>
+                        <td style="max-width:240px; font-size:0.8rem;">${shortMsg}${it.failReason ? '<div style="color:var(--danger); font-size:0.74rem; margin-top:3px;">' + it.failReason + '</div>' : ''}</td>
                         <td>${badge}</td>
-                        <td style="color:#dc2626; font-size:0.78rem; max-width:200px;">${it.failReason || '-'}</td>
-                        <td>${retryBtn}</td>
+                        <td style="white-space:nowrap;">${viewBtn}${retryBtn}</td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
                 container.innerHTML = html;
             }).catch(err => {
                 if (btn) toggleLoading(btn, false);
-                container.innerHTML = '<p style="text-align:center; color:red;">خطأ: ' + err.message + '</p>';
+                container.innerHTML = '<p style="text-align:center; color:var(--danger);">خطأ: ' + err.message + '</p>';
             });
         }
 
@@ -13869,13 +13841,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const origLoadInitial = window.loadInitialData;
             window.loadInitialData = function() {
                 try {
-                    const s = JSON.parse(localStorage.getItem(CACHE_KEYS.getPlatformSettings) || 'null');
+                    const s = JSON.parse(localStorage.getItem(adminCacheKey_(CACHE_KEYS.getPlatformSettings)) || 'null');
                     if (s) { window.currentPlatformSettings = s; applyAdminMenuOrderToSidebar(); populateAllGradeAndGroupSelects(); loadWhatsAppSettingsUI(); }
-                    const st = JSON.parse(localStorage.getItem(CACHE_KEYS.getStudentsForAssistant) || 'null');
+                    const st = JSON.parse(localStorage.getItem(adminCacheKey_(CACHE_KEYS.getStudentsForAssistant)) || 'null');
                     if (Array.isArray(st) && st.length) { globalStudents = st; window.allStudentsFullData = st; populateStudentSelects(); }
-                    const cl = JSON.parse(localStorage.getItem(CACHE_KEYS.getClassesForAssistant) || 'null');
+                    const cl = JSON.parse(localStorage.getItem(adminCacheKey_(CACHE_KEYS.getClassesForAssistant)) || 'null');
                     if (Array.isArray(cl) && cl.length) { globalClasses = cl; populateLeaderboardFilter(cl); }
-                    const sc = JSON.parse(localStorage.getItem(CACHE_KEYS.getScheduleDataAdmin) || 'null');
+                    const sc = JSON.parse(localStorage.getItem(adminCacheKey_(CACHE_KEYS.getScheduleDataAdmin)) || 'null');
                     if (Array.isArray(sc) && sc.length) { allScheduleData = sc; window.allScheduleData = sc; if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(sc); }
                 } catch(e) {}
                 if (typeof origLoadInitial === 'function') origLoadInitial();
@@ -13889,13 +13861,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         try {
                             const toStore = (funcName === 'getScheduleDataAdmin' && typeof res === 'string') ? JSON.parse(res) :
                                             (funcName === 'getEmployeesListGS' && res && res.employees) ? res.employees : res;
-                            if (toStore) localStorage.setItem(CACHE_KEYS[funcName], JSON.stringify(toStore));
+                            if (toStore) localStorage.setItem(adminCacheKey_(CACHE_KEYS[funcName]), JSON.stringify(toStore));
                         } catch(e) {}
                     }).catch(() => {});
                 }
                 // Invalidate client caches on write operations
                 if (/^(save|delete|update|modify|upload|reset)/i.test(funcName)) {
-                    Object.values(CACHE_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+                    Object.values(CACHE_KEYS).forEach(k => { try { localStorage.removeItem(adminCacheKey_(k)); } catch(e){} });
                 }
                 return p;
             };
@@ -15287,7 +15259,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             container.innerHTML = getEmpPerfSkeletonHtml();
             if (rangeLabelEl) rangeLabelEl.textContent = 'جاري تحميل تحليل الأداء...';
 
-            var rangeKey = from + '_' + to;
+            var rangeKey = adminCacheKey_(from + '_' + to);
             if (__empPerfCache.data && __empPerfCache.range === rangeKey && (Date.now() - __empPerfCache.timestamp < 180000)) {
                 renderEnhancedPerfDashboard(__empPerfCache.data);
                 return;
@@ -16575,16 +16547,21 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
                     var chips = [];
                     if (!hasW) {
-                        chips.push('<span class="emp-perf-chip">لا توجد مهام في هذه الفترة</span>');
+                        var emptyMsg = (key === 'ikhtibarat' && k.examDayNote) ? k.examDayNote : 'لا توجد مهام مستحقة حتى الآن في هذه الفترة';
+                        chips.push('<span class="emp-perf-chip">' + escapeHtml_(emptyMsg) + '</span>');
                     } else if (key === 'wajib') {
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#10b981;"></i> منجز: ' + (k.totalAchievements || 0) + '</span>');
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-clock" style="color:' + (bl.total > 0 ? '#ef4444' : '#10b981') + ';"></i> معلق: ' + (bl.total || 0) + '</span>');
+                        var overdueW = (bl.aging || 0) + (bl.critical || 0);
+                        var todayPendingW = bl.dueToday || 0;
+                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#16a34a;"></i> منجز: ' + (k.totalAchievements || 0) + '</span>');
+                        chips.push('<span class="emp-perf-chip"><i class="fas fa-exclamation-triangle" style="color:' + (overdueW > 0 ? '#dc2626' : '#16a34a') + ';"></i> متراكم: ' + overdueW + '</span>');
+                        if (bl.upcoming) chips.push('<span class="emp-perf-chip">استحقاق لاحق: ' + bl.upcoming + '</span>');
+                        if (todayPendingW > 0) chips.push('<span class="emp-perf-chip"><i class="fas fa-hourglass-half" style="color:#b45309;"></i> بانتظار اليوم: ' + todayPendingW + '</span>');
                         chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
                         chips.push('<span class="emp-perf-chip">الإنتاجية: <b style="color:' + scoreColor_(k.volume) + ';">' + (k.volume != null ? k.volume + '%' : '—') + '</b></span>');
                         chips.push('<span class="emp-perf-chip">الانتظام: <b style="color:' + scoreColor_(k.consistency) + ';">' + (k.consistency != null ? k.consistency + '%' : '—') + '</b></span>');
                         if (bl.oldestDays > 0) chips.push('<span class="emp-perf-chip" style="color:#ef4444;">أقدم مهمة: ' + bl.oldestDays + ' يوم</span>');
                     } else if (key === 'tasmiya') {
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#10b981;"></i> مقيّم: ' + (k.evaluatedTotal || k.totalAchievements || 0) + '/' + (k.targetTotal || k.totalAchievements || 0) + '</span>');
+                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#10b981;"></i> مقيّم: ' + (k.evaluatedTotal ?? k.totalAchievements ?? 0) + '/' + (k.targetTotal ?? k.totalAchievements ?? 0) + '</span>');
                         chips.push('<span class="emp-perf-chip"><i class="fas fa-clock" style="color:' + (bl.total > 0 ? '#ef4444' : '#10b981') + ';"></i> معلق: ' + (bl.total || 0) + '</span>');
                         chips.push('<span class="emp-perf-chip">الاستجابة: <b style="color:' + scoreColor_(k.responseRate) + ';">' + (k.responseRate != null ? k.responseRate + '%' : '100%') + '</b></span>');
                         chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
@@ -16659,7 +16636,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (toEl0) toEl0.value = to;
 
             wrap.classList.remove('hidden');
-            var rangeKey = from + '_' + to;
+            var rangeKey = adminCacheKey_(from + '_' + to);
             var lsKey = 'cache_emp_perf_' + rangeKey;
             var nowTs = Date.now();
             var cached = null;
@@ -16937,7 +16914,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 var next = JSON.stringify(res.employee);
                 if (prev !== next) {
                     window.currentEmployee = res.employee;
-                    try { localStorage.setItem('cachedAdminEmp', next); } catch (_e) {}
+                    try { localStorage.setItem(adminCacheKey_('cachedAdminEmp'), next); } catch (_e) {}
                     if (typeof applyEmployeePermissions === 'function') applyEmployeePermissions();
                 }
             }
@@ -16945,6 +16922,312 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     }
     window.addEventListener('focus', function() { syncCurrentEmployeePermissionsLive_(false); });
     setInterval(function() { syncCurrentEmployeePermissionsLive_(false); }, 60000);
+    </script>
+
+    <style id="elhelihey-unified-design-system">
+        /* ============================================================================
+           مِنَصَّةُ الهِلِّيهِي — نظام الهوية الموحد (زمردي + عنبر + رملي / غابي داكن)
+           + توافق كامل مع ويندوز وماك وأندرويد وآيفون (iOS Safari)
+           ============================================================================ */
+        html, body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--dark);
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* العناوين والشعار */
+        .logo h1, .brand-title {
+            font-family: 'Cairo', sans-serif;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .header {
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+        .sidebar {
+            background: var(--surface) !important;
+            border-left: 1px solid var(--border) !important;
+        }
+        .menu-item.active, .menu-item:hover {
+            background: var(--surface-hover) !important;
+            color: var(--primary) !important;
+        }
+        .menu-item.active i, .menu-item:hover i {
+            color: var(--primary) !important;
+        }
+
+        /* توحيد الأزرار والأشكال (حواف 8px + هدف لمس مريح) */
+        .btn {
+            border-radius: 8px !important;
+            font-family: 'Cairo', sans-serif !important;
+            font-weight: 700 !important;
+            transition: var(--transition);
+        }
+        .btn-primary {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #FFFFFF !important;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+        [data-theme="dark"] .btn-primary {
+            background: #0B6E4F !important;
+            border-color: #34D399 !important;
+            color: #F8FAFC !important;
+        }
+        [data-theme="dark"] .btn-primary:hover {
+            background: #065F46 !important;
+        }
+        .btn-warning {
+            background: #B45309 !important;
+            border-color: #B45309 !important;
+            color: #FFFFFF !important;
+        }
+        .btn-success {
+            background: #15803D !important;
+            border-color: #15803D !important;
+            color: #FFFFFF !important;
+        }
+
+        /* توحيد الحقول ومنع زووم آيفون التلقائي (16px floor) */
+        input.form-control, select.form-control, textarea.form-control,
+        .form-control, input[type="text"], input[type="number"], input[type="date"], input[type="password"], select, textarea {
+            font-size: 16px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border) !important;
+            background-color: var(--surface) !important;
+            color: var(--dark) !important;
+        }
+        .form-control:focus, input:focus, select:focus, textarea:focus {
+            outline: none !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-glow) !important;
+        }
+
+        /* توحيد النوافذ (Modals) وتوافقها مع كل الشاشات */
+        .modal {
+            padding: 12px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        }
+        .modal-content {
+            background: var(--surface) !important;
+            color: var(--dark) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 14px !important;
+            width: min(94vw, 600px);
+            max-height: 90vh;
+            max-height: 90dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* توحيد الجداول والاستجابة على الموبايل */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table thead th {
+            background: var(--primary) !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .data-table thead th {
+            background: #13382D !important;
+            color: #34D399 !important;
+        }
+        .data-table tbody td {
+            border-bottom: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        /* حماية الوضع الداكن من التنسيقات المدمجة البيضاء القديمة */
+        [data-theme="dark"] .form-container,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .section-card {
+            background: var(--surface) !important;
+            color: var(--dark) !important;
+            border-color: var(--border) !important;
+        }
+
+        /* تحسين اللمس على الموبايل والتابلت (أندرويد وآيفون) */
+        @media (max-width: 768px) {
+            .btn, .menu-item, .tab-btn, .mobile-menu-btn, .theme-toggle-btn {
+                min-height: 44px;
+            }
+            .content {
+                padding: 1rem 0.85rem calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+            }
+            #quickWhatsAppModal .modal-content {
+                width: 96vw !important;
+                padding: 16px !important;
+            }
+        }
+    </style>
+
+    <script id="elhelihey-secure-quick-wa-and-cleanup">
+        // ============================================================================
+        // توحيد الواتساب السريع عبر السيرفر (بدون متغيرات + سجل مراقبة المدير + إخفاء التوكن)
+        // ============================================================================
+        (function() {
+            // تعطيل الإرسال المباشر من المتصفح نهائياً لحماية التوكن وضمان التسجيل المركزي
+            window.sendWhatsAppDirectFromBrowser = async function() {
+                return { success: false, error: 'تم نقل إرسال الواتساب إلى السيرفر لأغراض الأمان والمراقبة.' };
+            };
+            window.processBrowserWhatsAppQueue = function() {
+                try { localStorage.removeItem('wa_msg_queue'); } catch(_e) {}
+            };
+            try { localStorage.removeItem('wa_msg_queue'); } catch(_e) {}
+
+            // تحديث نافذة الواتساب السريع لعرض الترويسة التلقائية (اسم الطالب + اسم الدرس)
+            const _prevOpenQuickWa = window.openQuickWhatsAppModal;
+            window.openQuickWhatsAppModal = function(studentName, lessonName, taskType) {
+                if (typeof _prevOpenQuickWa === 'function') {
+                    _prevOpenQuickWa(studentName, lessonName, taskType);
+                }
+                const cleanSt = (typeof stripCode === 'function')
+                    ? stripCode(studentName || '')
+                    : String(studentName || '').replace(/\s*[\(（]\s*\d+\s*[\)）]\s*/g, '').trim();
+                const typeLabel = taskType || 'واجب';
+                const lessonClean = String(lessonName || '').trim();
+                const previewEl = document.getElementById('quickWaAutoHeaderText');
+                if (previewEl) {
+                    const lines = ['مِنَصَّةُ الهِلِّيهِي — متابعة ' + typeLabel];
+                    if (cleanSt) lines.push('الطالب: ' + cleanSt);
+                    if (lessonClean) lines.push('الدرس: ' + lessonClean);
+                    previewEl.textContent = lines.join('\n');
+                }
+                // إبقاء زر الإرسال مفعلاً عند وجود أي جهة صالحة أو خدمة عملاء
+                const sendBtn = document.getElementById('quickWaSendBtn');
+                if (sendBtn && (document.getElementById('quickWaSendParent')?.checked || document.getElementById('quickWaSendStudent')?.checked || document.getElementById('quickWaSendCS')?.checked)) {
+                    sendBtn.disabled = false;
+                }
+            };
+
+            // إرسال الرسالة السريعة بالكامل عبر السيرفر sendQuickWhatsAppGS مع التسجيل باسم الموظف
+            window.sendQuickWaMessage = async function(btn) {
+                const studentRaw = (document.getElementById('quickWaStudentName')?.value || '').trim();
+                const lesson = (document.getElementById('quickWaLessonName')?.value || '').trim();
+                const taskType = (document.getElementById('quickWaTaskType')?.value || 'واجب').trim();
+                const body = (document.getElementById('quickWaMessageBody')?.value || '').trim();
+                const sendParent = !!document.getElementById('quickWaSendParent')?.checked;
+                const sendStudent = !!document.getElementById('quickWaSendStudent')?.checked;
+                const sendCS = !!document.getElementById('quickWaSendCS')?.checked;
+
+                if (!body) {
+                    if (typeof showNotify === 'function') showNotify('error', 'اكتب نص الرسالة أولاً');
+                    return;
+                }
+                if (!sendParent && !sendStudent && !sendCS) {
+                    if (typeof showNotify === 'function') showNotify('error', 'اختر جهة إرسال واحدة على الأقل');
+                    return;
+                }
+
+                if (btn && typeof toggleLoading === 'function') toggleLoading(btn, true);
+                try {
+                    const res = await runGS('sendQuickWhatsAppGS', {
+                        studentName: studentRaw,
+                        lessonName: lesson,
+                        taskType: taskType,
+                        messageBody: body,
+                        sendParent: sendParent,
+                        sendStudent: sendStudent,
+                        sendCS: sendCS
+                    });
+                    if (res && res.success) {
+                        if (typeof showNotify === 'function') showNotify('success', res.message || 'تم إرسال الرسالة وتسجيلها بنجاح');
+                        if (typeof closeModal === 'function') closeModal('quickWhatsAppModal');
+                    } else {
+                        if (typeof showNotify === 'function') showNotify('error', (res && res.message) || 'تعذر إرسال الرسالة');
+                    }
+                } catch (err) {
+                    if (typeof showNotify === 'function') showNotify('error', 'خطأ أثناء الإرسال: ' + (err.message || err));
+                } finally {
+                    if (btn && typeof toggleLoading === 'function') toggleLoading(btn, false);
+                }
+            };
+
+            // إظهار مؤشر حفظ التوكن السري في شاشة إعدادات الواتساب دون كشفه في المتصفح
+            const _origLoadWaSettings = window.loadWhatsAppSettingsUI;
+            window.loadWhatsAppSettingsUI = function() {
+                if (typeof _origLoadWaSettings === 'function') _origLoadWaSettings();
+                const tokEl = document.getElementById('hfTokenInput');
+                const wa = window.currentPlatformSettings && window.currentPlatformSettings.whatsapp;
+                if (tokEl && wa && wa.hfTokenConfigured && !tokEl.value) {
+                    tokEl.placeholder = '•••••••• (محفوظ بأمان على السيرفر — اتركه فارغاً للإبقاء عليه)';
+                }
+            };
+
+            // ترقيم صفحات تلقائي (Pagination) للجداول الكبيرة (> 40 صف) لتسريع الأداء على الهواتف
+            window.applyElheliheyPagination = function(tableEl, pageSize) {
+                if (!tableEl || tableEl.dataset.paginated === '1') return;
+                const tbody = tableEl.querySelector('tbody');
+                if (!tbody) return;
+                const rows = Array.from(tbody.querySelectorAll(':scope > tr'));
+                const size = pageSize || 40;
+                if (rows.length <= size) return;
+                tableEl.dataset.paginated = '1';
+                let page = 1;
+                const totalPages = Math.ceil(rows.length / size);
+
+                const bar = document.createElement('div');
+                bar.className = 'elhelihey-pager';
+                bar.style.cssText = 'display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; border-top:1px solid var(--border); background:var(--surface); font-size:0.85rem;';
+                const info = document.createElement('span');
+                info.style.cssText = 'color:var(--gray); font-weight:700;';
+                const btns = document.createElement('div');
+                btns.style.cssText = 'display:flex; gap:6px;';
+                const prevBtn = document.createElement('button');
+                prevBtn.type = 'button';
+                prevBtn.className = 'btn btn-sm btn-primary';
+                prevBtn.textContent = 'السابق';
+                const nextBtn = document.createElement('button');
+                nextBtn.type = 'button';
+                nextBtn.className = 'btn btn-sm btn-primary';
+                nextBtn.textContent = 'التالي';
+                btns.appendChild(prevBtn);
+                btns.appendChild(nextBtn);
+                bar.appendChild(info);
+                bar.appendChild(btns);
+
+                function renderPage() {
+                    const start = (page - 1) * size;
+                    const end = start + size;
+                    rows.forEach((r, idx) => { r.style.display = (idx >= start && idx < end) ? '' : 'none'; });
+                    info.textContent = 'صفحة ' + page + ' من ' + totalPages + ' (' + rows.length + ' سجل)';
+                    prevBtn.disabled = page <= 1;
+                    nextBtn.disabled = page >= totalPages;
+                }
+                prevBtn.onclick = function() { if (page > 1) { page--; renderPage(); } };
+                nextBtn.onclick = function() { if (page < totalPages) { page++; renderPage(); } };
+                renderPage();
+                const wrap = tableEl.closest('.table-responsive') || tableEl.parentElement;
+                if (wrap) {
+                    const oldBar = wrap.querySelector('.elhelihey-pager');
+                    if (oldBar) oldBar.remove();
+                    wrap.appendChild(bar);
+                }
+            };
+
+            const _tableObs = new MutationObserver(function() {
+                document.querySelectorAll('table.data-table').forEach(function(tbl) {
+                    if (tbl.dataset.paginated !== '1') window.applyElheliheyPagination(tbl, 40);
+                });
+            });
+            if (document.body) _tableObs.observe(document.body, { childList: true, subtree: true });
+        })();
     </script>
 </body>
 </html>

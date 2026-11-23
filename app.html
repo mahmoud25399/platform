@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
     <title>منصة الهليهي</title>
     
@@ -74,47 +74,7 @@
 
 </script>
 
-    <script src="https://cdn.tailwindcss.com">
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: "class"
@@ -166,47 +126,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/themes/introjs-modern.css">
     <script src="https://cdn.jsdelivr.net/npm/intro.js/minified/intro.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         .swal2-container { z-index: 999999 !important; }
@@ -939,6 +859,16 @@
     </div>
 
     <script>
+function recitationOutcome(grade, bookingStatus) {
+    const absence = /^(?:غائب|غايب|غياب|لم يتم التسميع|لم يسمع)$/;
+    const status = String(bookingStatus ?? '').trim();
+    const value = String(grade ?? '').trim();
+    if (absence.test(status)) return 'absent';
+    if (status === 'تم التسميع') return 'completed';
+    if (absence.test(value)) return 'absent';
+    return value ? 'completed' : 'pending';
+}
+
         // === الرابط السحري للـ API ===
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwhe5Ytj8rQie0i4nJGlHVpvoz9JOo6531dhbxKpRtbSOPPe94WJ7eOk6HvrrQ0r044NA/exec';
         // ============================
@@ -1480,20 +1410,11 @@
                 daySlots.forEach(slot => {
                     let isActiveNow = false;
                     if (isToday && slot.link) {
-                        const timeMatch = slot.time.match(/(\d+):(\d+)\s*(م|ص)/);
-                        if (timeMatch) {
-                            let hours = parseInt(timeMatch[1]);
-                            const minutes = parseInt(timeMatch[2]);
-                            const ampm = timeMatch[3];
-                            
-                            if (ampm === "م" && hours < 12) hours += 12;
-                            if (ampm === "ص" && hours === 12) hours = 0;
-                            
-                            const start = hours * 60 + minutes;
-                            const duration = parseInt(slot.duration || 60);
+                        const start = parseScheduleTimeMinutes_(slot.time);
+                        if (start !== null) {
+                            const duration = parseInt(slot.duration || 60, 10);
                             const end = start + duration;
-                            
-                            if (currentMinutesTotal >= (start - 30) && currentMinutesTotal < end) {
+                            if (currentMinutesTotal >= (start - 15) && currentMinutesTotal <= (end + 30)) {
                                 isActiveNow = true;
                             }
                         }
@@ -1567,7 +1488,7 @@
                     const duration = parseInt(item.duration || 120, 10);
                     const schedMinutesEnd = schedMinutesStart + duration;
                     
-                    if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal < schedMinutesEnd) {
+                    if (currentMinutesTotal >= (schedMinutesStart - 15) && currentMinutesTotal <= (schedMinutesEnd + 30)) {
                         activeLesson = item;
                         activeLessonStartsIn = Math.max(0, schedMinutesStart - currentMinutesTotal);
                         if (currentMinutesTotal === schedMinutesStart) {
@@ -1772,22 +1693,11 @@
             initSocialLinks();
         }
         function initSocialLinks() {
-            if (typeof google === 'undefined' || !google.script) {
-                // Default fallback if not in Apps Script context (for debugging/testing)
-                window.platformSocialLinks = [
-                    { label: "فيسبوك المدرس", icon: "fab fa-facebook-f", url: "https://www.facebook.com/arabicbymahmoud", active: true, showInSide: true },
-                    { label: "يوتيوب", icon: "fab fa-youtube", url: "https://youtube.com/@arabicbymahmoud", active: true, showInSide: true },
-                    { label: "واتساب", icon: "fab fa-whatsapp", url: "https://wa.me/201558251686", active: true, showInSide: true }
-                ];
+            api('getPlatformSocialLinks').then(result => {
+                window.platformSocialLinks = Array.isArray(result.links) ? result.links : [];
                 renderPlatformSocialLinks();
-                return;
-            }
-            google.script.run.withSuccessHandler(function(links) {
-                window.platformSocialLinks = links || [];
-                renderPlatformSocialLinks();
-            }).getPlatformSocialLinks();
+            });
         }
-
         function renderPlatformSocialLinks() {
             const links = window.platformSocialLinks || [];
             const sideLinks = links.filter(l => l.active && l.showInSide);
@@ -2060,8 +1970,11 @@
                             isDone = false; gradeDisplay = 'في الانتظار'; statusLabel = 'المطلوب حله:';
                         }
                     } else if (targetType === 'التسميع') {
-                        if (item.grade && item.grade !== "") {
-                            isDone = true; gradeDisplay = item.grade; statusLabel = 'درجة التسميع:';
+                        const outcome = item.recitationOutcome || recitationOutcome(item.grade);
+                if (outcome === 'absent') {
+                    isDone = false; gradeDisplay = 'لم يتم التسميع'; statusLabel = 'حالة التسميع:';
+                } else if (outcome === 'completed') {
+                            isDone = true; gradeDisplay = String(item.grade ?? '').trim() || 'تم التسميع'; statusLabel = 'درجة التسميع:';
                         } else if (item.pages && item.pages !== "") {
                             isDone = false; gradeDisplay = 'صـ: ' + item.pages; statusLabel = 'المطلوب تسميعه:';
                         } else {
@@ -2076,7 +1989,7 @@
                     if (deadlineVal) {
                         const deadlineStr = String(deadlineVal).replace(/'/g, '').trim();
                         if (deadlineStr && deadlineStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            const todayStr = new Date().toISOString().split('T')[0];
+                            const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
                             if (!isDone && deadlineStr < todayStr) {
                                 isExpired = true;
                             }
@@ -2144,7 +2057,9 @@
                         else if(item.isUploaded) html += downloadBtn + `<button onclick="deleteUpload('${item.lesson}')" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm"><i class="fas fa-trash"></i> حذف المرفوع</button>`;
                         else html += downloadBtn + `<button onclick="openUploadUI('${item.lesson}')" class="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-blue-200"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     } else if (targetType === 'التسميع') {
-                        if(isDone) {
+                        if ((item.recitationOutcome || recitationOutcome(item.grade)) === 'absent') {
+                            html += '<div class="text-center">لم يتم التسميع</div>';
+                        } else if(isDone) {
                             html += `<div class="w-full text-center bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-2 rounded-xl font-bold text-sm border border-green-200 dark:border-green-800"><i class="fas fa-check-circle"></i> تم التسميع</div>`;
                         } else if (item.isBooked) {
                             html += `
@@ -2814,53 +2729,6 @@
         }
 
         // 9. القائمة الإضافية (و الحصص)
-        async function loadPlaylistData(reqId = null) {
-            if (!reqId) {
-                window.activeSectionRequestId = (window.activeSectionRequestId || 0) + 1;
-                reqId = window.activeSectionRequestId;
-            }
-            const container = document.getElementById('playlistContainer');
-            const cacheKey = 'playlist';
-            
-            if (window.apkCache[cacheKey]) {
-                container.innerHTML = window.apkCache[cacheKey];
-            } else {
-                container.innerHTML = getAppTasksSkeletonHtml();
-            }
-            
-            try {
-                const res = await api('playlist');
-                if (reqId !== window.activeSectionRequestId) return;
-                let html = '';
-                if(res.error || !res.playlist || !res.playlist.length) {
-                    html = '<p class="text-center text-slate-500 font-bold">لا توجد حصص حالياً.</p>';
-                } else {
-                    res.playlist.forEach(l => {
-                        const safeTitle = l.title.replace(/'/g, "\\'");
-                        if (l.isYoutube) {
-                            html += `
-                            <button onclick="openVideo('${l.id}', '${safeTitle}')" class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-right font-bold text-slate-700 flex justify-between items-center w-full mb-3">
-                                <span class="truncate pr-2">${l.title}</span>
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-play"></i></div>
-                            </button>`;
-                        } else {
-                            html += `
-                            <button onclick="window.open('${l.url}', '_blank')" class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-right font-bold text-slate-700 flex justify-between items-center w-full mb-3">
-                                <span class="truncate pr-2">${l.title}</span>
-                                <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fas fa-external-link-alt"></i></div>
-                            </button>`;
-                        }
-                    });
-                }
-                container.innerHTML = html;
-                window.apkCache[cacheKey] = html;
-            } catch(e) {
-                if (reqId === window.activeSectionRequestId) {
-                    container.innerHTML = '<p class="text-center text-red-500 font-bold">فشل الاتصال بالخادم.</p>';
-                }
-            }
-        }
-
         async function loadMenuData(type) {
             window.activeSectionRequestId = (window.activeSectionRequestId || 0) + 1;
             const reqId = window.activeSectionRequestId;
@@ -2914,28 +2782,18 @@
                     } else {
                         const isClassActiveNow = (day, timeStr, duration) => {
                             try {
-                                const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-                                const now = new Date();
-                                const currentDayStr = arabicDays[now.getDay()];
-                                if (currentDayStr !== day) return false;
+                                // استخدام توقيت مصر دائماً (Africa/Cairo) حتى للطلاب المقيمين خارج مصر
+                                const egyptNow = getEgyptDayAndMinutes();
+                                const normD = s => String(s || '').trim().replace(/[أإآ]/g, 'ا').replace(/\s+/g, '');
+                                if (normD(egyptNow.day) !== normD(day)) return false;
 
-                                const cleanTime = timeStr.trim().replace(/([0-9])([مص])/g, '$1 $2').replace(/\s+/g, ' ');
-                                const parts = cleanTime.split(' ');
-                                if (parts.length < 2) return false;
+                                const startMinutes = parseScheduleTimeMinutes_(timeStr);
+                                if (startMinutes === null) return false;
 
-                                const timeParts = parts[0].split(':');
-                                let hour = parseInt(timeParts[0]);
-                                let minute = parseInt(timeParts[1] || '0');
-                                const period = parts[1]; // م or ص
+                                const durationMinutes = parseInt(duration, 10) || 60;
+                                const currentMinutes = egyptNow.minutes;
 
-                                if (period.includes('م') && hour < 12) hour += 12;
-                                if (period.includes('ص') && hour === 12) hour = 0;
-
-                                const startMinutes = hour * 60 + minute;
-                                const durationMinutes = parseInt(duration) || 60;
-                                const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-                                return currentMinutes >= (startMinutes - 15) && currentMinutes <= (startMinutes + durationMinutes + 15);
+                                return currentMinutes >= (startMinutes - 15) && currentMinutes <= (startMinutes + durationMinutes + 30);
                             } catch (e) {
                                 return false;
                             }

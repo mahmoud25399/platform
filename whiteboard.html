@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>السبورة التعليمية الذكية — منصة الهليهي</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
@@ -1034,7 +1034,7 @@
 
     const storage = {
       get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } },
-      set(key, val) { try { localStorage.setItem(key, val); } catch (_) {} },
+      set(key, val) { try { localStorage.setItem(key, val); } catch (_) { if (key === 'wb_autosave_v2') showToast('error','تعذر الحفظ المحلي. صدّر السبورة أو احفظها في السحابة'); } },
       remove(key) { try { localStorage.removeItem(key); } catch (_) {} }
     };
 
@@ -1246,6 +1246,7 @@
     let lastEraseClientY  = 0;
     let lastEraseTime     = 0;
     let currentStamp     = 'check';
+    let boardVersion = '';
     let currentBoardId   = 'board_' + Date.now();
     let lastPublishedLessonName = '';
     let lastPublishedPdfUrl = '';
@@ -5803,7 +5804,7 @@
       }
       const lessonName = document.getElementById('lesson-name').value.trim() || 'سبورة بدون عنوان';
       const pkg = {
-        id: currentBoardId,
+        id: currentBoardId, version: boardVersion,
         name: lessonName,
         thumbnail: staticCanvas.toDataURL('image/jpeg', 0.45),
         data: JSON.stringify({
@@ -5818,10 +5819,11 @@
       showToast('info', 'جاري الحفظ في السحابة...');
       runGS('saveBoardToCloud', pkg).then(res => {
         if (res && (res.success || (res.data && res.data.success))) {
+          boardVersion = res.version || '';
           clearAutoSave();
           showToast('success', (res && res.message) || 'تم حفظ السبورة بالسحابة بنجاح');
         } else {
-          showToast('error', 'تعذر الاتصال بالسحابة الآن');
+          showToast('error', (res && res.message) || 'تعذر الاتصال بالسحابة الآن');
         }
       });
     }
@@ -5832,7 +5834,8 @@
       const grid = document.getElementById('saved-boards-grid');
       grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-xs font-bold">جاري تحميل السبورات...</div>';
       runGS('getAllBoards').then(list => {
-        savedBoardsCache = Array.isArray(list) ? list : [];
+        if (!Array.isArray(list)) { grid.textContent = 'تعذر تحميل السبورات. أغلق الأرشيف وأعد فتحه.'; return; }
+        savedBoardsCache = list;
         renderSavedBoardsGrid(savedBoardsCache);
       });
     }
@@ -5868,6 +5871,7 @@
             if (res && res.success && res.data) {
               try {
                 const parsed = JSON.parse(res.data);
+                boardVersion = res.version || '';
                 currentBoardId = String(bid || ('board_' + Date.now())).trim();
                 lastPublishedLessonName = parsed.lastPublishedLessonName || parsed.lessonName || '';
                 lastPublishedPdfUrl = parsed.lastPublishedPdfUrl || '';
@@ -5998,11 +6002,11 @@
         storage.set('wb_autosave_v2', JSON.stringify({
           pages: serializePages(),
           currentPageIndex,
-          boardId: currentBoardId,
+          boardId: currentBoardId, version: boardVersion,
           lessonName: document.getElementById('lesson-name').value,
           updatedAt: Date.now()
         }));
-      }, 25000);
+      }, 1500);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -6030,6 +6034,7 @@
             `يوجد شرح غير محفوظ منذ ${mins} دقيقة. هل تريد استعادته؟`,
             () => {
               pages = restorePages(parsed.pages);
+              boardVersion = parsed.version || '';
               currentBoardId = parsed.boardId || currentBoardId;
               if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
               hasUnsavedChanges = true;
