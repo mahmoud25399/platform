@@ -1,11 +1,15 @@
-const CACHE_NAME = 'elheliehy-platform-v3';
+const CACHE_NAME = 'elheliehy-platform-v4';
 const ASSETS = [
   'index.html',
   'student.html',
   'app.html',
   'manifest.json',
   'app-manifest.json',
-  'icon.png'
+  'icon.png',
+  'platform-ui.css',
+  'platform-brand.js',
+  'task-input.js',
+  'games.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -21,7 +25,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName.startsWith('elheliehy-platform-') && cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -31,25 +35,26 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
-  
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const responseCopy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseCopy);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
-  );
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const cleanPages = { '/': 'index.html', '/app': 'app.html', '/student': 'student.html' };
+  const asset = cleanPages[url.pathname] || url.pathname.slice(1);
+  if (!ASSETS.includes(asset)) return;
+  event.respondWith((async () => {
+    try {
+      const response = await fetch(event.request);
+      if (response.ok && !url.search) {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(asset, response.clone());
+        } catch (_) { /* The network response is usable even when storage is full. */ }
+      }
+      return response;
+    } catch (_) {
+      const cache = await caches.open(CACHE_NAME);
+      return (await cache.match(asset)) || Response.error();
+    }
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {

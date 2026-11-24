@@ -930,6 +930,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 </style>
 
 <link rel="stylesheet" href="./platform-ui.css">
+<script src="./platform-brand.js"></script>
 </head>
 <body>
     <!-- Overlay for Mobile Menu -->
@@ -1002,7 +1003,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div class="menu-item" id="nav-liveAttendance" onclick="showSection('liveAttendance', this)" title="الحضور المباشر"><i class="fas fa-user-check"></i><span class="menu-label"> الحضور المباشر</span></div>
                             <div class="menu-item" id="nav-library" onclick="showSection('library', this)" title="المكتبة"><i class="fas fa-book"></i><span class="menu-label"> المكتبة</span></div>
                             <div class="menu-item" id="nav-adminFiles" onclick="showSection('adminFiles', this)" title="ملفات الإدارة"><i class="fas fa-folder-open"></i><span class="menu-label"> ملفات الإدارة</span></div>
-                            <div class="menu-item" id="nav-scheduledTasks" onclick="showSection('scheduledTasks', this)" title="المهام المجدولة"><i class="fas fa-calendar-check"></i><span class="menu-label"> المهام المجدولة</span></div>
+                            <div class="menu-item" id="nav-perfControl" data-admin-only="true" style="display:none;" onclick="showSection('perfControl', this)" title="إدارة الأداء والمهام"><i class="fas fa-sliders-h"></i><span class="menu-label"> إدارة الأداء والمهام</span></div>
  </div>
  </div>
 
@@ -1548,7 +1549,6 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="tasmiyaReserve" class="tab-content hidden">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; margin-top:10px;">
                             <h3 style="color:var(--primary); margin:0;"><i class="fas fa-calendar-day"></i> حجوزات اليوم</h3>
-                            <button type="button" class="btn btn-sm btn-outline-primary admin-only-backlog-btn" style="display:none;" onclick="openBacklogSchedulerModal(null, null, 'tasmiya')"><i class="fas fa-calendar-week"></i> جدولة التراكمات (تجاوز SLA)</button>
  </div>
                         <div id="tasmiyaActiveScheduleBanner" class="hidden" style="margin-bottom:16px;"></div>
                         <div id="tasmiyaTodayList" class="table-responsive" style="margin-bottom: 25px;"><div style="text-align:center; color:var(--gray);">جاري التحميل...</div></div>
@@ -1643,6 +1643,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div class="sub-tabs">
                         <button class="sub-tab active" onclick="switchTab('wajib', 'add')"><i class="fas fa-plus-circle"></i> تسجيل جديد</button>
                         <button class="sub-tab" onclick="switchTab('wajib', 'correct')"><i class="fas fa-check-double"></i> تصحيح</button>
+                        <button class="sub-tab admin-only-wajib-sched-tab" id="wajibScheduleTabBtn" style="display:none;" onclick="switchTab('wajib', 'schedule')"><i class="fas fa-calendar-week"></i> جدولة المهام</button>
  </div>
                     <div id="wajibAdd" class="tab-content">
                         <div class="form-container">
@@ -1687,7 +1688,6 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="wajibCorrect" class="tab-content hidden">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; margin-top:10px;">
                             <h3 style="color:var(--primary); margin:0;"><i class="fas fa-calendar-day"></i> واجبات اليوم</h3>
-                            <button type="button" class="btn btn-sm btn-outline-primary admin-only-backlog-btn" style="display:none;" onclick="openBacklogSchedulerModal(null, null, 'wajib')"><i class="fas fa-calendar-week"></i> جدولة التراكمات (تجاوز SLA)</button>
  </div>
                         <div id="wajibActiveScheduleBanner" class="hidden" style="margin-bottom:16px;"></div>
                         <div id="wajibTodayList" class="table-responsive" style="margin-bottom: 25px;"><div style="text-align:center; color:var(--gray);">جاري التحميل...</div></div>
@@ -1695,6 +1695,68 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <h3 style="color:var(--danger); margin-bottom:15px; font-size:1.1rem;"><i class="fas fa-clock"></i> الواجبات المتأخرة</h3>
                         <div id="wajibPendingList" class="table-responsive"><div style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div></div>
  </div>
+                    <div id="wajibSchedule" class="tab-content hidden">
+                        <div style="background:linear-gradient(135deg, #1d4ed8, #2563eb); color:#fff; padding:16px 20px; border-radius:14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <i class="fas fa-calendar-week" style="font-size:1.4rem;"></i>
+                                <div>
+                                    <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#fff;">جدولة الواجبات المتراكمة (للمدير فقط)</h3>
+                                    <div style="font-size:0.8rem; opacity:0.92; margin-top:2px;">توزيع الواجبات المتأخرة (من قبل اليوم) من الأقدم للأحدث على أيام محددة وإرسالها للموظف</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm" style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.35);" onclick="loadBacklogSchedulerData()"><i class="fas fa-sync-alt"></i> تحديث</button>
+                        </div>
+
+                        <div style="background:var(--surface, #fff); border:1px solid var(--border, #e2e8f0); border-radius:12px; padding:16px; margin-bottom:14px;">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; align-items:end;">
+                                <div class="form-group" style="margin:0;" id="bsEmpSelectWrap">
+                                    <label style="font-size:0.82rem; font-weight:700;">الموظف</label>
+                                    <select id="bsEmployeeSelect" class="form-control" onchange="loadBacklogSchedulerData()"></select>
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.82rem; font-weight:700;">تاريخ بداية الجدولة</label>
+                                    <input type="date" id="bsStartDate" class="form-control" onchange="rebuildBacklogSchedulePreview()">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.82rem; font-weight:700;">العدد اليومي (واجب/يوم)</label>
+                                    <input type="number" id="bsPerDay" class="form-control" min="1" max="200" value="5" oninput="onBsControlChange('perDay')">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.82rem; font-weight:700;">مدة الجدولة (عدد الأيام)</label>
+                                    <input type="number" id="bsDaysCount" class="form-control" min="1" max="90" value="3" oninput="onBsControlChange('days')">
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9;">
+                                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:var(--dark);">
+                                        <input type="checkbox" id="bsSkipFridays" checked onchange="rebuildBacklogSchedulePreview()" style="width:16px; height:16px; accent-color:var(--primary);">
+                                        <span>استثناء يوم الجمعة</span>
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:#b45309;">
+                                        <input type="checkbox" id="bsIncludeLegacy" onchange="loadBacklogSchedulerData()" style="width:16px; height:16px; accent-color:#d97706;">
+                                        <span>تضمين التراكمات القديمة (قبل تاريخ بداية الموظف) لتوزيعها عليه</span>
+                                    </label>
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:#0f766e;">
+                                        <input type="checkbox" id="bsIncludeAllStudents" onchange="loadBacklogSchedulerData()" style="width:16px; height:16px; accent-color:#0f766e;">
+                                        <span>تضمين واجبات كل طلاب المنصة (حتى خارج صفوف/مجموعات الموظف)</span>
+                                    </label>
+                                </div>
+                                <div id="bsSlaSummaryChip" style="font-size:0.8rem; color:var(--gray); font-weight:600;"></div>
+                            </div>
+                        </div>
+
+                        <div id="bsStatsStrip" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:14px;"></div>
+                        <div id="bsSavedNotice" class="hidden" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.84rem; color:#1e40af;"></div>
+                        <div id="bsPreviewContainer" style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;"></div>
+
+                        <div style="padding:14px 16px; background:var(--surface, #fff); border:1px solid var(--border, #e2e8f0); border-radius:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <button type="button" class="btn btn-sm btn-danger" id="bsDeleteBtn" onclick="clearSavedBacklogSchedule(this)" style="display:none;"><i class="fas fa-trash"></i> إلغاء الخطة المحفوظة</button>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-right:auto;">
+                                <button type="button" class="btn btn-sm btn-primary" onclick="saveBacklogScheduleUI(false, this)"><i class="fas fa-save"></i> حفظ الجدولة</button>
+                                <button type="button" class="btn btn-sm btn-whatsapp" onclick="saveBacklogScheduleUI(true, this)"><i class="fab fa-whatsapp"></i> حفظ وإرسال للموظف على واتساب</button>
+                            </div>
+                        </div>
+                    </div>
  </div>
 
                 <div id="ikhtibaratSection" class="hidden">
@@ -2300,20 +2362,171 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="adminFilesListContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:14px;"></div>
                 </div>
 
-                <!-- قسم المهام المجدولة (الواجبات والاختبارات المتأخرة الموزعة بالأيام) -->
-                <div id="scheduledTasksSection" class="hidden">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+                <!-- قسم إدارة الأداء والمهام (للمدير فقط — قوائم منسدلة مستقلة لكل قسم فرعي) -->
+                <div id="perfControlSection" class="hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
                         <div>
-                            <h2 class="section-title" style="padding-bottom:0; border-bottom:none; margin-bottom:4px;"><i class="fas fa-calendar-check"></i> المهام المجدولة</h2>
-                            <p style="margin:0; color:var(--gray); font-size:0.86rem;">متابعة خطة إنجاز الواجبات والاختبارات المجدولة (تظهر مهام اليوم أولاً في الأعلى)</p>
+                            <h2 class="section-title" style="padding-bottom:0; border-bottom:none; margin-bottom:4px;"><i class="fas fa-sliders-h"></i> إدارة الأداء والمهام</h2>
+                            <p style="margin:0; color:var(--gray); font-size:0.86rem;">تحكم كامل في تحليل الأداء اليومي ومهل الـ SLA وجدولة التراكمات وصلاحيات المساعدين — كل قسم فرعي في قائمة منسدلة مستقلة</p>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <select id="stSectionEmpFilter" class="form-control hidden" style="min-width:200px;" onchange="loadScheduledTasksSectionUI()"></select>
-                            <button class="btn btn-sm btn-warning hidden" id="stSectionOpenSchedulerBtn" onclick="openBacklogSchedulerModal(document.getElementById('stSectionEmpFilter')?.value || '')"><i class="fas fa-calendar-alt"></i> تعديل / إنشاء جدولة</button>
-                            <button class="btn btn-sm btn-outline-primary" onclick="loadScheduledTasksSectionUI(this)"><i class="fas fa-sync-alt"></i> تحديث</button>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadPerfControlHub(this)"><i class="fas fa-sync-alt"></i> تحديث البيانات</button>
                     </div>
-                    <div id="scheduledTasksContainer"></div>
+
+                    <div id="perfControlAccordions" style="display:flex; flex-direction:column; gap:14px;">
+
+                        <!-- 1. تفعيل تحليل الأداء اليومي والأهداف -->
+                        <div class="pc-acc-card" style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; overflow:hidden;">
+                            <div onclick="togglePerfControlAccordion('pcAcc_perf')" style="padding:14px 18px; background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(59,130,246,0.04)); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; user-select:none;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <i class="fas fa-chart-line" style="color:var(--primary); font-size:1.15rem;"></i>
+                                    <div>
+                                        <div style="font-weight:800; font-size:1rem; color:var(--dark);">1. تفعيل تحليل الأداء اليومي والأهداف للموظفين</div>
+                                        <div style="font-size:0.78rem; color:var(--gray);">يظهر في لوحة تحكم المدير فقط — تفعيل المتابعة، تحديد الأقسام والأهداف وتاريخ بداية المحاسبة</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span id="pcBadge_perf" style="background:#e0e7ff; color:#3730a3; padding:3px 10px; border-radius:99px; font-size:0.76rem; font-weight:800;">—</span>
+                                    <i id="pcArrow_perf" class="fas fa-chevron-down" style="color:var(--gray); transition:transform 0.2s;"></i>
+                                </div>
+                            </div>
+                            <div id="pcAcc_perf" style="padding:16px 18px; border-top:1px solid var(--border, #e2e8f0);">
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:14px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-size:0.82rem; font-weight:700;">اختر الموظف لتعديل إعداداته</label>
+                                        <select id="pcPerfEmpSelect" class="form-control" onchange="onPcPerfEmpChange()"></select>
+                                    </div>
+                                    <div class="form-group" style="margin:0; display:flex; align-items:flex-end;">
+                                        <label style="display:flex; align-items:center; gap:8px; font-weight:800; cursor:pointer; background:#f8fafc; border:1px solid #cbd5e1; padding:9px 14px; border-radius:10px; width:100%; margin:0;">
+                                            <input type="checkbox" id="pcPerfEnabled" onchange="onPcPerfToggle(this.checked)" style="width:17px; height:17px; accent-color:var(--primary);">
+                                            <span style="color:var(--primary); font-size:0.88rem;">تفعيل تحليل الأداء اليومي لهذا الموظف</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div id="pcPerfFieldsWrap" style="display:flex; flex-direction:column; gap:10px; padding:14px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:14px;">
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:700; cursor:pointer; min-width:115px; margin:0;"><input type="checkbox" value="wajib" class="pc-perf-sec-cb"> <span><i class="fas fa-tasks" style="color:var(--warning);"></i> الواجب</span></label>
+                                        <input type="number" min="0" class="form-control" id="pcPerfTargetWajib" placeholder="الهدف اليومي (مثلاً 10)" style="max-width:190px;">
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:700; cursor:pointer; min-width:115px; margin:0;"><input type="checkbox" value="tasmiya" class="pc-perf-sec-cb"> <span><i class="fas fa-microphone" style="color:var(--primary);"></i> التسميع</span></label>
+                                        <span style="font-size:0.78rem; color:#64748b;"><i class="fas fa-info-circle"></i> الهدف يُحسب تلقائياً حسب عدد حجوزات التسميع اليومية</span>
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:700; cursor:pointer; min-width:115px; margin:0;"><input type="checkbox" value="ikhtibarat" class="pc-perf-sec-cb"> <span><i class="fas fa-file-contract" style="color:var(--danger);"></i> الاختبارات</span></label>
+                                        <input type="number" min="0" class="form-control" id="pcPerfTargetIkhtibarat" placeholder="اختبارات/أسبوع" style="max-width:140px;">
+                                        <select id="pcPerfExamDay" class="form-control" style="max-width:210px;">
+                                            <option value="">يوم النزول الأسبوعي (اختياري)</option>
+                                            <option value="6">السبت</option>
+                                            <option value="0">الأحد</option>
+                                            <option value="1">الإثنين</option>
+                                            <option value="2">الثلاثاء</option>
+                                            <option value="3">الأربعاء</option>
+                                            <option value="4">الخميس</option>
+                                            <option value="5">الجمعة</option>
+                                        </select>
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:8px; border-top:1px dashed #cbd5e1;">
+                                        <label style="font-size:0.85rem; font-weight:700; min-width:170px; margin:0; color:var(--primary-dark);"><i class="fas fa-calendar-plus"></i> تاريخ بداية محاسبة الأداء</label>
+                                        <input type="date" id="pcPerfStartDate" class="form-control" style="max-width:190px;">
+                                        <span style="font-size:0.76rem; color:#64748b;">يعزل التراكمات القديمة قبل هذا التاريخ تلقائياً</span>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                                    <button type="button" class="btn btn-primary" onclick="savePerfControlSettings('perf', this)"><i class="fas fa-save"></i> حفظ إعدادات تحليل الأداء</button>
+                                </div>
+
+                                <div id="pcPerfDataTable" class="table-responsive"></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. مدة المهمة المسموح بها (SLA) بالساعات -->
+                        <div class="pc-acc-card" style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; overflow:hidden;">
+                            <div onclick="togglePerfControlAccordion('pcAcc_sla')" style="padding:14px 18px; background:linear-gradient(135deg, rgba(239,68,68,0.07), rgba(245,158,11,0.04)); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; user-select:none;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <i class="fas fa-stopwatch" style="color:#ef4444; font-size:1.15rem;"></i>
+                                    <div>
+                                        <div style="font-weight:800; font-size:1rem; color:var(--dark);">2. مدة المهمة المسموح بها (SLA) بالساعات</div>
+                                        <div style="font-size:0.78rem; color:var(--gray);">تحديد المهلة القصوى لكل نوع مهمة (واجب / تسميع / اختبار) قبل احتسابها متأخرة</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span id="pcBadge_sla" style="background:#fee2e2; color:#991b1b; padding:3px 10px; border-radius:99px; font-size:0.76rem; font-weight:800;">الواجب: 24 ساعة</span>
+                                    <i id="pcArrow_sla" class="fas fa-chevron-down" style="color:var(--gray); transition:transform 0.2s;"></i>
+                                </div>
+                            </div>
+                            <div id="pcAcc_sla" class="hidden" style="padding:16px 18px; border-top:1px solid var(--border, #e2e8f0);">
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; align-items:end; margin-bottom:14px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-size:0.82rem; font-weight:700;">الموظف</label>
+                                        <select id="pcSlaEmpSelect" class="form-control" onchange="onPcSlaEmpChange()"></select>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-size:0.82rem; font-weight:700;">الواجب (ساعة)</label>
+                                        <input type="number" id="pcSlaWajib" class="form-control" min="1" max="720" value="24">
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-size:0.82rem; font-weight:700;">التسميع (ساعة)</label>
+                                        <input type="number" id="pcSlaTasmiya" class="form-control" min="1" max="720" value="48">
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-size:0.82rem; font-weight:700;">الاختبار (ساعة)</label>
+                                        <input type="number" id="pcSlaIkhtibarat" class="form-control" min="1" max="720" value="96">
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                                    <button type="button" class="btn btn-danger" onclick="savePerfControlSettings('sla', this)"><i class="fas fa-save"></i> حفظ مهل الـ SLA</button>
+                                </div>
+                                <div id="pcSlaDataTable" class="table-responsive"></div>
+                            </div>
+                        </div>
+
+                        <!-- 3. جدولة الواجبات المتأخرة (ملخص وتحكم سريع) -->
+                        <div class="pc-acc-card" style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; overflow:hidden;">
+                            <div onclick="togglePerfControlAccordion('pcAcc_backlog')" style="padding:14px 18px; background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.04)); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; user-select:none;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <i class="fas fa-calendar-week" style="color:#0f766e; font-size:1.15rem;"></i>
+                                    <div>
+                                        <div style="font-weight:800; font-size:1rem; color:var(--dark);">3. جدولة الواجبات المتراكمة (تجاوز 24 ساعة)</div>
+                                        <div style="font-size:0.78rem; color:var(--gray);">متابعة خطط الجدولة النشطة والانتقال المباشر لجدولة واجبات أي موظف</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span id="pcBadge_backlog" style="background:#ccfbf1; color:#115e59; padding:3px 10px; border-radius:99px; font-size:0.76rem; font-weight:800;">واجبات فقط</span>
+                                    <i id="pcArrow_backlog" class="fas fa-chevron-down" style="color:var(--gray); transition:transform 0.2s;"></i>
+                                </div>
+                            </div>
+                            <div id="pcAcc_backlog" class="hidden" style="padding:16px 18px; border-top:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                                    <span style="font-size:0.84rem; color:var(--gray);">يمكنك فتح أداة جدولة الواجبات الكاملة مباشرة لأي موظف من الجدول أو من الزر التالي:</span>
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="openBacklogSchedulerModal()"><i class="fas fa-external-link-alt"></i> فتح تبويب جدولة الواجبات</button>
+                                </div>
+                                <div id="pcBacklogDataTable" class="table-responsive"></div>
+                            </div>
+                        </div>
+
+                        <!-- 4. صلاحيات وأقسام المساعدين والموظفين -->
+                        <div class="pc-acc-card" style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; overflow:hidden;">
+                            <div onclick="togglePerfControlAccordion('pcAcc_perms')" style="padding:14px 18px; background:linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.04)); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; user-select:none;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <i class="fas fa-user-lock" style="color:#b45309; font-size:1.15rem;"></i>
+                                    <div>
+                                        <div style="font-weight:800; font-size:1rem; color:var(--dark);">4. مراجعة أقسام وصلاحيات المساعدين والموظفين</div>
+                                        <div style="font-size:0.78rem; color:var(--gray);">عرض الأقسام المفتوحة لكل مساعد/موظف والتحكم في إغلاق أو فتح أي قسم فوراً</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span id="pcBadge_perms" style="background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:99px; font-size:0.76rem; font-weight:800;">—</span>
+                                    <i id="pcArrow_perms" class="fas fa-chevron-down" style="color:var(--gray); transition:transform 0.2s;"></i>
+                                </div>
+                            </div>
+                            <div id="pcAcc_perms" class="hidden" style="padding:16px 18px; border-top:1px solid var(--border, #e2e8f0);">
+                                <div id="pcPermsDataTable" class="table-responsive"></div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <div id="librarySection" class="hidden">
@@ -2621,6 +2834,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                                     <option value="SENT">تم الإرسال</option>
                                     <option value="FAILED">فشل الإرسال</option>
                                     <option value="PENDING">قيد الانتظار</option>
+                                    <option value="UNKNOWN">تحتاج مراجعة التسليم</option>
+                                    <option value="SENDING">بدأ الإرسال</option>
                                 </select>
                                 <input type="text" id="waLogSearchInput" class="form-control" style="flex:1; min-width:200px;" placeholder="بحث باسم الموظف أو الطالب أو الدرس أو نص الرسالة..." oninput="clearTimeout(window._waLogTimer); window._waLogTimer=setTimeout(()=>loadWhatsAppLogUI(), 350);">
                             </div>
@@ -2863,6 +3078,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <h3 style="color: var(--dark); font-size: 1.05rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;"><i class="fas fa-headset" style="color: var(--primary);"></i> إعدادات رابط جلسة التسميع ورقم خدمة العملاء</h3>
                             <p style="color: #64748b; font-size: 0.88rem; margin-bottom: 18px;">يُستخدم رابط التسميع لفتح جلسة Google Meet مباشرة من جدول الحجوزات، ويُستخدم رقم خدمة العملاء لتحويل رسائل واتساب السريعة إليه تلقائياً عند عدم توفر رقم الطالب أو ولي الأمر أو كونه غير مصري.</p>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                                <div class="form-group"><label for="platformPalette">لون الهوية في المنصات</label>
+                                    <select class="form-control" id="platformPalette"><option value="forest">أخضر غابي</option><option value="emerald">أخضر زمردي</option><option value="olive">أخضر زيتوني</option></select></div>
                                 <div class="form-group" style="margin: 0;">
                                     <label style="font-weight: 700; font-size: 0.88rem;"><i class="fas fa-video" style="color: var(--primary); margin-left: 4px;"></i> رابط جلسة التسميع (Google Meet)</label>
                                     <input type="url" id="tasmiyaMeetLinkInput" class="form-control" dir="ltr" placeholder="https://meet.google.com/xxx-xxxx-xxx">
@@ -3171,7 +3388,6 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="liveAttendance" class="emp-sec-cb"> <span>الحضور المباشر</span></label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="library" class="emp-sec-cb"> <span>المكتبة</span></label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer; color:#0f5d57;"><input type="checkbox" value="adminFiles" class="emp-sec-cb"> <span>ملفات الإدارة (عرض/تحميل)</span></label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer; color:#1d4ed8;"><input type="checkbox" value="scheduledTasks" class="emp-sec-cb"> <span>المهام المجدولة</span></label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="schedule" class="emp-sec-cb"> <span>جدول الحصص</span></label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="notifications" class="emp-sec-cb"> <span>الإشعارات</span></label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:0.84rem; font-weight:bold; cursor:pointer;"><input type="checkbox" value="reports" class="emp-sec-cb"> <span>التقارير والإحصائيات</span></label>
@@ -3222,65 +3438,10 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     </div>
  </div>
 
-                <div class="form-group" style="grid-column: span 2; background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(59,130,246,0.03)); padding: 15px; border-radius: var(--radius-lg); border: 1.5px solid rgba(99,102,241,0.2);">
-                    <label style="display:flex; align-items:center; gap:8px; font-weight:bold; cursor:pointer; margin-bottom: 10px;">
-                        <input type="checkbox" id="empPerfEnabled" onchange="onEmployeePerfToggle(this.checked)">
-                        <span style="color:var(--primary); font-size:0.95rem; font-weight:800;"><i class="fas fa-chart-line"></i> تفعيل تحليل الأداء اليومي لهذا الموظف (يظهر في لوحة تحكمك فقط)</span>
- </label>
-                    <p style="margin:4px 0 12px; color:#64748b; font-size:0.8rem;">اختر الأقسام التي تريد متابعة إنجاز هذا الموظف فيها يومياً، وحدد العدد المستهدف يومياً لكل قسم.</p>
-                    <div id="empPerfSectionsContainer" style="display:flex; flex-direction:column; gap:10px;">
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; min-width:110px;"><input type="checkbox" value="wajib" class="emp-perf-sec-cb"> <span><i class="fas fa-tasks" style="color:var(--warning);"></i> الواجب</span></label>
-                            <input type="number" min="0" class="form-control emp-perf-target" id="empPerfTargetWajib" placeholder="الهدف اليومي" style="max-width:150px;">
- </div>
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; min-width:110px;"><input type="checkbox" value="tasmiya" class="emp-perf-sec-cb"> <span><i class="fas fa-microphone" style="color:var(--primary);"></i> التسميع</span></label>
-                            <span style="font-size:0.78rem; color:#64748b; font-style:italic;"><i class="fas fa-info-circle"></i> الهدف بيتحسب تلقائيًا من عدد حجوزات التسميع كل يوم — مفيش رقم ثابت</span>
- </div>
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; min-width:110px;"><input type="checkbox" value="ikhtibarat" class="emp-perf-sec-cb"> <span><i class="fas fa-file-contract" style="color:var(--danger);"></i> الاختبارات</span></label>
-                            <input type="number" min="0" class="form-control emp-perf-target" id="empPerfTargetIkhtibarat" placeholder="اختبارات/أسبوع" style="max-width:130px;" title="عدد الاختبارات الأسبوعية المطلوبة لكل صف">
-                            <select id="empPerfExamDay" class="form-control" style="max-width:210px;" title="اليوم الأسبوعي لنزول الاختبار — إذا مرّ هذا اليوم بدون رفع الاختبار يُحسب متأخراً في التحليل">
-                                <option value="">يوم النزول الأسبوعي (اختياري)</option>
-                                <option value="6">السبت</option>
-                                <option value="0">الأحد</option>
-                                <option value="1">الإثنين</option>
-                                <option value="2">الثلاثاء</option>
-                                <option value="3">الأربعاء</option>
-                                <option value="4">الخميس</option>
-                                <option value="5">الجمعة</option>
-                            </select>
-                            <span style="font-size:0.76rem; color:#64748b;"><i class="fas fa-calendar-check"></i> لو عدا اليوم المحدد بدون رفع الاختبار يتحسب متأخر في التحليل والجدولة</span>
- </div>
-                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:8px; border-top:1px dashed rgba(99,102,241,0.25);">
-                            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:bold; min-width:170px; color:var(--primary-dark);"><i class="fas fa-calendar-plus"></i> تاريخ بداية محاسبة الأداء</label>
-                            <input type="date" id="empPerfStartDate" class="form-control" style="max-width:190px;" title="لن يتم احتساب أي واجبات أو تراكمات سابقة قبل هذا التاريخ على هذا الموظف">
-                            <span style="font-size:0.76rem; color:#64748b;">يعزل التراكمات القديمة عن الموظف الجديد تلقائياً (فقط ما بعد هذا التاريخ يُحسب عليه)</span>
- </div>
- </div>
- </div>
-
-                <div class="form-group" style="grid-column: span 2; background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(249,115,22,0.03)); padding: 15px; border-radius: var(--radius-lg); border: 1.5px solid rgba(239,68,68,0.2);">
-                    <label style="display:flex; align-items:center; gap:8px; font-weight:bold; margin-bottom: 10px;">
-                        <i class="fas fa-stopwatch" style="color:#ef4444;"></i>
-                        <span style="color:var(--dark); font-size:0.95rem; font-weight:800;">مدة المهمة المسموح بها (SLA) بالساعات</span>
- </label>
-                    <p style="margin:0 0 12px; color:#64748b; font-size:0.8rem;">بعد كده المهمة تتحسب "متأخرة" وبتأثر على مؤشر الالتزام بالوقت.</p>
-                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">الواجب (ساعة)</label>
-                            <input type="number" id="empPerfSlaWajib" class="form-control" min="1" max="720" value="48">
- </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">التسميع (ساعة)</label>
-                            <input type="number" id="empPerfSlaTasmiya" class="form-control" min="1" max="720" value="48">
- </div>
-                        <div>
-                            <label style="font-size:0.8rem; font-weight:bold; color:var(--text-secondary); margin-bottom:4px; display:block;">الاختبار (ساعة)</label>
-                            <input type="number" id="empPerfSlaIkhtibarat" class="form-control" min="1" max="720" value="96">
- </div>
- </div>
- </div>
+                <div style="grid-column: span 2; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.82rem; color:#475569;">
+                    <span><i class="fas fa-sliders-h" style="color:var(--primary); margin-left:6px;"></i> إعدادات <strong>تحليل الأداء اليومي</strong> و<strong>مهل الـ SLA</strong> نُقلت لقسم <strong>إدارة الأداء والمهام</strong> تحت المحتوى التعليمي.</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" style="padding:4px 10px; font-size:0.78rem;" onclick="closeModal('employeeModal'); showSection('perfControl');">فتح إدارة الأداء والمهام</button>
+                </div>
 
                 <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-success" onclick="saveEmployeeProfile(this)" style="flex:2;"><i class="fas fa-save"></i> حفظ الموظف</button>
@@ -4485,7 +4646,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const validSections = [
                 'dashboard', 'students', 'reports', 'notifications', 
                 'tasmiya', 'wajib', 'ikhtibarat', 'hossas', 
-                'library', 'adminFiles', 'scheduledTasks', 'games', 'leaderboard', 'whatsappSettings', 'platformSettings', 'users', 'schedule', 'liveAttendance'
+                'library', 'adminFiles', 'perfControl', 'games', 'leaderboard', 'whatsappSettings', 'platformSettings', 'users', 'schedule', 'liveAttendance'
             ];
             if (!validSections.includes(targetSection)) {
                 window.location.hash = '#/dashboard';
@@ -4565,8 +4726,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 if (typeof initEmpPerfDefaultRange_ === 'function') initEmpPerfDefaultRange_();
             } else if (id === 'adminFiles') {
                 if (typeof loadAdminFilesUI === 'function') loadAdminFilesUI();
-            } else if (id === 'scheduledTasks') {
-                if (typeof loadScheduledTasksSectionUI === 'function') loadScheduledTasksSectionUI();
+            } else if (id === 'perfControl') {
+                if (typeof isPlatformAdmin === 'function' && !isPlatformAdmin(window.currentEmployee)) {
+                    showNotify('warning', 'هذا القسم متاح للمدير فقط');
+                    showSection('dashboard');
+                    return;
+                }
+                if (typeof loadPerfControlHub === 'function') loadPerfControlHub();
             }
 
             // Refresh & Initialize section data (Protected with Try-Catch)
@@ -4669,6 +4835,9 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             if (_activeSubBtn && _activeSubBtn.classList) _activeSubBtn.classList.add('active');
 
             const tabKey = section + '_' + tab;
+            if (section === 'wajib' && tab === 'schedule') {
+                if (typeof initWajibScheduleTab === 'function') initWajibScheduleTab();
+            }
             if (section === 'schedule' && tab === 'editor') {
                 if (typeof setupCascadingDropdowns === 'function') {
                     setupCascadingDropdowns('scheduleType', 'scheduleGrade', 'scheduleGroup');
@@ -5116,15 +5285,18 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 showNotify('success',result.message);
             } catch (error) { showNotify('error',error.message); button.disabled=false; }
         });
+        window._wajibPendingReqSeq = 0;
         function loadPendingWajib() {
             var containerAll = document.getElementById('wajibPendingList'); 
             var containerToday = document.getElementById('wajibTodayList');
             if (!containerAll || !containerToday) return; 
 
+            var mySeq = ++window._wajibPendingReqSeq;
             containerAll.innerHTML = getAdminSkeletonTableHtml(4);
             containerToday.innerHTML = getAdminSkeletonTableHtml(2);
 
             runGS('getPendingWajibCorrections').then(function(data) {
+                if (mySeq !== window._wajibPendingReqSeq) return;
                 if (!data || data.length === 0) {
                     var emptyMsg = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-check-circle fa-2x" style="color:var(--success);"></i><p style="margin-top:10px;">لا توجد واجبات تحتاج تصحيح حالياً</p></div>';
                     containerAll.innerHTML = emptyMsg;
@@ -5191,10 +5363,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             var containerToday = document.getElementById('tasmiyaTodayList');
             if (!containerAll || !containerToday) return; 
             
+            window._tasmiyaResReqSeq = (window._tasmiyaResReqSeq || 0) + 1;
+            var mySeqT = window._tasmiyaResReqSeq;
             containerAll.innerHTML = getAdminSkeletonTableHtml(4);
             containerToday.innerHTML = getAdminSkeletonTableHtml(2);
             
             runGS('getPendingReservedTasmiya').then(function(data) {
+                if (mySeqT !== window._tasmiyaResReqSeq) return;
                 if (!data || data.length === 0) {
                     var emptyMsg = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-calendar-check fa-2x" style="color:var(--success);"></i><p style="margin-top:10px;">لا توجد حجوزات تسميع حالياً</p></div>';
                     containerAll.innerHTML = emptyMsg;
@@ -5610,7 +5785,9 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             document.getElementById('tasmiyaEvalModal').style.display = 'flex';
         }
 
+        window._tasmiyaEvalSubmitting = false;
         function submitTasmiyaEvaluation() {
+            if (window._tasmiyaEvalSubmitting) return;
             var student = document.getElementById('tasmiyaEvalStudent').value;
             var lesson = document.getElementById('tasmiyaEvalLessonDisplay').value;
             var serial = document.getElementById('tasmiyaEvalSerial').value;
@@ -5623,14 +5800,21 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 return; 
             }
             
+            window._tasmiyaEvalSubmitting = true;
             showNotify('info', 'جاري حفظ التقييم...');
             runGS('saveReservedTasmiyaEvaluation', { id: serial, studentName: student, lesson: lesson, grade: (status === 'تم التسميع' ? grade : ''), status: status, notes: notes || '' }).then(function(res) {
                 if (res && res.success) {
                     showNotify('success', res.message || 'تم التقييم بنجاح');
                     document.getElementById('tasmiyaEvalModal').style.display = 'none';
                     loadTasmiyaReservations();
-                } else showNotify('error', res ? res.message : 'حدث خطأ');
-            }).catch(function(err) { showNotify('error', err.message); });
+                } else {
+                    showNotify('error', res ? res.message : 'حدث خطأ');
+                }
+            }).catch(function(err) {
+                showNotify('error', err.message);
+            }).finally(function() {
+                window._tasmiyaEvalSubmitting = false;
+            });
         }
 
         function goToTab(section, tab) {
@@ -6120,6 +6304,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 document.getElementById('hfEndpointInput').value = settings.whatsapp && settings.whatsapp.hfEndpoint ? settings.whatsapp.hfEndpoint : '';
                 document.getElementById('hfTokenInput').value = settings.whatsapp && settings.whatsapp.hfToken ? settings.whatsapp.hfToken : '';
             }
+            applyPlatformPalette(settings.brandPalette);
+            document.getElementById('platformPalette').value = settings.brandPalette || 'forest';
             if (document.getElementById('tasmiyaMeetLinkInput')) {
                 document.getElementById('tasmiyaMeetLinkInput').value = settings.tasmiyaMeetLink || '';
             }
@@ -8980,7 +9166,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     { id: 'liveAttendance', label: 'الحضور المباشر', icon: 'fas fa-user-check' },
                     { id: 'library', label: 'المكتبة', icon: 'fas fa-book' },
                     { id: 'adminFiles', label: 'ملفات الإدارة', icon: 'fas fa-folder-open' },
-                    { id: 'scheduledTasks', label: 'المهام المجدولة', icon: 'fas fa-calendar-check' },
+                    { id: 'perfControl', label: 'إدارة الأداء والمهام', icon: 'fas fa-sliders-h', adminOnly: true },
                     { id: 'games', label: 'العب وتعلّم', icon: 'fas fa-gamepad' }
                 ]
             },
@@ -9023,10 +9209,24 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
         function getActiveNavStructure() {
             const settings = window.currentPlatformSettings || {};
-            if (settings.navStructure && Array.isArray(settings.navStructure) && settings.navStructure.length > 0) {
-                return settings.navStructure;
+            let structure = (settings.navStructure && Array.isArray(settings.navStructure) && settings.navStructure.length > 0)
+                ? JSON.parse(JSON.stringify(settings.navStructure))
+                : JSON.parse(JSON.stringify(DEFAULT_NAV_STRUCTURE));
+            // إزالة المهام المجدولة القديمة من أي تخطيط محفوظ + ضمان وجود إدارة الأداء والمهام تحت المحتوى التعليمي
+            let hasPerfControl = false;
+            structure.forEach(function(g) {
+                if (Array.isArray(g.items)) {
+                    g.items = g.items.filter(function(it) { return it && it.id !== 'scheduledTasks'; });
+                    if (g.items.some(function(it) { return it.id === 'perfControl'; })) hasPerfControl = true;
+                }
+            });
+            if (!hasPerfControl) {
+                const contentGrp = structure.find(function(g) { return g.id === 'content' || (g.title && g.title.indexOf('المحتوى التعليمي') !== -1); });
+                if (contentGrp && Array.isArray(contentGrp.items)) {
+                    contentGrp.items.push({ id: 'perfControl', label: 'إدارة الأداء والمهام', icon: 'fas fa-sliders-h', adminOnly: true });
+                }
             }
-            return JSON.parse(JSON.stringify(DEFAULT_NAV_STRUCTURE));
+            return structure;
         }
 
         function renderSidebarNavigation() {
@@ -9061,9 +9261,9 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
                         `;
                     } else {
-                        const styleAttr = item.adminOnly ? ' style="display: none;"' : '';
+                        const adminAttr = item.adminOnly ? ' data-admin-only="true" style="display: none;"' : '';
                         html += `
-                            <div class="menu-item" id="nav-${item.id}" onclick="showSection('${item.id}', this)" title="${item.label}"${styleAttr}>
+                            <div class="menu-item" id="nav-${item.id}" onclick="showSection('${item.id}', this)" title="${item.label}"${adminAttr}>
                                 <i class="${item.icon}"></i><span class="menu-label"> ${item.label}</span>
  </div>
                         `;
@@ -9547,9 +9747,9 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function deleteStudentGS(code) {
-            showConfirmModal('هل أنت متأكد من حذف الطالب نهائياً؟', function() {
+            showConfirmModal('تعطيل حساب الطالب مع الاحتفاظ ببياناته وسجله؟', function() {
                 toggleLoading(null, true);
-                runGS('modifyStudentState', 'delete', code).then(function(res) {
+                runGS('modifyStudentState', 'disable', code).then(function(res) {
                     if(res && res.success) { showNotify('success', res.message); loadStudentsManagement(); }
                     else { showNotify('error', res ? res.message : 'خطأ'); }
                 }).catch(function(e) { showNotify('error', e.message); }).finally(function(){ toggleLoading(null, false); });
@@ -9718,7 +9918,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <button class="btn btn-sm btn-outline-primary" onclick="openStudentDevicesModal('${code}', '${String(name).replace(/'/g, "\\'")}')" title="إدارة الأجهزة المتصلة وإخراج جهاز معين"><i class="fas fa-laptop-house"></i></button>
                             <button class="btn btn-sm" onclick="resetStudentDevices('${code}')" style="background:#0891b2; color:#fff;" title="حذف كل الأجهزة"><i class="fas fa-sync-alt"></i></button>
                             <button class="btn btn-secondary btn-sm" onclick="openEditStudentModal('${code}')" title="تعديل"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteStudentGS('${code}')" title="حذف"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStudentGS('${code}')" title="الاحتفاظ بالسجل وتعطيل الدخول"><i class="fas fa-archive"></i></button>
  </div>
                     </td>
                 </tr>`;
@@ -11259,23 +11459,40 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 return;
             }
             
+            const ADMIN_ONLY_SECS = ['users', 'perfControl'];
             let allowed = [];
             if (Array.isArray(emp.allowedSections)) {
-                allowed = emp.allowedSections;
+                allowed = emp.allowedSections.map(s => String(s || '').trim()).filter(Boolean);
             } else if (emp.allowedSections && emp.allowedSections !== 'لا يوجد') {
-                allowed = String(emp.allowedSections).split(',').map(s => s.trim());
+                allowed = String(emp.allowedSections).split(',').map(s => s.trim()).filter(Boolean);
             }
 
-            const isAll = (emp.allowedSections === 'ALL' || emp.allowedSections === 'الكل' || allowed.includes('ALL') || allowed.includes('الكل'));
+            const rawSecStr = String(emp.allowedSections || '').trim();
+            const isNone = (!rawSecStr || rawSecStr === 'لا يوجد' || rawSecStr === 'none');
+            const isAll = !isNone && (rawSecStr === 'ALL' || rawSecStr === 'الكل' || allowed.includes('ALL') || allowed.includes('الكل'));
 
             if (isAll) {
-                document.querySelectorAll('.sidebar .menu-item').forEach(m => m.style.display = 'flex');
-            } else {
+                document.querySelectorAll('.sidebar .menu-item').forEach(m => {
+                    const mId = (m.id || '').replace('nav-', '');
+                    if (m.getAttribute('data-admin-only') === 'true' || ADMIN_ONLY_SECS.includes(mId)) {
+                        m.style.display = 'none';
+                    } else {
+                        m.style.display = 'flex';
+                    }
+                });
+            } else if (!isNone) {
                 allowed.forEach(sec => {
+                    if (ADMIN_ONLY_SECS.includes(sec)) return;
                     const navItem = document.getElementById('nav-' + sec);
-                    if (navItem) navItem.style.display = 'flex';
+                    if (navItem && navItem.getAttribute('data-admin-only') !== 'true') {
+                        navItem.style.display = 'flex';
+                    }
                 });
             }
+            // تأكيد إضافي: إخفاء جميع العناصر المخصصة للمدير عن غير المدير دائماً
+            document.querySelectorAll('.sidebar .menu-item[data-admin-only="true"], #nav-users, #nav-perfControl').forEach(m => {
+                m.style.display = 'none';
+            });
 
             document.querySelectorAll('.nav-group').forEach(group => {
                 let hasVisibleItem = false;
@@ -11469,7 +11686,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             
             document.querySelectorAll('.emp-sec-cb').forEach(cb => cb.checked = false);
             
-            document.getElementById('empPerfEnabled').checked = false;
+            if (document.getElementById('empPerfEnabled')) document.getElementById('empPerfEnabled').checked = false;
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = false);
             document.getElementById('empPerfTargetWajib').value = '';
             document.getElementById('empPerfTargetIkhtibarat').value = '';
@@ -11519,7 +11736,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             document.querySelectorAll('.emp-sens-cb').forEach(cb => { cb.checked = isAllSens || sensArr.includes(cb.value); });
 
             const perfEnabled = !!emp.perfEnabled;
-            document.getElementById('empPerfEnabled').checked = perfEnabled;
+            if (document.getElementById('empPerfEnabled')) document.getElementById('empPerfEnabled').checked = perfEnabled;
             onEmployeePerfToggle(perfEnabled);
             const perfSecs = Array.isArray(emp.perfSections) ? emp.perfSections : [];
             document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => { cb.checked = perfSecs.includes(cb.value); });
@@ -11534,7 +11751,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var slaW = document.getElementById('empPerfSlaWajib');
             var slaT = document.getElementById('empPerfSlaTasmiya');
             var slaI = document.getElementById('empPerfSlaIkhtibarat');
-            if (slaW) slaW.value = perfSla.wajib || 48;
+            if (slaW) slaW.value = perfSla.wajib || 24;
             if (slaT) slaT.value = perfSla.tasmiya || 48;
             if (slaI) slaI.value = perfSla.ikhtibarat || 96;
 
@@ -11604,7 +11821,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             let selectedGroups = [];
             document.querySelectorAll('.emp-group-cb:checked').forEach(cb => selectedGroups.push(cb.value));
 
-            const perfEnabled = document.getElementById('empPerfEnabled').checked;
+            const perfEnabled = !!(document.getElementById('empPerfEnabled') && document.getElementById('empPerfEnabled').checked);
             let selectedPerfSecs = [];
             document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
             if (perfEnabled && selectedPerfSecs.length === 0) {
@@ -12915,7 +13132,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     { id: 'liveAttendance', label: 'الحضور المباشر', tabs: [] },
                     { id: 'library', label: 'المكتبة', tabs: [] },
                     { id: 'adminFiles', label: 'ملفات الإدارة', tabs: [] },
-                    { id: 'scheduledTasks', label: 'المهام المجدولة', tabs: [] },
                     { id: 'games', label: 'العب وتعلّم', tabs: [] }
                 ]
             },
@@ -13094,18 +13310,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             renderEmployeePermissionsTree('لا يوجد', 'لا يوجد');
             document.querySelectorAll('#empTabsContainer .emp-tab-cb').forEach(cb => cb.checked = true);
             document.querySelectorAll('#empSensitiveContainer .emp-sens-cb').forEach(cb => cb.checked = (cb.value === 'perm_add' || cb.value === 'perm_edit' || cb.value === 'perm_whatsapp'));
-            document.getElementById('empPerfEnabled').checked = false;
-            document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => cb.checked = false);
-            document.getElementById('empPerfTargetWajib').value = '';
-            document.getElementById('empPerfTargetIkhtibarat').value = '';
-            var exDayEl = document.getElementById('empPerfExamDay');
-            if (exDayEl) exDayEl.value = '';
-            var sdEl = document.getElementById('empPerfStartDate');
-            if (sdEl) sdEl.value = (typeof getLocalDateString === 'function') ? getLocalDateString() : '';
-            if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = 48;
-            if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = 48;
-            if (document.getElementById('empPerfSlaIkhtibarat')) document.getElementById('empPerfSlaIkhtibarat').value = 96;
-            onEmployeePerfToggle(false);
+            // إعدادات تحليل الأداء والـ SLA نُقلت لقسم إدارة الأداء والمهام
             renderEmployeePermissionsDropdowns(null);
             openModal('employeeModal');
         };
@@ -13132,22 +13337,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const isAllSens = (emp.allowedSensitive === 'ALL' || emp.allowedSensitive === 'الكل' || sensArr.includes('ALL') || sensArr.includes('الكل'));
             document.querySelectorAll('#empSensitiveContainer .emp-sens-cb').forEach(cb => { cb.checked = isAllSens || sensArr.includes(cb.value); });
 
-            const perfEnabled = !!emp.perfEnabled;
-            document.getElementById('empPerfEnabled').checked = perfEnabled;
-            onEmployeePerfToggle(perfEnabled);
-            const perfSecs = Array.isArray(emp.perfSections) ? emp.perfSections : [];
-            document.querySelectorAll('.emp-perf-sec-cb').forEach(cb => { cb.checked = perfSecs.includes(cb.value); });
-            const perfTargets = emp.perfTargets || {};
-            document.getElementById('empPerfTargetWajib').value = perfTargets.wajib || '';
-            document.getElementById('empPerfTargetIkhtibarat').value = perfTargets.ikhtibarat || '';
-            var exDayEdit = document.getElementById('empPerfExamDay');
-            if (exDayEdit) exDayEdit.value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
-            var sdEdit = document.getElementById('empPerfStartDate');
-            if (sdEdit) sdEdit.value = emp.perfStartDate || '';
-            const perfSla = emp.perfSla || {};
-            if (document.getElementById('empPerfSlaWajib')) document.getElementById('empPerfSlaWajib').value = perfSla.wajib || 48;
-            if (document.getElementById('empPerfSlaTasmiya')) document.getElementById('empPerfSlaTasmiya').value = perfSla.tasmiya || 48;
-            if (document.getElementById('empPerfSlaIkhtibarat')) document.getElementById('empPerfSlaIkhtibarat').value = perfSla.ikhtibarat || 96;
+            // إعدادات تحليل الأداء والـ SLA تُدار من قسم إدارة الأداء والمهام مع حفظ القيم الحالية تلقائياً
             renderEmployeePermissionsDropdowns(emp);
             openModal('employeeModal');
         };
@@ -13187,14 +13377,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             let selectedGroups = [];
             document.querySelectorAll('.emp-group-cb:checked').forEach(cb => selectedGroups.push(cb.value));
 
-            const perfEnabled = document.getElementById('empPerfEnabled').checked;
-            let selectedPerfSecs = [];
-            document.querySelectorAll('.emp-perf-sec-cb:checked').forEach(cb => selectedPerfSecs.push(cb.value));
-            if (perfEnabled && selectedPerfSecs.length === 0) return showNotify('error','اختر أقسام العمل المكلف بها الموظف قبل تفعيل التقييم');
-
-            const perfExamDay = document.getElementById('empPerfExamDay') ? document.getElementById('empPerfExamDay').value : '';
-            const perfStartDate = document.getElementById('empPerfStartDate') ? document.getElementById('empPerfStartDate').value : '';
-
             const empData = {
                 originalCode, name, role, code, teacherCode, phone,
                 allowedTypes: selectedTypes,
@@ -13206,20 +13388,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 allowedSections: finalSections,
                 allowedTabs: finalTabs,
                 allowedSensitive: finalSens,
-                perfEnabled,
-                perfSections: selectedPerfSecs,
-                perfExamDay: perfExamDay,
-                perfStartDate: perfStartDate,
-                perfTargets: {
-                    wajib: Number(document.getElementById('empPerfTargetWajib')?.value) || 0,
-                    tasmiya: 0,
-                    ikhtibarat: Number(document.getElementById('empPerfTargetIkhtibarat')?.value) || 0
-                },
-                perfSla: {
-                    wajib: Number(document.getElementById('empPerfSlaWajib')?.value) || 48,
-                    tasmiya: Number(document.getElementById('empPerfSlaTasmiya')?.value) || 48,
-                    ikhtibarat: Number(document.getElementById('empPerfSlaIkhtibarat')?.value) || 96
-                }
+                preservePerfSettings: true
             };
             if (btn) disableBtn(btn);
             runGS('saveEmployeeProfileGS', empData, window.currentEmployee.code).then(res => {
@@ -13247,8 +13416,15 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (typeof _origApplyEmployeePermissions === 'function') _origApplyEmployeePermissions();
             const emp = window.currentEmployee;
 
-            // إعادة إظهار جميع التبويبات الفرعية أولاً قبل تطبيق أي تقييد
-            document.querySelectorAll('.sub-tab').forEach(function(b) { b.style.display = ''; });
+            // إعادة إظهار التبويبات الفرعية (ما عدا التبويبات المخصصة للمدير لغير المدير)
+            const _isAdmSub = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(emp));
+            document.querySelectorAll('.sub-tab').forEach(function(b) {
+                if (!_isAdmSub && (b.classList.contains('admin-only-wajib-sched-tab') || b.classList.contains('admin-only-tasmiya-sched-tab'))) {
+                    b.style.display = 'none';
+                } else {
+                    b.style.display = '';
+                }
+            });
 
             if (!emp || isPlatformAdmin(emp)) return;
 
@@ -13456,6 +13632,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     let badge = '';
                     if (it.status === 'SENT') badge = '<span style="background:rgba(21,128,61,0.14); color:var(--success); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">تم الإرسال</span>';
                     else if (it.status === 'FAILED') badge = '<span style="background:rgba(185,28,28,0.14); color:var(--danger); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">فشل الإرسال</span>';
+                    else if (it.status === 'UNKNOWN') badge = '<span>تحتاج مراجعة التسليم</span>';
+                    else if (it.status === 'SENDING') badge = '<span>بدأ الإرسال ولم تتأكد النتيجة بعد</span>';
                     else badge = '<span style="background:rgba(180,83,9,0.14); color:var(--accent); padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.76rem; white-space:nowrap;">قيد الانتظار</span>';
 
                     const senderCell = it.senderName
@@ -14622,87 +14800,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         }
     </script>
 
-    <!-- Backlog Scheduler Modal (جدولة التراكمات) -->
-    <div id="backlogSchedulerModal" class="modal" style="display:none; z-index: 6500;">
-        <div class="modal-content" style="max-width: 820px; width: 95%; padding: 0; overflow: hidden; border-radius: 16px; display:flex; flex-direction:column; max-height:92vh;">
-            <div style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: #fff; padding: 18px 22px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <i class="fas fa-calendar-week" style="font-size:1.3rem;"></i>
-                    <div>
-                        <h3 style="margin:0; font-size:1.12rem; font-weight:800; color:#fff;">جدولة المهام المتراكمة (تجاوز SLA)</h3>
-                        <div id="bsHeaderSub" style="font-size:0.8rem; opacity:0.9; margin-top:2px;">توزيع المهام المتأخرة تلقائياً من الأقدم للأحدث على أيام محددة وإرسالها عبر واتساب</div>
- </div>
- </div>
-                <button type="button" onclick="closeModal('backlogSchedulerModal')" style="background:none; border:none; color:#fff; font-size:1.35rem; cursor:pointer;"><i class="fas fa-times"></i></button>
- </div>
-
-            <div style="padding: 18px 22px; overflow-y: auto; flex: 1; background: #f8fafc;">
-                <!-- Controls Card -->
-                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:14px;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(165px, 1fr)); gap:12px; align-items:end;">
-                        <div class="form-group" style="margin:0;" id="bsEmpSelectWrap">
-                            <label style="font-size:0.82rem; font-weight:700;">الموظف</label>
-                            <select id="bsEmployeeSelect" class="form-control" onchange="loadBacklogSchedulerData()"></select>
- </div>
-                        <div class="form-group" style="margin:0;">
-                            <label style="font-size:0.82rem; font-weight:700;">نوع المهام المتراكمة</label>
-                            <select id="bsTaskType" class="form-control" onchange="rebuildBacklogSchedulePreview()">
-                                <option value="both">الكل (واجبات + اختبارات)</option>
-                                <option value="wajib">الواجبات المتأخرة فقط</option>
-                                <option value="ikhtibarat">الاختبارات المتأخرة فقط</option>
-                            </select>
- </div>
-                        <div class="form-group" style="margin:0;">
-                            <label style="font-size:0.82rem; font-weight:700;">تاريخ بداية الجدولة</label>
-                            <input type="date" id="bsStartDate" class="form-control" onchange="rebuildBacklogSchedulePreview()">
- </div>
-                        <div class="form-group" style="margin:0;">
-                            <label style="font-size:0.82rem; font-weight:700;">العدد اليومي (مهمة/يوم)</label>
-                            <input type="number" id="bsPerDay" class="form-control" min="1" max="200" value="5" oninput="onBsControlChange('perDay')">
- </div>
-                        <div class="form-group" style="margin:0;">
-                            <label style="font-size:0.82rem; font-weight:700;">مدة الجدولة (عدد الأيام)</label>
-                            <input type="number" id="bsDaysCount" class="form-control" min="1" max="90" value="3" oninput="onBsControlChange('days')">
- </div>
- </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9;">
-                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                            <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:var(--dark);">
-                                <input type="checkbox" id="bsSkipFridays" checked onchange="rebuildBacklogSchedulePreview()" style="width:16px; height:16px; accent-color:var(--primary);">
-                                <span>استثناء يوم الجمعة</span>
-                            </label>
-                            <label style="display:flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; cursor:pointer; margin:0; color:#b45309;">
-                                <input type="checkbox" id="bsIncludeLegacy" onchange="loadBacklogSchedulerData()" style="width:16px; height:16px; accent-color:#d97706;">
-                                <span>تضمين التراكمات القديمة (قبل تاريخ بداية الموظف) لتوزيعها عليه</span>
-                            </label>
-                        </div>
-                        <div id="bsSlaSummaryChip" style="font-size:0.8rem; color:var(--gray); font-weight:600;"></div>
- </div>
- </div>
-
-                <!-- Summary Stats Strip -->
-                <div id="bsStatsStrip" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:14px;"></div>
-
-                <!-- Saved Schedule Status Banner -->
-                <div id="bsSavedNotice" class="hidden" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.84rem; color:#1e40af;"></div>
-
-                <!-- Day-by-Day Preview -->
-                <div id="bsPreviewContainer" style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="text-align:center; padding:30px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
- </div>
- </div>
-
-            <div style="padding: 14px 22px; background:#fff; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <button type="button" class="btn btn-sm btn-danger" id="bsDeleteBtn" onclick="clearSavedBacklogSchedule(this)" style="display:none;"><i class="fas fa-trash"></i> إلغاء الخطة المحفوظة</button>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-right:auto;">
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="closeModal('backlogSchedulerModal')">إغلاق</button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="saveBacklogScheduleUI(false, this)"><i class="fas fa-save"></i> حفظ الجدولة</button>
-                    <button type="button" class="btn btn-sm btn-whatsapp" onclick="saveBacklogScheduleUI(true, this)"><i class="fab fa-whatsapp"></i> حفظ وإرسال للموظف على واتساب</button>
- </div>
- </div>
- </div>
- </div>
-
     <script>
         // ====================================================================
         // 1. OPERATIONAL LINKS SETTINGS (TASMIYA MEET LINK + CUSTOMER SERVICE)
@@ -14719,11 +14816,15 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
             if (btn) toggleLoading(btn, true);
             runGS('savePlatformSettings', {
+                brandPalette: document.getElementById('platformPalette').value,
                 tasmiyaMeetLink: meetLink,
                 customerServicePhone: csPhone
             }).then(function(res) {
                 if (res && res.success) {
                     window.currentPlatformSettings = res.settings || window.currentPlatformSettings;
+                    const palette = document.getElementById('platformPalette').value;
+                    window.currentPlatformSettings.brandPalette = palette;
+                    applyPlatformPalette(palette);
                     showNotify('success', 'تم حفظ رابط التسميع ورقم خدمة العملاء بنجاح');
                 } else {
                     showNotify('error', (res && res.message) || 'فشل الحفظ');
@@ -14964,42 +15065,57 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             previewDays: []
         };
 
-        function openBacklogSchedulerModal(empCode, empName, defaultTaskType) {
+        function initWajibScheduleTab(empCode) {
             var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
+            if (!isAdmin) {
+                showNotify('warning', 'تبويب جدولة المهام متاح للمدير فقط');
+                switchTab('wajib', 'correct');
+                return;
+            }
             var sel = document.getElementById('bsEmployeeSelect');
             var wrap = document.getElementById('bsEmpSelectWrap');
-            var targetCode = empCode || (window.currentEmployee ? window.currentEmployee.code : '');
+            var targetCode = empCode || (sel && sel.value) || (window.currentEmployee ? window.currentEmployee.code : '');
 
             if (sel) {
+                var prevVal = sel.value;
                 sel.innerHTML = '';
-                if (isAdmin && Array.isArray(window.allEmployees) && window.allEmployees.length > 0) {
+                if (Array.isArray(window.allEmployees) && window.allEmployees.length > 0) {
                     window.allEmployees.forEach(function(e) {
                         var opt = document.createElement('option');
                         opt.value = e.code;
                         opt.textContent = (e.name || e.code) + ' (' + (e.role || 'موظف') + ')';
-                        if (String(e.code) === String(targetCode)) opt.selected = true;
+                        if (String(e.code) === String(targetCode || prevVal)) opt.selected = true;
                         sel.appendChild(opt);
                     });
                     if (wrap) wrap.style.display = 'block';
                 } else {
                     var optMe = document.createElement('option');
                     optMe.value = targetCode;
-                    optMe.textContent = empName || (window.currentEmployee ? window.currentEmployee.name : 'حسابي');
+                    optMe.textContent = (window.currentEmployee ? window.currentEmployee.name : 'حسابي');
                     optMe.selected = true;
                     sel.appendChild(optMe);
-                    if (wrap) wrap.style.display = isAdmin ? 'block' : 'none';
+                    if (wrap) wrap.style.display = 'block';
                 }
-            }
-
-            if (defaultTaskType && document.getElementById('bsTaskType')) {
-                document.getElementById('bsTaskType').value = defaultTaskType;
             }
             var startEl = document.getElementById('bsStartDate');
             if (startEl && !startEl.value) startEl.value = getLocalDateString();
-
-            openModal('backlogSchedulerModal');
             loadBacklogSchedulerData();
         }
+
+        function openBacklogSchedulerModal(empCode) {
+            var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
+            if (!isAdmin) {
+                showNotify('warning', 'أداة جدولة الواجبات المتأخرة متاحة للمدير فقط');
+                return;
+            }
+            showSection('wajib');
+            setTimeout(function() {
+                switchTab('wajib', 'schedule');
+                if (empCode) initWajibScheduleTab(empCode);
+            }, 60);
+        }
+
+        window._bsReqSeq = 0;
 
         function loadBacklogSchedulerData() {
             var sel = document.getElementById('bsEmployeeSelect');
@@ -15009,177 +15125,186 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             window._bsState.employeeName = empName.replace(/\s*\([^)]*\)\s*$/, '').trim();
 
             var prev = document.getElementById('bsPreviewContainer');
-            if (prev) prev.innerHTML = '<div style="text-align:center; padding:30px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">جاري فحص المهام المتأخرة عن SLA...</p></div>';
+            if (prev) prev.innerHTML = '<div style="text-align:center; padding:30px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">جاري فحص الواجبات المتأخرة...</p></div>';
 
             var incLegacy = !!(document.getElementById('bsIncludeLegacy') && document.getElementById('bsIncludeLegacy').checked);
-            runGS('getBacklogScheduleDataGS', empCode, 'both', incLegacy).then(function(res) {
+            var incAll = !!(document.getElementById('bsIncludeAllStudents') && document.getElementById('bsIncludeAllStudents').checked);
+            var myReqId = ++window._bsReqSeq;
+
+            runGS('getBacklogScheduleDataGS', empCode, 'wajib', incLegacy, incAll).then(function(res) {
+                if (myReqId !== window._bsReqSeq) return;
                 if (!res || !res.success) {
                     if (prev) prev.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">' + escapeHtml_((res && res.message) || 'تعذر تحميل البيانات') + '</div>';
                     return;
                 }
-                window._bsState.sla = res.sla || { wajib: 48, ikhtibarat: 96 };
+                window._bsState.sla = res.sla || { wajib: 24 };
+                window._bsState.perfStartDate = res.perfStartDate || '';
+                window._bsState.excludedByScopeCount = Number(res.excludedByScopeCount) || 0;
                 window._bsState.overdueWajib = res.overdueWajib || [];
-                window._bsState.overdueExams = res.overdueExams || [];
-                window._bsState.overdueTasmiya = [];
+                window._bsState.overdueIkhtibarat = [];
+                window._bsState.overdueAll = res.overdueWajib || [];
                 window._bsState.savedSchedule = res.savedSchedule || null;
 
-                var slaEl = document.getElementById('bsSlaSummaryChip');
-                if (slaEl) {
-                    var arDaysChip = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-                    var exDayChip = (res.examDay !== undefined && res.examDay !== '' && !isNaN(Number(res.examDay))) ? ('يوم ' + arDaysChip[Number(res.examDay)]) : ((window._bsState.sla.ikhtibarat || 96) + ' ساعة');
-                    slaEl.innerHTML = '<i class="fas fa-stopwatch" style="color:var(--primary); margin-left:4px;"></i> الجدولة للواجبات والاختبارات فقط — مهلة الواجب: <b>' + window._bsState.sla.wajib + ' ساعة</b> | موعد الاختبار: <b>' + exDayChip + '</b>';
+                var slaChip = document.getElementById('bsSlaSummaryChip');
+                if (slaChip) {
+                    var startNote = res.perfStartDate ? (' • بداية الموظف: ' + res.perfStartDate) : '';
+                    slaChip.textContent = 'نظام الحصة اليومية: أي واجب غير مصحح من قبل اليوم يُحسب متأخراً' + startNote;
                 }
 
-                var savedBanner = document.getElementById('bsSavedNotice');
+                var savedNotice = document.getElementById('bsSavedNotice');
                 var delBtn = document.getElementById('bsDeleteBtn');
-                if (res.savedSchedule && Array.isArray(res.savedSchedule.days) && res.savedSchedule.days.length > 0) {
-                    var doneCount = 0, totalSaved = 0;
-                    res.savedSchedule.days.forEach(function(d) {
-                        (d.items || []).forEach(function(it) { totalSaved++; if (it.done) doneCount++; });
-                    });
-                    if (savedBanner) {
-                        savedBanner.classList.remove('hidden');
-                        savedBanner.style.display = 'flex';
-                        savedBanner.innerHTML = '<div><i class="fas fa-check-circle" style="margin-left:6px;"></i> <b>يوجد خطة محفوظة حالياً:</b> ' + totalSaved + ' مهمة على ' + res.savedSchedule.days.length + ' يوم (أُنجز ' + doneCount + ' من ' + totalSaved + ') — أُنشئت في ' + escapeHtml_(res.savedSchedule.createdAt || '') + '</div>' +
-                            '<button type="button" class="btn btn-sm btn-whatsapp" onclick="sendSavedBacklogScheduleWa(this)"><i class="fab fa-whatsapp"></i> إعادة إرسال واتساب</button>';
+                if (res.savedSchedule && res.savedSchedule.totalItems > 0) {
+                    if (savedNotice) {
+                        savedNotice.classList.remove('hidden');
+                        savedNotice.style.display = 'flex';
+                        savedNotice.innerHTML =
+                            '<div><i class="fas fa-info-circle" style="margin-left:6px;"></i> <strong>توجد خطة مجدولة محفوظة حالياً</strong> (' + res.savedSchedule.doneItems + '/' + res.savedSchedule.totalItems + ' منجز — نسبة ' + res.savedSchedule.progressPercent + '% • حصة اليوم: ' + res.savedSchedule.todayCount + ')</div>' +
+                            '<button type="button" class="btn btn-sm btn-whatsapp" onclick="sendSavedBacklogScheduleWa(this)" style="padding:4px 10px; font-size:0.78rem;"><i class="fab fa-whatsapp"></i> إعادة إرسال الحالية</button>';
                     }
                     if (delBtn) delBtn.style.display = 'inline-flex';
                 } else {
-                    if (savedBanner) { savedBanner.classList.add('hidden'); savedBanner.style.display = 'none'; }
+                    if (savedNotice) { savedNotice.classList.add('hidden'); savedNotice.style.display = 'none'; }
                     if (delBtn) delBtn.style.display = 'none';
                 }
 
-                // ضبط العدد اليومي وعدد الأيام التلقائي
-                var pool = getSelectedBsPool_();
+                var totalNow = window._bsState.overdueWajib.length;
                 var perDayEl = document.getElementById('bsPerDay');
                 var daysEl = document.getElementById('bsDaysCount');
-                if (pool.length > 0 && perDayEl && daysEl) {
-                    var pd = Math.max(1, parseInt(perDayEl.value, 10) || 5);
-                    daysEl.value = Math.max(1, Math.ceil(pool.length / pd));
+                if (totalNow > 0 && perDayEl && daysEl) {
+                    var pd = parseInt(perDayEl.value, 10) || 5;
+                    daysEl.value = Math.max(1, Math.ceil(totalNow / pd));
                 }
                 rebuildBacklogSchedulePreview();
             }).catch(function(err) {
+                if (myReqId !== window._bsReqSeq) return;
                 if (prev) prev.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">خطأ: ' + escapeHtml_(err.message) + '</div>';
             });
         }
 
-        function getSelectedBsPool_() {
-            var tt = (document.getElementById('bsTaskType') || {}).value || 'both';
-            var list = [];
-            if (tt === 'wajib' || tt === 'both') list = list.concat(window._bsState.overdueWajib || []);
-            if (tt === 'ikhtibarat' || tt === 'both') list = list.concat(window._bsState.overdueExams || []);
-            // ترتيب صارم من الأقدم للأحدث (أكبر عمر بالساعات أولاً)
-            list.sort(function(a, b) { return (b.ageHours || 0) - (a.ageHours || 0); });
-            return list;
+        function getFilteredBsItems_() {
+            return (window._bsState.overdueWajib || []).slice();
         }
 
-        function onBsControlChange(changed) {
-            var pool = getSelectedBsPool_();
+        function onBsControlChange(source) {
+            var items = getFilteredBsItems_();
             var perDayEl = document.getElementById('bsPerDay');
             var daysEl = document.getElementById('bsDaysCount');
             if (!perDayEl || !daysEl) return;
-            if (pool.length > 0) {
-                if (changed === 'perDay') {
-                    var pd = Math.max(1, parseInt(perDayEl.value, 10) || 1);
-                    daysEl.value = Math.max(1, Math.ceil(pool.length / pd));
-                } else if (changed === 'days') {
-                    var dc = Math.max(1, parseInt(daysEl.value, 10) || 1);
-                    perDayEl.value = Math.max(1, Math.ceil(pool.length / dc));
-                }
+            if (items.length === 0) { rebuildBacklogSchedulePreview(); return; }
+            if (source === 'perDay') {
+                var pd = Math.max(1, parseInt(perDayEl.value, 10) || 1);
+                daysEl.value = Math.max(1, Math.ceil(items.length / pd));
+            } else if (source === 'days') {
+                var dc = Math.max(1, parseInt(daysEl.value, 10) || 1);
+                perDayEl.value = Math.max(1, Math.ceil(items.length / dc));
             }
             rebuildBacklogSchedulePreview();
         }
 
-        function rebuildBacklogSchedulePreview() {
-            var pool = getSelectedBsPool_();
-            var statsEl = document.getElementById('bsStatsStrip');
-            var prevEl = document.getElementById('bsPreviewContainer');
+        function computeBsDays_() {
+            var items = getFilteredBsItems_();
+            if (items.length === 0) return [];
             var perDay = Math.max(1, parseInt((document.getElementById('bsPerDay') || {}).value, 10) || 5);
-            var maxDays = Math.max(1, parseInt((document.getElementById('bsDaysCount') || {}).value, 10) || 1);
-            var startDateStr = (document.getElementById('bsStartDate') || {}).value || getLocalDateString();
+            var startVal = (document.getElementById('bsStartDate') || {}).value || getLocalDateString();
             var skipFridays = !!(document.getElementById('bsSkipFridays') && document.getElementById('bsSkipFridays').checked);
+            var dayNamesAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-            var wCount = (window._bsState.overdueWajib || []).length;
-            var eCount = (window._bsState.overdueExams || []).length;
+            var days = [];
+            var parts = startVal.split('-');
+            var cur = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            var idx = 0;
+            var guard = 0;
+            while (idx < items.length && guard < 365) {
+                guard++;
+                if (skipFridays && cur.getDay() === 5) {
+                    cur.setDate(cur.getDate() + 1);
+                    continue;
+                }
+                var y = cur.getFullYear();
+                var m = String(cur.getMonth() + 1).padStart(2, '0');
+                var d = String(cur.getDate()).padStart(2, '0');
+                var chunk = items.slice(idx, idx + perDay);
+                days.push({
+                    date: y + '-' + m + '-' + d,
+                    dayName: dayNamesAr[cur.getDay()],
+                    items: chunk
+                });
+                idx += perDay;
+                cur.setDate(cur.getDate() + 1);
+            }
+            return days;
+        }
+
+        function enableBsAllStudentsScope_() {
+            var cb = document.getElementById('bsIncludeAllStudents');
+            if (cb) { cb.checked = true; loadBacklogSchedulerData(); }
+        }
+
+        function rebuildBacklogSchedulePreview() {
+            var items = getFilteredBsItems_();
+            var days = computeBsDays_();
+            var statsEl = document.getElementById('bsStatsStrip');
+            var prev = document.getElementById('bsPreviewContainer');
+            var excludedCnt = Number(window._bsState.excludedByScopeCount) || 0;
 
             if (statsEl) {
                 statsEl.innerHTML =
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#dc2626;">' + pool.length + '</div><div style="font-size:0.76rem;color:var(--gray);">إجمالي المتراكم (محدد)</div></div>' +
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#d97706;">' + wCount + '</div><div style="font-size:0.76rem;color:var(--gray);">واجبات متأخرة</div></div>' +
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#dc2626;">' + eCount + '</div><div style="font-size:0.76rem;color:var(--gray);">اختبارات أسبوعية متأخرة</div></div>' +
-                    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;text-align:center;"><div style="font-size:1.25rem;font-weight:900;color:#16a34a;">' + Math.min(pool.length, perDay * maxDays) + '</div><div style="font-size:0.76rem;color:var(--gray);">سيتم جدولتها الآن</div></div>';
+                    '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; text-align:center;"><div style="font-size:0.75rem; color:var(--gray); font-weight:700;">إجمالي الواجبات المتأخرة</div><div style="font-size:1.35rem; font-weight:900; color:#dc2626;">' + items.length + '</div></div>' +
+                    '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; text-align:center;"><div style="font-size:0.75rem; color:var(--gray); font-weight:700;">أيام الخطة</div><div style="font-size:1.35rem; font-weight:900; color:#1d4ed8;">' + days.length + '</div></div>' +
+                    '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; text-align:center;"><div style="font-size:0.75rem; color:var(--gray); font-weight:700;">تاريخ الانتهاء المتوقع</div><div style="font-size:1rem; font-weight:800; color:#0f766e; margin-top:4px;">' + (days.length ? days[days.length - 1].date : '—') + '</div></div>';
             }
 
-            if (pool.length === 0) {
-                window._bsState.previewDays = [];
-                if (prevEl) {
-                    prevEl.innerHTML = '<div style="background:#fff; border:1px solid #bbf7d0; border-radius:12px; padding:28px; text-align:center; color:#15803d;"><i class="fas fa-check-circle fa-2x" style="margin-bottom:8px;"></i><p style="margin:0; font-weight:800;">لا توجد مهام متراكمة متأخرة عن مدة SLA لهذا الموظف حالياً</p></div>';
-                }
+            if (!prev) return;
+            var scopeBanner = '';
+            if (excludedCnt > 0) {
+                scopeBanner = '<div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.84rem; color:#92400e;">' +
+                    '<div><i class="fas fa-filter" style="margin-left:6px;"></i> يوجد <strong>' + excludedCnt + ' واجب متأخر</strong> لطلاب خارج صفوف/مجموعات هذا الموظف (أو بأسماء غير مطابقة في قاعدة الطلاب).</div>' +
+                    '<button type="button" class="btn btn-sm btn-warning" style="padding:4px 10px; font-size:0.78rem;" onclick="enableBsAllStudentsScope_()"><i class="fas fa-globe"></i> إظهار كل واجبات المنصة</button>' +
+                '</div>';
+            }
+
+            if (items.length === 0) {
+                var incLeg = !!(document.getElementById('bsIncludeLegacy') && document.getElementById('bsIncludeLegacy').checked);
+                var legacyHint = (!incLeg && window._bsState.perfStartDate)
+                    ? '<div style="margin-top:8px; font-size:0.82rem; color:#b45309;">ملاحظة: يتم حالياً عزل الواجبات التي قبل ' + escapeHtml_(window._bsState.perfStartDate) + '. فعّل خيار "تضمين التراكمات القديمة" بالأعلى لإظهارها.</div>'
+                    : '';
+                prev.innerHTML = scopeBanner + '<div style="background:#fff; border:1px solid #bbf7d0; border-radius:12px; padding:28px; text-align:center; color:#15803d;"><i class="fas fa-check-circle fa-2x" style="margin-bottom:8px;"></i><div style="font-weight:800; font-size:1rem;">لا توجد واجبات متأخرة من قبل اليوم حالياً!</div>' + legacyHint + '</div>';
                 return;
             }
 
-            var arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-            var cursor = new Date(startDateStr + 'T12:00:00');
-            var days = [];
-            var idx = 0;
-
-            for (var d = 0; d < maxDays && idx < pool.length; d++) {
-                while (skipFridays && cursor.getDay() === 5) {
-                    cursor.setDate(cursor.getDate() + 1);
-                }
-                var ymd = formatDateYMD_(cursor);
-                var dayName = arabicDays[cursor.getDay()];
-                var chunk = pool.slice(idx, idx + perDay);
-                idx += chunk.length;
-                days.push({ date: ymd, dayName: dayName, items: chunk });
-                cursor.setDate(cursor.getDate() + 1);
-            }
-
-            window._bsState.previewDays = days;
-            var unscheduled = pool.length - idx;
-
-            var html = '';
-            if (unscheduled > 0) {
-                html += '<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:10px 14px; font-size:0.83rem; color:#92400e; font-weight:700;"><i class="fas fa-info-circle" style="margin-left:6px;"></i> يتبقى ' + unscheduled + ' مهمة خارج عدد الأيام المحدد — يمكنك زيادة عدد الأيام أو العدد اليومي لتغطيتها بالكامل.</div>';
-            }
-
+            var html = scopeBanner;
             days.forEach(function(dayObj, dIdx) {
-                html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">';
-                html += '<div style="background:#f1f5f9; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">';
-                html += '<div style="font-weight:800; color:var(--dark); font-size:0.9rem;"><i class="fas fa-calendar-day" style="color:var(--primary); margin-left:6px;"></i> اليوم ' + (dIdx + 1) + ': ' + dayObj.dayName + ' (' + dayObj.date + ')</div>';
-                html += '<span style="background:var(--primary); color:#fff; padding:2px 10px; border-radius:16px; font-size:0.78rem; font-weight:700;">' + dayObj.items.length + ' مهمة</span>';
-                html += '</div>';
-                html += '<div style="padding:10px 14px; display:flex; flex-direction:column; gap:6px;">';
+                html += '<div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">' +
+                    '<div style="background:#f8fafc; padding:10px 14px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">' +
+                        '<strong style="color:#1e3a8a; font-size:0.92rem;"><i class="fas fa-calendar-day" style="margin-left:6px;"></i> اليوم ' + (dIdx + 1) + ': ' + escapeHtml_(dayObj.dayName) + ' (' + escapeHtml_(dayObj.date) + ')</strong>' +
+                        '<span style="background:#dbeafe; color:#1e40af; padding:2px 10px; border-radius:99px; font-size:0.78rem; font-weight:800;">' + dayObj.items.length + ' واجب</span>' +
+                    '</div>' +
+                    '<div style="padding:10px 14px; display:flex; flex-direction:column; gap:6px;">';
                 dayObj.items.forEach(function(it, iIdx) {
-                    var typeBadge = it.type === 'ikhtibarat'
-                        ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:6px; font-size:0.74rem; font-weight:700;">اختبار</span>'
-                        : '<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:6px; font-size:0.74rem; font-weight:700;">واجب</span>';
-                    html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:6px 10px; background:#f8fafc; border-radius:8px; font-size:0.84rem;">' +
-                        '<div style="display:flex; align-items:center; gap:8px;">' +
-                            '<span style="color:var(--gray); font-weight:700; min-width:20px;">' + (iIdx + 1) + '.</span>' +
-                            typeBadge +
-                            '<strong style="color:var(--dark);">' + escapeHtml_(stripCode(it.student)) + '</strong>' +
-                            '<span style="color:var(--gray);">— ' + escapeHtml_(it.lesson || '-') + '</span>' +
-                        '</div>' +
-                        '<div style="font-size:0.76rem; color:#dc2626; font-weight:700;">تاريخ: ' + escapeHtml_(it.date || '-') + ' (متأخر ' + (it.ageDays || 0) + ' يوم)</div>' +
+                    var dtShow = it.displayDate || it.date || '-';
+                    html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:0.84rem; padding:6px 10px; background:#f8fafc; border-radius:8px; border:1px solid #f1f5f9;">' +
+                        '<div><span style="color:var(--gray); font-weight:700; margin-left:6px;">' + (iIdx + 1) + '.</span>' +
+                        '<strong style="color:var(--dark);">' + escapeHtml_(stripCode(it.student)) + '</strong>' +
+                        '<span style="color:var(--gray);"> — ' + escapeHtml_(it.lesson || '-') + '</span>' +
+                        (it.class ? '<span style="color:#64748b; font-size:0.76rem;"> (' + escapeHtml_(it.class) + ')</span>' : '') + '</div>' +
+                        '<span style="font-size:0.76rem; color:#b91c1c; font-weight:700;">' + escapeHtml_(dtShow) + (it.ageDays && it.ageDays < 90 ? (' • منذ ' + it.ageDays + ' يوم') : '') + '</span>' +
                     '</div>';
                 });
                 html += '</div></div>';
             });
-
-            if (prevEl) prevEl.innerHTML = html;
+            prev.innerHTML = html;
         }
 
         function saveBacklogScheduleUI(sendWaNow, btn) {
-            var days = window._bsState.previewDays || [];
+            var days = computeBsDays_();
             if (days.length === 0) {
-                showNotify('warning', 'لا توجد مهام متراكمة لجدولتها');
+                showNotify('warning', 'لا توجد واجبات متراكمة لجدولتها');
                 return;
             }
             var payload = {
                 employeeCode: window._bsState.employeeCode,
                 employeeName: window._bsState.employeeName,
-                taskType: (document.getElementById('bsTaskType') || {}).value || 'both',
+                taskType: 'wajib',
                 perDay: parseInt((document.getElementById('bsPerDay') || {}).value, 10) || 5,
                 startDate: (document.getElementById('bsStartDate') || {}).value || getLocalDateString(),
                 skipFridays: !!(document.getElementById('bsSkipFridays') && document.getElementById('bsSkipFridays').checked),
@@ -15456,11 +15581,10 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                                         '<span style="background:#f1f5f9; color:#475569; padding:2px 9px; border-radius:99px; font-size:0.75rem; font-weight:700;">' + escapeHtml_(emp.role || '') + '</span>' +
                                         schedBadge +
                                     '</div>' +
-                                    '<div style="font-size:0.76rem; color:#64748b; margin-top:3px;"><i class="fas fa-stopwatch" style="margin-left:4px;"></i> مهلة SLA: واجب ' + sla.wajib + ' ساعة | تسميع ' + sla.tasmiya + ' ساعة</div>' +
+                                    '<div style="font-size:0.76rem; color:#64748b; margin-top:3px;"><i class="fas fa-calendar-day" style="margin-left:4px;"></i> النظام: يومي (الواجب والتسميع) • الاختبارات بتاريخ الانتهاء</div>' +
                                 '</div>' +
                             '</div>' +
                             '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
-                                '<button type="button" class="btn btn-sm ' + (hasOverdue ? 'btn-warning' : 'btn-outline-primary') + '" onclick="openBacklogSchedulerModal(\'' + escapeHtml_(emp.code) + '\', \'' + escapeHtml_(emp.name).replace(/&#39;/g, "\\'") + '\', \'both\')" style="font-size:0.78rem; padding:5px 12px;"><i class="fas fa-calendar-week"></i> جدولة التراكمات</button>' +
                                 '<div style="background:' + g.color + '14; border:1px solid ' + g.color + '40; color:' + g.color + '; padding:6px 14px; border-radius:12px; display:flex; align-items:center; gap:8px;">' +
                                     '<span style="font-size:0.8rem; font-weight:800;">' + escapeHtml_(g.label) + '</span>' +
                                     '<strong style="font-size:1.25rem; font-weight:900;">' + (comp !== null ? comp : '—') + '</strong><span style="font-size:0.72rem; opacity:0.8;">/100</span>' +
@@ -15494,7 +15618,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             window.applyEmployeePermissions = function() {
                 if (typeof _prevApplyPerm === 'function') _prevApplyPerm();
                 var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
-                document.querySelectorAll('.admin-only-backlog-btn').forEach(function(btn) {
+                document.querySelectorAll('.admin-only-backlog-btn, .admin-only-wajib-sched-tab').forEach(function(btn) {
                     btn.style.display = isAdmin ? 'inline-flex' : 'none';
                 });
             };
@@ -16483,7 +16607,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (emps.length === 0) {
                 var isAdminEmpty = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
                 container.innerHTML = '<div style="padding:32px; text-align:center; color:var(--gray); font-weight:700;">لا يوجد موظفون مفعّل لهم تحليل الأداء حالياً — يمكنك تفعيله من إعدادات كل موظف.' +
-                    (isAdminEmpty ? '<div style="margin-top:14px;"><button type="button" class="btn btn-sm btn-warning" onclick="openBacklogSchedulerModal()"><i class="fas fa-calendar-alt"></i> جدولة المهام المتأخرة (الواجبات والاختبارات)</button></div>' : '') + '</div>';
+                    '</div>';
                 return;
             }
 
@@ -16603,12 +16727,11 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                                     '<strong style="font-size:1.05rem; color:var(--dark);">' + escapeHtml_(emp.name || 'موظف') + '</strong>' +
                                     '<span class="emp-perf-chip" style="padding:2px 8px; font-size:0.73rem;">' + escapeHtml_(emp.role || '') + '</span>' +
                                 '</div>' +
-                                '<div style="font-size:0.76rem; color:var(--gray); margin-top:2px;">مهلة SLA: واجب ' + (sla.wajib || 48) + ' ساعة • تسميع ' + (sla.tasmiya || 48) + ' ساعة</div>' +
+                                '<div style="font-size:0.76rem; color:var(--gray); margin-top:2px;">النظام: يومي (الواجب والتسميع) • الاختبارات بتاريخ الانتهاء</div>' +
                             '</div>' +
                         '</div>' +
                         '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
                             ((emp.activeSchedule && emp.activeSchedule.missedCount > 0) ? ('<span style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; padding:5px 10px; border-radius:10px; font-size:0.76rem; font-weight:800;"><i class="fas fa-exclamation-triangle"></i> متأخر عن الجدولة: ' + emp.activeSchedule.missedCount + ' مهمة</span>') : '') +
-                            (isAdmin ? '<button type="button" class="btn btn-sm btn-warning" style="padding:7px 14px; font-size:0.8rem;" onclick="event.stopPropagation(); openBacklogSchedulerModal(\'' + safeCode + '\', \'' + safeName + '\')"><i class="fas fa-calendar-alt"></i> جدولة التراكمات</button>' : '') +
                             '<div style="background:' + c + '1a; border:1px solid ' + c + '44; color:' + c + '; padding:6px 14px; border-radius:12px; font-weight:900; font-size:0.95rem;">' + scoreLabel_(comp) + ' &nbsp;' + (comp !== null ? comp + '/100' : '—') + '</div>' +
                         '</div>' +
                     '</div>' +
@@ -16817,91 +16940,6 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         });
     }
 
-    // ── قسم المهام المجدولة (يظهر اليوم الحالي أولاً + يبرز الأيام المتأخرة بالأحمر) ──
-    function goToScheduledTask_(isExam) { var sec = isExam ? 'ikhtibarat' : 'wajib'; var tab = isExam ? 'build' : 'correct'; showSection(sec); setTimeout(function(){ switchTab(sec, tab); }, 80); }
-
-    function loadScheduledTasksSectionUI(btn) {
-        const container = document.getElementById('scheduledTasksContainer');
-        const empFilter = document.getElementById('stSectionEmpFilter');
-        const schedBtn = document.getElementById('stSectionOpenSchedulerBtn');
-        const isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
-
-        if (isAdmin && empFilter) {
-            empFilter.classList.remove('hidden');
-            if (schedBtn) schedBtn.classList.remove('hidden');
-            if (empFilter.options.length === 0 && Array.isArray(window.allEmployees)) {
-                empFilter.innerHTML = window.allEmployees.map(e => '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name) + ' (' + escapeHtml_(e.role || 'موظف') + ')</option>').join('');
-            }
-        }
-        const targetCode = (isAdmin && empFilter && empFilter.value) ? empFilter.value : (window.currentEmployee ? window.currentEmployee.code : '');
-        if (!container) return;
-        if (btn) toggleLoading(btn, true);
-        container.innerHTML = '<div style="text-align:center; padding:35px; color:var(--gray);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">جاري تحميل المهام المجدولة...</p></div>';
-
-        runGS('getBacklogScheduleDataGS', targetCode, 'both', true).then(res => {
-            if (btn) toggleLoading(btn, false);
-            const sched = res && res.savedSchedule;
-            if (!sched || !Array.isArray(sched.days) || sched.days.length === 0) {
-                container.innerHTML = '<div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:40px; text-align:center; color:var(--gray);"><i class="fas fa-calendar-check fa-3x" style="opacity:0.35; margin-bottom:10px;"></i><p style="font-weight:800; margin:0;">لا توجد مهام مجدولة حالياً.</p></div>';
-                return;
-            }
-            const todayStr = getLocalDateString();
-            // ترتيب: اليوم الحالي أولاً في الأعلى، ثم الأيام المتأخرة السابقة، ثم الأيام القادمة
-            const todayDays = sched.days.filter(d => d.date === todayStr);
-            const missedDays = sched.days.filter(d => d.date < todayStr && (d.items || []).some(it => !it.done));
-            const futureDays = sched.days.filter(d => d.date > todayStr);
-            const pastDoneDays = sched.days.filter(d => d.date < todayStr && !(d.items || []).some(it => !it.done));
-            const ordered = [].concat(todayDays, missedDays, futureDays, pastDoneDays);
-
-            let html = '<div style="display:flex; flex-direction:column; gap:14px;">';
-            ordered.forEach(dayObj => {
-                const isToday = dayObj.date === todayStr;
-                const items = dayObj.items || [];
-                const doneCnt = items.filter(it => it.done).length;
-                const isMissed = dayObj.date < todayStr && doneCnt < items.length;
-                const borderCol = isToday ? '#2563eb' : (isMissed ? '#dc2626' : '#e2e8f0');
-                const headBg = isToday ? 'linear-gradient(135deg,#eff6ff,#dbeafe)' : (isMissed ? 'linear-gradient(135deg,#fef2f2,#fee2e2)' : '#f8fafc');
-                const tag = isToday
-                    ? '<span style="background:#2563eb; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;">مهام اليوم</span>'
-                    : (isMissed
-                        ? '<span style="background:#dc2626; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;"><i class="fas fa-exclamation-triangle"></i> متأخر عن الموعد!</span>'
-                        : (doneCnt === items.length ? '<span style="background:#16a34a; color:#fff; padding:3px 10px; border-radius:99px; font-size:0.75rem; font-weight:800;">مكتمل</span>' : ''));
-
-                html += '<div style="background:var(--surface); border:2px solid ' + borderCol + '; border-radius:14px; overflow:hidden;">' +
-                    '<div style="background:' + headBg + '; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--border);">' +
-                        '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><strong style="font-size:1rem; color:var(--dark);"><i class="fas fa-calendar-day"></i> ' + escapeHtml_(dayObj.dayName || '') + ' (' + escapeHtml_(dayObj.date) + ')</strong>' + tag + '</div>' +
-                        '<span style="font-size:0.82rem; font-weight:800; color:' + (doneCnt === items.length ? '#15803d' : '#1e40af') + ';">المنجز: ' + doneCnt + ' / ' + items.length + '</span>' +
-                    '</div>' +
-                    '<div style="padding:12px 16px; display:flex; flex-direction:column; gap:8px;">';
-
-                items.forEach((it, idx) => {
-                    const isExam = it.type === 'ikhtibarat';
-                    const badge = isExam
-                        ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">اختبار</span>'
-                        : '<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">واجب</span>';
-                    const goBtn = !it.done
-                        ? ('<button type="button" class="btn btn-sm btn-primary" style="padding:4px 10px; font-size:0.76rem;" onclick="goToScheduledTask_(' + (isExam ? 'true' : 'false') + ')">تنفيذ الآن</button>')
-                        : '<span style="color:#16a34a; font-weight:800; font-size:0.82rem;"><i class="fas fa-check-circle"></i> تم الإنجاز</span>';
-                    html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; border-radius:10px; background:' + (it.done ? '#f0fdf4' : '#f8fafc') + '; border:1px solid ' + (it.done ? '#bbf7d0' : '#e2e8f0') + ';">' +
-                        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
-                            '<span style="color:var(--gray); font-weight:700;">' + (idx + 1) + '.</span>' +
-                            badge +
-                            '<strong style="color:var(--dark);' + (it.done ? 'text-decoration:line-through; opacity:0.65;' : '') + '">' + escapeHtml_(stripCode(it.student)) + '</strong>' +
-                            '<span style="color:var(--gray);">— ' + escapeHtml_(it.lesson || '-') + '</span>' +
-                        '</div>' +
-                        goBtn +
-                    '</div>';
-                });
-                html += '</div></div>';
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }).catch(err => {
-            if (btn) toggleLoading(btn, false);
-            container.innerHTML = '<div style="text-align:center; padding:25px; color:#dc2626;">خطأ: ' + escapeHtml_(err.message) + '</div>';
-        });
-    }
-
     // ── تحديث صلاحيات الموظف الحالي لحظياً بدون الحاجة لتسجيل الخروج والدخول ──
     window._lastEmpPermSyncTs = 0;
     function syncCurrentEmployeePermissionsLive_(force) {
@@ -16923,6 +16961,234 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     }
     window.addEventListener('focus', function() { syncCurrentEmployeePermissionsLive_(false); });
     setInterval(function() { syncCurrentEmployeePermissionsLive_(false); }, 60000);
+    </script>
+
+
+    <script>
+        // ====================================================================
+        // إدارة الأداء والمهام (قسم موحد تحت المحتوى التعليمي — للمدير فقط)
+        // ====================================================================
+        function togglePerfControlAccordion(accId) {
+            var body = document.getElementById(accId);
+            if (!body) return;
+            var key = accId.replace('pcAcc_', '');
+            var arrow = document.getElementById('pcArrow_' + key);
+            var isHidden = body.classList.contains('hidden');
+            body.classList.toggle('hidden', !isHidden);
+            if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        function onPcPerfToggle(enabled) {
+            var wrap = document.getElementById('pcPerfFieldsWrap');
+            if (!wrap) return;
+            wrap.style.opacity = enabled ? '1' : '0.55';
+            wrap.style.pointerEvents = enabled ? 'auto' : 'none';
+        }
+
+        function loadPerfControlHub(btn) {
+            if (typeof isPlatformAdmin === 'function' && !isPlatformAdmin(window.currentEmployee)) return;
+            if (btn) toggleLoading(btn, true);
+            runGS('getEmployeesListGS', window.currentEmployee ? window.currentEmployee.code : '').then(function(res) {
+                if (btn) toggleLoading(btn, false);
+                if (!res || !res.success) {
+                    showNotify('error', (res && res.message) || 'تعذر تحميل بيانات الموظفين');
+                    return;
+                }
+                window.allEmployees = res.employees || [];
+                renderPerfControlHubUI_();
+            }).catch(function(err) {
+                if (btn) toggleLoading(btn, false);
+                showNotify('error', err.message);
+            });
+        }
+
+        function renderPerfControlHubUI_() {
+            var emps = Array.isArray(window.allEmployees) ? window.allEmployees : [];
+            var staff = emps.filter(function(e) { return e && e.code; });
+
+            var perfSel = document.getElementById('pcPerfEmpSelect');
+            var slaSel = document.getElementById('pcSlaEmpSelect');
+            var prevPerf = perfSel ? perfSel.value : '';
+            var prevSla = slaSel ? slaSel.value : '';
+
+            [perfSel, slaSel].forEach(function(sel, idx) {
+                if (!sel) return;
+                var prev = idx === 0 ? prevPerf : prevSla;
+                sel.innerHTML = staff.map(function(e) {
+                    return '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name || e.code) + ' (' + escapeHtml_(e.role || 'موظف') + ')</option>';
+                }).join('');
+                if (prev && staff.some(function(e) { return String(e.code) === String(prev); })) sel.value = prev;
+            });
+
+            onPcPerfEmpChange();
+            onPcSlaEmpChange();
+
+            // 1. جدول بيانات تحليل الأداء اليومي
+            var enabledCount = staff.filter(function(e) { return !!e.perfEnabled; }).length;
+            var bPerf = document.getElementById('pcBadge_perf');
+            if (bPerf) bPerf.textContent = enabledCount + ' / ' + staff.length + ' مفعّل';
+
+            var secAr = { wajib: 'الواجب', tasmiya: 'التسميع', ikhtibarat: 'الاختبارات' };
+            var perfTbl = document.getElementById('pcPerfDataTable');
+            if (perfTbl) {
+                var rows = staff.map(function(e) {
+                    var secs = (Array.isArray(e.perfSections) ? e.perfSections : []).map(function(s) { return secAr[s] || s; }).join('، ') || '—';
+                    var tw = (e.perfTargets && e.perfTargets.wajib) ? e.perfTargets.wajib + '/يوم' : '—';
+                    var ti = (e.perfTargets && e.perfTargets.ikhtibarat) ? e.perfTargets.ikhtibarat + '/أسبوع' : '—';
+                    var badge = e.perfEnabled
+                        ? '<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:99px; font-size:0.75rem; font-weight:800;">مفعّل</span>'
+                        : '<span style="background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:99px; font-size:0.75rem; font-weight:700;">غير مفعّل</span>';
+                    return '<tr>' +
+                        '<td><strong>' + escapeHtml_(e.name) + '</strong> <span style="font-size:0.75rem; color:var(--gray);">(' + escapeHtml_(e.role || '') + ')</span></td>' +
+                        '<td>' + badge + '</td>' +
+                        '<td>' + escapeHtml_(secs) + '</td>' +
+                        '<td>' + escapeHtml_(tw) + '</td>' +
+                        '<td>' + escapeHtml_(ti) + '</td>' +
+                        '<td>' + escapeHtml_(e.perfStartDate || '—') + '</td>' +
+                        '<td><button type="button" class="btn btn-sm btn-outline-primary" style="padding:3px 9px; font-size:0.76rem;" onclick="selectPcPerfEmp_(\'' + escapeHtml_(e.code) + '\')">تعديل</button></td>' +
+                    '</tr>';
+                }).join('');
+                perfTbl.innerHTML = '<table class="table" style="width:100%; font-size:0.84rem;"><thead><tr><th>الموظف</th><th>الحالة</th><th>الأقسام المراقبة</th><th>هدف الواجب</th><th>هدف الاختبار</th><th>بداية المحاسبة</th><th>إجراء</th></tr></thead><tbody>' + rows + '</tbody></table>';
+            }
+
+            // 2. جدول مهل الـ SLA
+            var slaTbl = document.getElementById('pcSlaDataTable');
+            if (slaTbl) {
+                var sRows = staff.map(function(e) {
+                    var s = e.perfSla || {};
+                    return '<tr>' +
+                        '<td><strong>' + escapeHtml_(e.name) + '</strong></td>' +
+                        '<td><span style="font-weight:800; color:#b91c1c;">' + (s.wajib || 24) + ' ساعة</span></td>' +
+                        '<td>' + (s.tasmiya || 48) + ' ساعة</td>' +
+                        '<td>' + (s.ikhtibarat || 96) + ' ساعة</td>' +
+                        '<td><button type="button" class="btn btn-sm btn-outline-danger" style="padding:3px 9px; font-size:0.76rem;" onclick="selectPcSlaEmp_(\'' + escapeHtml_(e.code) + '\')">تعديل</button></td>' +
+                    '</tr>';
+                }).join('');
+                slaTbl.innerHTML = '<table class="table" style="width:100%; font-size:0.84rem;"><thead><tr><th>الموظف</th><th>مهلة الواجب</th><th>مهلة التسميع</th><th>مهلة الاختبار</th><th>إجراء</th></tr></thead><tbody>' + sRows + '</tbody></table>';
+            }
+
+            // 3. جدول جدولة الواجبات المتأخرة
+            var bTbl = document.getElementById('pcBacklogDataTable');
+            if (bTbl) {
+                var bRows = staff.map(function(e) {
+                    return '<tr>' +
+                        '<td><strong>' + escapeHtml_(e.name) + '</strong> <span style="font-size:0.75rem; color:var(--gray);">(' + escapeHtml_(e.role || '') + ')</span></td>' +
+                        '<td>' + ((e.perfSla && e.perfSla.wajib) || 24) + ' ساعة</td>' +
+                        '<td>' + escapeHtml_(e.perfStartDate || 'غير محدد') + '</td>' +
+                        '<td><button type="button" class="btn btn-sm btn-primary" style="padding:3px 10px; font-size:0.76rem;" onclick="openBacklogSchedulerModal(\'' + escapeHtml_(e.code) + '\')"><i class="fas fa-calendar-week"></i> جدولة واجباته</button></td>' +
+                    '</tr>';
+                }).join('');
+                bTbl.innerHTML = '<table class="table" style="width:100%; font-size:0.84rem;"><thead><tr><th>الموظف</th><th>مهلة الواجب</th><th>تاريخ البداية</th><th>جدولة التراكمات</th></tr></thead><tbody>' + bRows + '</tbody></table>';
+            }
+
+            // 4. جدول صلاحيات وأقسام المساعدين والموظفين
+            var nonAdmins = staff.filter(function(e) { return !(typeof isPlatformAdmin === 'function' && isPlatformAdmin(e)); });
+            var bPerms = document.getElementById('pcBadge_perms');
+            if (bPerms) bPerms.textContent = nonAdmins.length + ' موظف/مساعد';
+            var pTbl = document.getElementById('pcPermsDataTable');
+            if (pTbl) {
+                var pRows = nonAdmins.map(function(e) {
+                    var secs = Array.isArray(e.allowedSections) ? e.allowedSections.join('، ') : String(e.allowedSections || 'لا يوجد');
+                    if (secs === 'ALL' || secs === 'الكل') secs = 'كل الأقسام (ما عدا أقسام المدير)';
+                    return '<tr>' +
+                        '<td><strong>' + escapeHtml_(e.name) + '</strong></td>' +
+                        '<td>' + escapeHtml_(e.role || '') + '</td>' +
+                        '<td style="max-width:340px; white-space:normal;">' + escapeHtml_(secs) + '</td>' +
+                        '<td><button type="button" class="btn btn-sm btn-warning" style="padding:3px 10px; font-size:0.76rem;" onclick="editEmployee(\'' + escapeHtml_(e.code) + '\')"><i class="fas fa-user-edit"></i> تعديل الصلاحيات</button></td>' +
+                    '</tr>';
+                }).join('');
+                pTbl.innerHTML = nonAdmins.length
+                    ? '<table class="table" style="width:100%; font-size:0.84rem;"><thead><tr><th>الاسم</th><th>الدور</th><th>الأقسام المفتوحة حالياً</th><th>تحكم</th></tr></thead><tbody>' + pRows + '</tbody></table>'
+                    : '<div style="text-align:center; padding:18px; color:var(--gray);">لا يوجد مساعدون أو موظفون غير المديرين حالياً.</div>';
+            }
+        }
+
+        function selectPcPerfEmp_(code) {
+            var sel = document.getElementById('pcPerfEmpSelect');
+            if (sel) { sel.value = code; onPcPerfEmpChange(); sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        }
+
+        function selectPcSlaEmp_(code) {
+            var sel = document.getElementById('pcSlaEmpSelect');
+            if (sel) { sel.value = code; onPcSlaEmpChange(); sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        }
+
+        function onPcPerfEmpChange() {
+            var sel = document.getElementById('pcPerfEmpSelect');
+            if (!sel || !Array.isArray(window.allEmployees)) return;
+            var emp = window.allEmployees.find(function(e) { return String(e.code) === String(sel.value); });
+            if (!emp) return;
+            var en = !!emp.perfEnabled;
+            var cbEn = document.getElementById('pcPerfEnabled');
+            if (cbEn) cbEn.checked = en;
+            onPcPerfToggle(en);
+            var secs = Array.isArray(emp.perfSections) ? emp.perfSections : [];
+            document.querySelectorAll('.pc-perf-sec-cb').forEach(function(cb) { cb.checked = secs.indexOf(cb.value) !== -1; });
+            var t = emp.perfTargets || {};
+            if (document.getElementById('pcPerfTargetWajib')) document.getElementById('pcPerfTargetWajib').value = t.wajib || '';
+            if (document.getElementById('pcPerfTargetIkhtibarat')) document.getElementById('pcPerfTargetIkhtibarat').value = t.ikhtibarat || '';
+            if (document.getElementById('pcPerfExamDay')) document.getElementById('pcPerfExamDay').value = (emp.perfExamDay !== undefined && emp.perfExamDay !== null) ? String(emp.perfExamDay) : '';
+            if (document.getElementById('pcPerfStartDate')) document.getElementById('pcPerfStartDate').value = emp.perfStartDate || '';
+        }
+
+        function onPcSlaEmpChange() {
+            var sel = document.getElementById('pcSlaEmpSelect');
+            if (!sel || !Array.isArray(window.allEmployees)) return;
+            var emp = window.allEmployees.find(function(e) { return String(e.code) === String(sel.value); });
+            if (!emp) return;
+            var s = emp.perfSla || {};
+            if (document.getElementById('pcSlaWajib')) document.getElementById('pcSlaWajib').value = s.wajib || 24;
+            if (document.getElementById('pcSlaTasmiya')) document.getElementById('pcSlaTasmiya').value = s.tasmiya || 48;
+            if (document.getElementById('pcSlaIkhtibarat')) document.getElementById('pcSlaIkhtibarat').value = s.ikhtibarat || 96;
+        }
+
+        function savePerfControlSettings(mode, btn) {
+            var empCode = mode === 'sla'
+                ? (document.getElementById('pcSlaEmpSelect') || {}).value
+                : (document.getElementById('pcPerfEmpSelect') || {}).value;
+            if (!empCode) return showNotify('warning', 'يرجى اختيار الموظف أولاً');
+
+            var payload = { employeeCode: empCode, mode: mode };
+            if (mode === 'perf') {
+                var en = !!(document.getElementById('pcPerfEnabled') && document.getElementById('pcPerfEnabled').checked);
+                var secs = [];
+                document.querySelectorAll('.pc-perf-sec-cb:checked').forEach(function(cb) { secs.push(cb.value); });
+                if (en && secs.length === 0) return showNotify('error', 'اختر قسماً واحداً على الأقل قبل تفعيل تحليل الأداء اليومي');
+                payload.perfEnabled = en;
+                payload.perfSections = secs;
+                payload.perfTargets = {
+                    wajib: Number((document.getElementById('pcPerfTargetWajib') || {}).value) || 0,
+                    tasmiya: 0,
+                    ikhtibarat: Number((document.getElementById('pcPerfTargetIkhtibarat') || {}).value) || 0
+                };
+                payload.perfExamDay = (document.getElementById('pcPerfExamDay') || {}).value || '';
+                payload.perfStartDate = (document.getElementById('pcPerfStartDate') || {}).value || '';
+            } else if (mode === 'sla') {
+                payload.perfSla = {
+                    wajib: Math.max(1, Number((document.getElementById('pcSlaWajib') || {}).value) || 24),
+                    tasmiya: Math.max(1, Number((document.getElementById('pcSlaTasmiya') || {}).value) || 48),
+                    ikhtibarat: Math.max(1, Number((document.getElementById('pcSlaIkhtibarat') || {}).value) || 96)
+                };
+            }
+
+            if (btn) toggleLoading(btn, true);
+            runGS('saveEmployeePerfSettingsGS', payload).then(function(res) {
+                if (btn) toggleLoading(btn, false);
+                if (res && res.success) {
+                    showNotify('success', res.message || 'تم الحفظ بنجاح');
+                    try { Object.keys(localStorage).forEach(function(k) { if (k.startsWith('cache_emp_perf_')) localStorage.removeItem(k); }); } catch (_e) {}
+                    loadPerfControlHub();
+                    if (typeof loadEmployeesPerformanceDashboard === 'function') {
+                        loadEmployeesPerformanceDashboard(null, null, true);
+                    }
+                } else {
+                    showNotify('error', (res && res.message) || 'فشل الحفظ');
+                }
+            }).catch(function(err) {
+                if (btn) toggleLoading(btn, false);
+                showNotify('error', err.message);
+            });
+        }
     </script>
 
     <style id="elhelihey-unified-design-system">

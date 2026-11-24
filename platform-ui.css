@@ -47,3 +47,19 @@ button, input, select, textarea { font-family: inherit; }
 [data-theme="dark"] .hero-section {
   background: linear-gradient(135deg, #10261e, #17392d) !important;
 }
+
+:root[data-platform-palette="emerald"] {
+  --platform-green: #116849;
+  --platform-green-deep: #0a503a;
+  --platform-green-soft: #e3f4eb;
+  --platform-focus: #197450;
+}
+:root[data-platform-palette="olive"] {
+  --platform-green: #49602f;
+  --platform-green-deep: #334522;
+  --platform-green-soft: #eef2e5;
+  --platform-focus: #526d36;
+}
+:root[data-platform-palette]:not([data-theme="dark"]):not(.dark) {
+  --secondary: var(--platform-green);
+}
