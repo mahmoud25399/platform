@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>السبورة التعليمية الذكية — منصة الهليهي</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --brand: #0f5d57;
@@ -29,7 +29,9 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
+      overscroll-behavior: none;
       font-family: 'Cairo', sans-serif;
       background: #f8fafc;
       color: var(--ink);
@@ -121,7 +123,7 @@
     /* Unified Floating Bottom Dock */
     #bottom-dock-wrap {
       position: fixed;
-      bottom: 14px;
+      bottom: max(12px, env(safe-area-inset-bottom, 12px));
       left: 50%;
       transform: translateX(-50%);
       z-index: 40;
@@ -292,25 +294,106 @@
     }
 
     /* Textarea for Text Tool (Auto-growing width & height) */
-    #text-input {
+    #rich-text-editor {
       position: fixed;
-      z-index: 46;
-      background: rgba(255, 255, 255, 0.96);
-      border: 2px dashed var(--brand);
-      border-radius: 12px;
-      padding: 8px 14px;
-      font-family: 'Cairo', sans-serif;
-      font-weight: 700;
-      line-height: 1.45;
+      z-index: 62;
+      background: transparent;
+      border: 1.5px dashed var(--brand);
+      border-radius: 6px;
+      padding: 2px 6px;
+      outline: none;
       direction: rtl;
       text-align: right;
-      outline: none;
-      resize: none;
-      overflow: hidden;
+      min-width: 90px;
+      min-height: 32px;
+      line-height: 1.45;
       white-space: pre;
-      min-width: 220px;
-      min-height: 54px;
-      box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.12), 0 1px 3px rgba(15, 23, 42, 0.06);
+      cursor: text;
+      caret-color: var(--brand);
+    }
+    #rich-text-editor:empty::before {
+      content: attr(data-placeholder);
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    #rich-text-toolbar {
+      position: fixed;
+      z-index: 65;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(15, 23, 42, 0.10);
+      border-radius: 13px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
+      direction: rtl;
+    }
+    #rich-text-toolbar.hidden { display: none; }
+    .rt-btn {
+      font-family: 'Cairo', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: #f1f5f9;
+      color: #334155;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.12s, color 0.12s;
+    }
+    .rt-btn:hover { background: #e2e8f0; }
+    .rt-btn.active { background: var(--brand); color: #ffffff; }
+    .rt-color-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .rt-color-dot.active { box-shadow: 0 0 0 2px var(--brand); }
+
+    /* Floating Draggable Random Student Picker */
+    #picker-widget {
+      position: fixed;
+      top: 68px;
+      left: 296px;
+      width: 300px;
+      max-width: calc(100vw - 24px);
+      z-index: 47;
+      display: none;
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(15, 23, 42, 0.09);
+      border-radius: 16px;
+      box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.14), 0 1px 3px rgba(15, 23, 42, 0.06);
+      overflow: hidden;
+      user-select: none;
+    }
+    #picker-widget.open { display: block; animation: toastIn 0.2s ease; }
+    #picker-drag-handle { cursor: grab; }
+    #picker-drag-handle:active { cursor: grabbing; }
+    #picker-stage {
+      min-height: 76px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      text-align: center;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    #picker-stage.winner {
+      background: #e6f4f1;
+      border-color: var(--brand);
     }
 
     /* Modals & Toasts */
@@ -467,11 +550,14 @@
     /* Responsive adjustments */
     @media (max-width: 768px) {
       #zoom-pill { display: none; }
-      #top-bar { padding: 0 8px; gap: 4px; }
+      #top-bar { padding: 0 6px; gap: 4px; height: 48px; }
       .dock-btn { width: 34px; height: 34px; }
+      .preset-btn { width: 28px; height: 28px; }
+      #picker-widget { left: 10px !important; width: calc(100vw - 20px); }
+      #timer-widget { left: 10px !important; }
+      #pages-drawer { width: min(260px, 82vw); }
     }
   </style>
-<link rel="stylesheet" href="./platform-ui.css">
 </head>
 <body>
 
@@ -483,7 +569,44 @@
   <div id="laser-pointer"></div>
 
   <!-- Hidden Inputs -->
-  <textarea id="text-input" class="hidden" placeholder="اكتب النص هنا..."></textarea>
+  <div id="rich-text-toolbar" class="hidden">
+    <div class="flex items-center gap-1.5" id="rt-colors">
+      <button type="button" class="rt-color-dot" data-rt-color="#1e293b" style="background:#1e293b;" title="أسود"></button>
+      <button type="button" class="rt-color-dot" data-rt-color="#b91c1c" style="background:#b91c1c;" title="أحمر"></button>
+      <button type="button" class="rt-color-dot" data-rt-color="#1d4ed8" style="background:#1d4ed8;" title="أزرق"></button>
+      <button type="button" class="rt-color-dot" data-rt-color="#0f5d57" style="background:#0f5d57;" title="أخضر"></button>
+      <button type="button" class="rt-color-dot" data-rt-color="#6d28d9" style="background:#6d28d9;" title="بنفسجي"></button>
+      <button type="button" class="rt-color-dot" data-rt-color="#b45309" style="background:#b45309;" title="برتقالي"></button>
+    </div>
+    <div class="w-px h-4 bg-slate-200"></div>
+    <select id="rt-font-select" class="bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg px-2 py-1 outline-none border border-slate-200 cursor-pointer" title="نوع الخط">
+      <option value="Cairo">القاهرة (عصري)</option>
+      <option value="Amiri">أميري (نسخ)</option>
+      <option value="Tajawal">تجوال (مبسط)</option>
+    </select>
+    <div class="w-px h-4 bg-slate-200"></div>
+    <div class="flex items-center gap-1" id="rt-sizes">
+      <button type="button" class="rt-btn" data-rt-size="22" title="حجم عادي">عادي</button>
+      <button type="button" class="rt-btn" data-rt-size="28" title="حجم متوسط">متوسط</button>
+      <button type="button" class="rt-btn" data-rt-size="38" title="حجم كبير">كبير</button>
+      <button type="button" class="rt-btn" data-rt-size="50" title="عنوان">عنوان</button>
+    </div>
+    <div class="w-px h-4 bg-slate-200"></div>
+    <div class="flex items-center gap-1" id="rt-weights">
+      <button type="button" class="rt-btn" data-rt-weight="400" title="خط خفيف">خفيف</button>
+      <button type="button" class="rt-btn" data-rt-weight="600" title="خط عادي">عادي</button>
+      <button type="button" class="rt-btn" data-rt-weight="800" title="خط ضخم">ضخم</button>
+    </div>
+    <div class="w-px h-4 bg-slate-200"></div>
+    <div class="flex items-center gap-1" id="rt-aligns">
+      <button type="button" class="rt-btn active" data-rt-align="right" title="محاذاة لليمين"><i class="ph ph-text-align-right text-sm"></i></button>
+      <button type="button" class="rt-btn" data-rt-align="center" title="توسيط"><i class="ph ph-text-align-center text-sm"></i></button>
+      <button type="button" class="rt-btn" data-rt-align="left" title="محاذاة لليسار"><i class="ph ph-text-align-left text-sm"></i></button>
+    </div>
+    <div class="w-px h-4 bg-slate-200"></div>
+    <button type="button" id="rt-done-btn" class="rt-btn active" title="تثبيت [Esc]">✓</button>
+  </div>
+  <div id="rich-text-editor" class="hidden" contenteditable="true" spellcheck="false" data-placeholder="اكتب هنا..."></div>
   <input type="file" id="image-upload" accept="image/*" class="hidden">
   <input type="file" id="frame-upload" accept="image/*" class="hidden">
   <input type="file" id="pdf-upload" accept="application/pdf,.pdf" class="hidden">
@@ -577,6 +700,58 @@
     </div>
   </div>
 
+  <!-- Floating Draggable Random Student Picker Widget -->
+  <div id="picker-widget" aria-label="الاختيار العشوائي للطالب">
+    <div id="picker-drag-handle" class="px-3 py-2 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <i class="ph ph-dots-six-vertical text-slate-400 text-sm"></i>
+        <i class="ph ph-shuffle text-teal-700 text-sm"></i>
+        <span class="text-xs font-bold text-slate-800">اختيار طالب عشوائي</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button id="picker-refresh-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-slate-200/70 text-slate-500 flex items-center justify-center" title="تحديث القائمة">
+          <i class="ph ph-arrows-clockwise text-sm"></i>
+        </button>
+        <button id="picker-close-btn" type="button" class="w-6 h-6 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center" title="إغلاق">
+          <i class="ph ph-x text-sm"></i>
+        </button>
+      </div>
+    </div>
+    <div class="p-3">
+      <div class="flex items-center justify-between gap-2 mb-2 text-[11px] font-bold">
+        <span id="picker-scope-badge" class="text-teal-800 bg-teal-50 border border-teal-100 rounded-md px-2 py-0.5 truncate">جاري التحميل...</span>
+        <span id="picker-count-badge" class="text-slate-500 flex-shrink-0 font-mono">0</span>
+      </div>
+
+      <div id="picker-stage" class="mb-2.5">
+        <div id="picker-result-name" class="text-lg font-extrabold text-slate-800 leading-snug">اضغط لاختيار طالب</div>
+      </div>
+
+      <button id="picker-spin-btn" type="button" class="w-full bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm mb-2.5">
+        <i class="ph ph-sparkle text-sm"></i>
+        <span>اختر طالباً عشوائياً</span>
+      </button>
+
+      <div class="flex items-center justify-between gap-2 text-[11px] font-bold text-slate-600 mb-2">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" id="picker-no-repeat" checked class="w-3.5 h-3.5 accent-[#0f5d57] cursor-pointer">
+          <span>عدم تكرار الطالب</span>
+        </label>
+        <button id="picker-reset-btn" type="button" class="text-teal-700 hover:underline">إعادة الكل</button>
+      </div>
+
+      <details class="border-t border-slate-100 pt-2" open>
+        <summary class="text-[11px] font-bold text-slate-600 cursor-pointer hover:text-slate-800 select-none flex items-center justify-between">
+          <span>استبعاد الغائبين (اضغط على الاسم)</span>
+          <span id="picker-absent-badge" class="text-[10px] font-bold text-rose-600"></span>
+        </summary>
+        <input type="text" id="picker-search-student" placeholder="ابحث عن اسم طالب..." dir="rtl"
+          class="w-full mt-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-700 outline-none focus:border-teal-600">
+        <div id="picker-students-list" class="mt-1.5 max-h-32 overflow-y-auto slim-scroll flex flex-wrap gap-1"></div>
+      </details>
+    </div>
+  </div>
+
   <!-- ══════════════════════════════════════════════════
        1. ULTRA-SLIM TOP HEADER (52px)
        ══════════════════════════════════════════════════ -->
@@ -619,6 +794,11 @@
 
     <!-- Left: Timer + Publish CTA + More Menu + Focus Mode -->
     <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button id="btn-picker-toggle" type="button" class="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer" title="اختيار طالب عشوائي">
+        <i class="ph ph-shuffle text-base text-teal-700"></i>
+        <span class="hidden md:inline">اختيار طالب</span>
+      </button>
+
       <button id="btn-timer-toggle" type="button" class="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer" title="المؤقت">
         <i class="ph ph-timer text-base text-teal-700"></i>
         <span id="top-timer-badge" class="hidden sm:inline">مؤقت</span>
@@ -672,6 +852,9 @@
     <div class="px-3.5 py-2.5 border-b border-slate-200 flex items-center justify-between">
       <span class="text-xs font-extrabold text-slate-800">صفحات الدرس</span>
       <div class="flex items-center gap-1">
+        <button id="drawer-paste-page" type="button" class="hidden h-7 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1 text-[10px] font-bold" title="لصق صفحة منقولة من سبورة أخرى">
+          <i class="ph ph-clipboard-text text-xs"></i><span>لصق</span>
+        </button>
         <button id="drawer-add-page" type="button" class="w-7 h-7 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 flex items-center justify-center" title="صفحة جديدة">
           <i class="ph ph-plus text-sm"></i>
         </button>
@@ -831,6 +1014,10 @@
         <input type="color" id="custom-color-input" value="#1e293b" class="sr-only">
       </label>
     </div>
+    <div id="recent-colors-row" class="hidden items-center gap-1.5 mb-2.5 pt-1.5 border-t border-slate-100">
+      <span class="text-[10px] font-bold text-slate-400">ألوانك:</span>
+      <div id="recent-colors-list" class="flex items-center gap-1.5 flex-wrap"></div>
+    </div>
 
     <!-- Wacom Controls: Pressure + Stabilizer -->
     <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -980,7 +1167,8 @@
         <input type="text" id="search-saved-boards" placeholder="ابحث باسم الدرس..." dir="rtl"
           class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-teal-600 w-44">
       </div>
-      <div id="saved-boards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto slim-scroll p-1 flex-1 min-h-[180px]"></div>
+      <div id="saved-boards-breadcrumb" class="flex items-center gap-1.5 flex-wrap mb-3 text-xs font-bold text-slate-500"></div>
+      <div id="saved-boards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto slim-scroll p-1 flex-1 min-h-[220px]"></div>
     </div>
   </div>
 
@@ -1035,9 +1223,72 @@
 
     const storage = {
       get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } },
-      set(key, val) { try { localStorage.setItem(key, val); } catch (_) { if (key === 'wb_autosave_v2') showToast('error','تعذر الحفظ المحلي. صدّر السبورة أو احفظها في السحابة'); } },
+      set(key, val) { try { localStorage.setItem(key, val); } catch (_) {} },
       remove(key) { try { localStorage.removeItem(key); } catch (_) {} }
     };
+
+    // High-Capacity IndexedDB Store (Autosave + PDF Binary Blobs + Cross-Board Page Transfer)
+    const wbDB = (() => {
+      let dbPromise = null;
+      function open() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise((resolve) => {
+          if (!window.indexedDB) { resolve(null); return; }
+          try {
+            const req = indexedDB.open('elhelihey_wb_db_v1', 1);
+            req.onupgradeneeded = (e) => {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+              if (!db.objectStoreNames.contains('pdfs')) db.createObjectStore('pdfs');
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror   = () => resolve(null);
+          } catch (_) { resolve(null); }
+        });
+        return dbPromise;
+      }
+      async function tx(store, mode, fn) {
+        const db = await open();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          try {
+            const t = db.transaction(store, mode);
+            const s = t.objectStore(store);
+            const r = fn(s);
+            r.onsuccess = () => resolve(r.result);
+            r.onerror   = () => resolve(null);
+          } catch (_) { resolve(null); }
+        });
+      }
+      return {
+        get: (k) => tx('kv', 'readonly', s => s.get(k)),
+        set: (k, v) => tx('kv', 'readwrite', s => s.put(v, k)),
+        del: (k) => tx('kv', 'readwrite', s => s.delete(k)),
+        getPdf: (id) => tx('pdfs', 'readonly', s => s.get(id)),
+        setPdf: (id, buf) => tx('pdfs', 'readwrite', s => s.put(buf, id)),
+        delPdf: (id) => tx('pdfs', 'readwrite', s => s.delete(id))
+      };
+    })();
+
+    // Shared Media Pool: prevents duplicating giant base64 strings across 50 Undo snapshots!
+    const mediaPool = new Map(); // mediaId -> { imgSrc, imgObj }
+    function registerMedia(imgSrc, imgObj, existingId) {
+      const id = existingId || ('med_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6));
+      mediaPool.set(id, { imgSrc, imgObj });
+      return id;
+    }
+    function getMediaImgObj(el) {
+      if (el.imgObj) return el.imgObj;
+      if (el.mediaId && mediaPool.has(el.mediaId)) {
+        el.imgObj = mediaPool.get(el.mediaId).imgObj;
+        return el.imgObj;
+      }
+      return null;
+    }
+    function getMediaSrc(el) {
+      if (el.mediaId && mediaPool.has(el.mediaId)) return mediaPool.get(el.mediaId).imgSrc;
+      return el.imgSrc || '';
+    }
 
     async function runGS(action, ...params) {
       try {
@@ -1150,7 +1401,8 @@
     const overlayLayer = document.getElementById('overlay-layer');
     const penCursor    = document.getElementById('pen-cursor');
     const laserDot     = document.getElementById('laser-pointer');
-    const textInput    = document.getElementById('text-input');
+    const richTextEditor  = document.getElementById('rich-text-editor');
+    const richTextToolbar = document.getElementById('rich-text-toolbar');
     const imageUpload  = document.getElementById('image-upload');
     const frameUpload  = document.getElementById('frame-upload');
     const pdfUpload    = document.getElementById('pdf-upload');
@@ -1172,12 +1424,23 @@
 
     function cloneElements(list) {
       return list.map(el => {
+        if (!el) return el;
         if (el.type === 'image' || el.type === 'pdf') {
+          if (!el.mediaId && el.imgSrc) el.mediaId = registerMedia(el.imgSrc, el.imgObj);
           const copy = { ...el };
           delete copy.imgObj;
+          delete copy.imgSrc; // Stored once in mediaPool, never cloned 50x in RAM!
           const out = JSON.parse(JSON.stringify(copy));
-          out.imgObj = el.imgObj;
+          out.imgObj = getMediaImgObj(el);
           return out;
+        }
+        if (el.type === 'pen' || el.type === 'highlighter') {
+          // Fast shallow clone for strokes (points arrays are replaced on erase/move, never mutated in-place)
+          return {
+            ...el,
+            points: el.points ? el.points.slice() : undefined,
+            relPoints: el.relPoints ? el.relPoints.slice() : undefined
+          };
         }
         const copy = JSON.parse(JSON.stringify(el));
         delete copy._dragNode;
@@ -1190,6 +1453,7 @@
       hasUnsavedChanges = false;
       if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null; }
       storage.remove('wb_autosave_v2');
+      wbDB.del('autosave_latest');
     }
 
     function pushUndoSnapshot() {
@@ -1247,7 +1511,6 @@
     let lastEraseClientY  = 0;
     let lastEraseTime     = 0;
     let currentStamp     = 'check';
-    let boardVersion = '';
     let currentBoardId   = 'board_' + Date.now();
     let lastPublishedLessonName = '';
     let lastPublishedPdfUrl = '';
@@ -1729,6 +1992,7 @@
       ctx.lineCap     = 'round';
       ctx.lineJoin    = 'round';
 
+      if (el.dashed) ctx.setLineDash([10, 7]);
       if (el.type === 'line') {
         ctx.beginPath();
         ctx.moveTo(el.x1, el.y1);
@@ -1741,6 +2005,7 @@
         ctx.moveTo(el.x1, el.y1);
         ctx.lineTo(el.x2, el.y2);
         ctx.stroke();
+        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(el.x2, el.y2);
         ctx.lineTo(el.x2 - headLen * Math.cos(angle - Math.PI / 7), el.y2 - headLen * Math.sin(angle - Math.PI / 7));
@@ -1748,11 +2013,13 @@
         ctx.closePath();
         ctx.fill();
       } else if (el.type === 'rect') {
+        if (el.fillColor) { ctx.save(); ctx.globalAlpha = 0.14; ctx.fillStyle = el.fillColor; ctx.fillRect(el.x, el.y, el.w, el.h); ctx.restore(); }
         ctx.strokeRect(el.x, el.y, el.w, el.h);
       } else if (el.type === 'circle') {
         const rx = Math.abs(el.w) / 2, ry = Math.abs(el.h) / 2;
         ctx.beginPath();
         ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, rx, ry, 0, 0, Math.PI * 2);
+        if (el.fillColor) { ctx.save(); ctx.globalAlpha = 0.14; ctx.fillStyle = el.fillColor; ctx.fill(); ctx.restore(); }
         ctx.stroke();
       } else if (el.type === 'triangle' && el.verts && el.verts.length === 3) {
         ctx.beginPath();
@@ -1760,30 +2027,78 @@
         ctx.lineTo(el.verts[1].x, el.verts[1].y);
         ctx.lineTo(el.verts[2].x, el.verts[2].y);
         ctx.closePath();
+        if (el.fillColor) { ctx.save(); ctx.globalAlpha = 0.14; ctx.fillStyle = el.fillColor; ctx.fill(); ctx.restore(); }
         ctx.stroke();
       } else if (el.type === 'text') {
-        const fontSize = Math.max(16, (el.size || 4) * TEXT_SCALE);
-        const lineHeight = fontSize * 1.45;
-        ctx.font = `700 ${fontSize}px Cairo, Amiri, sans-serif`;
+        if (el._editing) return;
+        const baseSize   = el.fontSize || Math.max(18, (el.size || 4) * TEXT_SCALE);
+        const fontFamily = el.fontFamily || 'Cairo';
+        const baseWeight = el.fontWeight || 700;
+        const baseColor  = el.color || '#1e293b';
         ctx.direction = 'rtl';
         ctx.textAlign = 'right';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = el.color || '#1e293b';
-        const lines = String(el.text || '').split('\n');
-        lines.forEach((line, idx) => {
-          if (line) ctx.fillText(line, el.x, el.y + idx * lineHeight);
+        ctx.textBaseline = 'alphabetic';
+
+        const rawLines = Array.isArray(el.richLines) && el.richLines.length
+          ? el.richLines
+          : String(el.text || '').split('\n').map(l => ({ align: el.align || 'right', runs: [{ text: l, color: baseColor, weight: baseWeight, size: baseSize }] }));
+
+        const normLines = rawLines.map(ln => Array.isArray(ln) ? { align: el.align || 'right', runs: ln } : { align: ln.align || el.align || 'right', runs: ln.runs || [] });
+
+        // Measure each line width & max font size so alignment (right/center/left) is pixel-exact
+        let boxW = 44;
+        const measured = normLines.map(ln => {
+          let lw = 0, maxFs = baseSize;
+          ln.runs.forEach(run => {
+            if (!run.text) return;
+            const rFs = run.size || baseSize;
+            const rW  = run.weight || baseWeight;
+            if (rFs > maxFs) maxFs = rFs;
+            ctx.font = `${rW} ${rFs}px "${fontFamily}", Cairo, sans-serif`;
+            lw += ctx.measureText(run.text).width;
+          });
+          if (lw > boxW) boxW = lw;
+          return { align: ln.align, runs: ln.runs, lw, maxFs, lh: maxFs * 1.45 };
+        });
+
+        let curY = el.y;
+        measured.forEach(ln => {
+          let cursorX = el.x;
+          if (ln.align === 'center') cursorX = el.x - (boxW - ln.lw) * 0.5;
+          else if (ln.align === 'left') cursorX = el.x - (boxW - ln.lw);
+          const baselineY = curY + ln.maxFs * 1.05;
+          ln.runs.forEach(run => {
+            if (!run.text) return;
+            const rFs = run.size || baseSize;
+            const rW  = run.weight || baseWeight;
+            ctx.font = `${rW} ${rFs}px "${fontFamily}", Cairo, sans-serif`;
+            ctx.fillStyle = run.color || baseColor;
+            ctx.fillText(run.text, cursorX, baselineY);
+            cursorX -= ctx.measureText(run.text).width;
+          });
+          curY += ln.lh;
         });
       } else if (el.type === 'stamp') {
         drawStampElement(ctx, el);
-      } else if (el.type === 'image' && el.imgObj) {
+      } else if (el.type === 'image' && getMediaImgObj(el)) {
+        const imgObj = getMediaImgObj(el);
         const { drawW, drawH } = getPdfDrawDims(el);
         const vx = el.viewX || 0;
         const vy = el.viewY || 0;
+        const rot = ((el.rotation || 0) * Math.PI) / 180;
         ctx.save();
         ctx.beginPath();
         ctx.rect(el.x, el.y, el.w, el.h);
         ctx.clip();
-        ctx.drawImage(el.imgObj, el.x + vx, el.y + vy, drawW, drawH);
+        if (rot) {
+          const icx = el.x + vx + drawW * 0.5;
+          const icy = el.y + vy + drawH * 0.5;
+          ctx.translate(icx, icy);
+          ctx.rotate(rot);
+          ctx.drawImage(imgObj, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+        } else {
+          ctx.drawImage(imgObj, el.x + vx, el.y + vy, drawW, drawH);
+        }
         ctx.restore();
         drawAttachedStrokesForParent(ctx, el, true);
       } else if (el.type === 'pdf') {
@@ -1890,6 +2205,21 @@
       }
       ctx.fillStyle = tbl.headerBg || '#e6f4f1';
       ctx.fillRect(tbl.x, tbl.y, totalW, getTblRowH(tbl, 0));
+      if (tbl.cellBgs) {
+        let bgY = tbl.y;
+        for (let r = 0; r < tbl.rows; r++) {
+          const ch = getTblRowH(tbl, r);
+          let bgX = tbl.x;
+          for (let c = 0; c < tbl.cols; c++) {
+            const rtlC = tbl.cols - 1 - c;
+            const cw = getTblColW(tbl, rtlC);
+            const cbg = tbl.cellBgs[r] && tbl.cellBgs[r][rtlC];
+            if (cbg) { ctx.fillStyle = cbg; ctx.fillRect(bgX, bgY, cw, ch); }
+            bgX += cw;
+          }
+          bgY += ch;
+        }
+      }
 
       ctx.strokeStyle = tbl.borderColor || '#0f5d57';
       ctx.lineWidth = 1.6;
@@ -1949,9 +2279,102 @@
       return w;
     }
 
+    function getHiddenMindmapNodeIds(mm) {
+      const hidden = new Set();
+      const collapsedIds = (mm.nodes || []).filter(n => n.collapsed).map(n => n.id);
+      const queue = [...collapsedIds];
+      while (queue.length) {
+        const cur = queue.shift();
+        (mm.connections || []).forEach(c => {
+          if (c.from === cur && !hidden.has(c.to)) {
+            hidden.add(c.to);
+            queue.push(c.to);
+          }
+        });
+      }
+      return hidden;
+    }
+
+    function countMindmapDescendants(mm, nodeId) {
+      const seen = new Set();
+      const q = [nodeId];
+      while (q.length) {
+        const cur = q.shift();
+        (mm.connections || []).forEach(c => {
+          if (c.from === cur && !seen.has(c.to)) { seen.add(c.to); q.push(c.to); }
+        });
+      }
+      return seen.size;
+    }
+
+    function autoLayoutMindmap(mm) {
+      if (!mm || !mm.nodes || !mm.nodes.length) return;
+      const root = mm.nodes.find(n => n.id === 'root') || mm.nodes[0];
+      const byId = new Map(mm.nodes.map(n => [n.id, n]));
+      const childrenOf = (id, dirFilter) => (mm.connections || [])
+        .filter(c => c.from === id && (!dirFilter || c.dir === dirFilter))
+        .map(c => ({ node: byId.get(c.to), dir: c.dir }))
+        .filter(x => x.node);
+
+      const gapX = 56, gapY = 20;
+      function subtreeH(node) {
+        if (node.collapsed) return (node.h || 36);
+        const ch = childrenOf(node.id);
+        if (!ch.length) return (node.h || 36);
+        const total = ch.reduce((acc, c) => acc + subtreeH(c.node), 0) + (ch.length - 1) * gapY;
+        return Math.max(node.h || 36, total);
+      }
+      function placeBranch(node, dirSign) {
+        if (node.collapsed) return;
+        const ch = childrenOf(node.id);
+        if (!ch.length) return;
+        const totalH = ch.reduce((acc, c) => acc + subtreeH(c.node), 0) + (ch.length - 1) * gapY;
+        let curY = node.y + (node.h || 36) * 0.5 - totalH * 0.5;
+        ch.forEach(({ node: cn }) => {
+          const sh = subtreeH(cn);
+          cn.y = curY + sh * 0.5 - (cn.h || 36) * 0.5;
+          cn.x = dirSign > 0 ? (node.x + (node.w || 100) + gapX) : (node.x - (cn.w || 100) - gapX);
+          placeBranch(cn, dirSign);
+          curY += sh + gapY;
+        });
+      }
+
+      const rightCh = childrenOf(root.id, 'right');
+      const leftCh  = childrenOf(root.id, 'left');
+      const belowCh = childrenOf(root.id, 'below');
+      const layoutSide = (list, sign) => {
+        if (!list.length) return;
+        const totalH = list.reduce((a, c) => a + subtreeH(c.node), 0) + (list.length - 1) * gapY;
+        let curY = root.y + (root.h || 38) * 0.5 - totalH * 0.5;
+        list.forEach(({ node: cn }) => {
+          const sh = subtreeH(cn);
+          cn.y = curY + sh * 0.5 - (cn.h || 36) * 0.5;
+          cn.x = sign > 0 ? (root.x + (root.w || 100) + gapX) : (root.x - (cn.w || 100) - gapX);
+          placeBranch(cn, sign);
+          curY += sh + gapY;
+        });
+      };
+      layoutSide(rightCh, 1);
+      layoutSide(leftCh, -1);
+
+      if (belowCh.length) {
+        const gapBelowX = 32;
+        const totalW = belowCh.reduce((a, c) => a + (c.node.w || 100), 0) + (belowCh.length - 1) * gapBelowX;
+        let curX = root.x + (root.w || 100) * 0.5 - totalW * 0.5;
+        belowCh.forEach(({ node: cn }) => {
+          cn.x = curX;
+          cn.y = root.y + (root.h || 38) + 56;
+          placeBranch(cn, 1);
+          curX += (cn.w || 100) + gapBelowX;
+        });
+      }
+    }
+
     function drawMindmapElement(ctx, mm) {
       if (!mm.nodes || mm.nodes.length === 0) return;
+      const hiddenIds = getHiddenMindmapNodeIds(mm);
       (mm.connections || []).forEach(conn => {
+        if (hiddenIds.has(conn.from) || hiddenIds.has(conn.to)) return;
         const from = mm.nodes.find(n => n.id === conn.from);
         const to   = mm.nodes.find(n => n.id === conn.to);
         if (!from || !to) return;
@@ -1966,6 +2389,7 @@
         ctx.stroke();
       });
       mm.nodes.forEach(node => {
+        if (hiddenIds.has(node.id)) return;
         const nw = node.w || 100, nh = node.h || 36;
         ctx.fillStyle = node.color || '#0f5d57';
         roundRect(ctx, node.x, node.y, nw, nh, 10);
@@ -1974,6 +2398,18 @@
         ctx.font = `700 ${node.fontSize || 14}px Cairo, sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.direction = 'rtl';
         ctx.fillText(node.text, node.x + nw / 2, node.y + nh / 2);
+        if (node.collapsed) {
+          const cnt = countMindmapDescendants(mm, node.id);
+          if (cnt > 0) {
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(node.x, node.y + nh * 0.5, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 10px "IBM Plex Mono", sans-serif';
+            ctx.fillText('+' + cnt, node.x, node.y + nh * 0.5 + 0.5);
+          }
+        }
         if (mm.selectedNodeId === node.id) {
           ctx.strokeStyle = '#f59e0b';
           ctx.lineWidth = 3;
@@ -1994,7 +2430,16 @@
       sCtx.save();
       sCtx.translate(panX, panY);
       sCtx.scale(zoom, zoom);
-      curElements().forEach(el => drawElement(sCtx, el));
+      const vMinX = -panX / zoom - 80, vMinY = -panY / zoom - 80;
+      const vMaxX = (viewW - panX) / zoom + 80, vMaxY = (viewH - panY) / zoom + 80;
+      const elsToDraw = curElements();
+      for (let i = 0; i < elsToDraw.length; i++) {
+        const el = elsToDraw[i];
+        if (!el || el.attach) continue;
+        const b = getBox(el);
+        if (b && (b.x + b.w < vMinX || b.x > vMaxX || b.y + b.h < vMinY || b.y > vMaxY)) continue;
+        drawElement(sCtx, el);
+      }
       sCtx.restore();
 
       updateOverlayControls();
@@ -2160,15 +2605,28 @@
         return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xe) - Math.min(...xs), h: Math.max(...ye) - Math.min(...ys) };
       }
       if (el.type === 'text') {
-        const fs = Math.max(16, (el.size || 4) * TEXT_SCALE);
-        const lh = fs * 1.45;
+        const baseFs = el.fontSize || Math.max(18, (el.size || 4) * TEXT_SCALE);
+        const ff = el.fontFamily || 'Cairo';
+        const bw = el.fontWeight || 700;
+        const rawLines = Array.isArray(el.richLines) && el.richLines.length
+          ? el.richLines
+          : String(el.text || '').split('\n').map(l => ({ align: el.align || 'right', runs: [{ text: l, color: el.color || '#1e293b', weight: bw, size: baseFs }] }));
         sCtx.save();
-        sCtx.font = `700 ${fs}px Cairo, Amiri, sans-serif`;
-        const lines = String(el.text || '').split('\n');
-        let maxW = 40;
-        lines.forEach(l => { maxW = Math.max(maxW, sCtx.measureText(l).width); });
+        let maxW = 44, totalH = 0;
+        rawLines.forEach(ln => {
+          const runs = Array.isArray(ln) ? ln : (ln.runs || []);
+          let lw = 0, maxFs = baseFs;
+          runs.forEach(r => {
+            const rFs = r.size || baseFs;
+            if (rFs > maxFs) maxFs = rFs;
+            sCtx.font = `${r.weight || bw} ${rFs}px "${ff}", Cairo, sans-serif`;
+            lw += sCtx.measureText(r.text || '').width;
+          });
+          maxW = Math.max(maxW, lw);
+          totalH += maxFs * 1.45;
+        });
         sCtx.restore();
-        return { x: el.x - maxW, y: el.y, w: maxW, h: lh * Math.max(1, lines.length) };
+        return { x: el.x - maxW, y: el.y, w: maxW, h: Math.max(baseFs * 1.45, totalH) };
       }
       return { x: el.x || 0, y: el.y || 0, w: el.w || 80, h: el.h || 80 };
     }
@@ -3205,19 +3663,29 @@
       renderActive();
     }, { passive: false });
 
-    let pinchDist = 0;
+    let pinchDist = 0, pinchMidX = 0, pinchMidY = 0;
     activeCanvas.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
         currentElement = null; isDrawing = false;
-        pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const t0 = e.touches[0], t1 = e.touches[1];
+        pinchDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        pinchMidX = (t0.clientX + t1.clientX) * 0.5;
+        pinchMidY = (t0.clientY + t1.clientY) * 0.5;
       }
     }, { passive: false });
     activeCanvas.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2 && pinchDist > 0 && !isPanLocked) {
         e.preventDefault();
-        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        zoom = Math.max(0.25, Math.min(zoom * (d / pinchDist), 5));
-        pinchDist = d;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const d = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+        const mx = (t0.clientX + t1.clientX) * 0.5;
+        const my = (t0.clientY + t1.clientY) * 0.5;
+        const nextZoom = Math.max(0.25, Math.min(zoom * (d / pinchDist), 5));
+        const ratio = nextZoom / zoom;
+        panX = mx - (pinchMidX - panX) * ratio;
+        panY = my - (pinchMidY - panY) * ratio;
+        zoom = nextZoom;
+        pinchDist = d; pinchMidX = mx; pinchMidY = my;
         document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
         renderStatic();
         renderActive();
@@ -3253,69 +3721,384 @@
     // ═══════════════════════════════════════════════════════════
     // 10. TEXT, TABLE & MINDMAP OVERLAY EDITORS
     // ═══════════════════════════════════════════════════════════
-    function openTextInput(worldX, worldY, screenX, screenY, existingEl) {
-      if (textInput._commitFn) textInput._commitFn();
-      const autoTextSz = existingEl ? existingEl.size : Math.max(brushSize, Math.round(4.6 * getScreenScale()));
-      const fontPx = Math.max(20, autoTextSz * TEXT_SCALE);
-      const anchorRight = Math.max(230, Math.min(screenX, window.innerWidth - 16));
-      const py = Math.max(60, Math.min(screenY, window.innerHeight - 120));
+    let defaultTextFont   = 'Cairo';
+    let defaultTextSize   = 28;
+    let defaultTextWeight = 700;
 
-      textInput.style.fontSize = fontPx + 'px';
-      textInput.style.color = existingEl ? existingEl.color : brushColor;
-      textInput.value = existingEl ? existingEl.text : '';
-      textInput.style.top = py + 'px';
-      textInput.classList.remove('hidden');
+    function richLinesToHtml(richLines, fallbackColor, fallbackWeight, fallbackSize, zoomScale) {
+      const z = zoomScale || 1;
+      return richLines.map(ln => {
+        const align = Array.isArray(ln) ? 'right' : (ln.align || 'right');
+        const runs  = Array.isArray(ln) ? ln : (ln.runs || []);
+        const inner = runs.map(r => {
+          const c  = r.color || fallbackColor || '#1e293b';
+          const w  = r.weight || fallbackWeight || 700;
+          const sz = r.size || fallbackSize || 28;
+          const safe = escapeHtml(r.text || '');
+          return `<span data-sz="${sz}" style="color:${c};font-weight:${w};font-size:${Math.max(12, sz * z)}px;">${safe}</span>`;
+        }).join('');
+        return `<div style="text-align:${align};">${inner || '<br>'}</div>`;
+      }).join('');
+    }
 
-      function autoResizeTextBox() {
-        const lines = (textInput.value || '').split('\n');
-        sCtx.save();
-        sCtx.font = `700 ${fontPx}px Cairo, Amiri, sans-serif`;
-        let maxW = 200;
-        lines.forEach(l => { maxW = Math.max(maxW, sCtx.measureText(l).width + 44); });
-        sCtx.restore();
-        const maxAllowedW = Math.max(240, window.innerWidth - 32);
-        const w = Math.min(maxAllowedW, Math.max(220, Math.ceil(maxW)));
-        textInput.style.width = w + 'px';
-        // Expand RTL leftward from click anchor while staying inside screen bounds
-        const leftPos = Math.max(16, Math.min(anchorRight - w, window.innerWidth - w - 16));
-        textInput.style.left = leftPos + 'px';
+    function parseEditorToRichLines(editorEl, defaultColor, defaultWeight, defaultSize, zoomScale) {
+      const z = zoomScale || 1;
+      const lines = [{ align: 'right', runs: [] }];
 
-        textInput.style.height = 'auto';
-        const lineH = Math.ceil(fontPx * 1.45);
-        const targetH = Math.max(lineH + 20, lines.length * lineH + 22, textInput.scrollHeight);
-        textInput.style.height = Math.min(window.innerHeight - py - 24, targetH) + 'px';
+      function pushRun(text, color, weight, size) {
+        const clean = text.replace(/\u200B/g, '');
+        if (!clean) return;
+        const curLine = lines[lines.length - 1];
+        const prev = curLine.runs[curLine.runs.length - 1];
+        if (prev && prev.color === color && prev.weight === weight && prev.size === size) {
+          prev.text += clean;
+        } else {
+          curLine.runs.push({ text: clean, color, weight, size });
+        }
       }
-      autoResizeTextBox();
+      function rgbToHex(col) {
+        if (!col) return defaultColor;
+        if (col.startsWith('#')) return col;
+        const m = col.match(/\d+/g);
+        if (!m || m.length < 3) return defaultColor;
+        return '#' + m.slice(0, 3).map(n => Number(n).toString(16).padStart(2, '0')).join('');
+      }
+      function walk(node, curColor, curWeight, curSize, curAlign) {
+        if (node.nodeType === 3) {
+          const parts = (node.nodeValue || '').replace(/\u00a0/g, ' ').split('\n');
+          parts.forEach((part, idx) => {
+            if (idx > 0) lines.push({ align: curAlign, runs: [] });
+            pushRun(part, curColor, curWeight, curSize);
+          });
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        const tag = node.tagName.toLowerCase();
+        if (tag === 'br') {
+          // Ignore lone <br> inside an otherwise empty block div (browser placeholder)
+          if (node.parentNode && (node.parentNode.tagName.toLowerCase() === 'div' || node.parentNode.tagName.toLowerCase() === 'p') && node.parentNode.childNodes.length === 1) {
+            return;
+          }
+          lines.push({ align: curAlign, runs: [] });
+          return;
+        }
+        let nextColor  = curColor;
+        let nextWeight = curWeight;
+        let nextSize   = curSize;
+        let nextAlign  = curAlign;
+
+        if (node.style && node.style.color) nextColor = rgbToHex(node.style.color);
+        else if (node.getAttribute && node.getAttribute('color')) nextColor = node.getAttribute('color');
+
+        if (node.style && node.style.fontWeight) {
+          const fw = parseInt(node.style.fontWeight, 10);
+          if (!isNaN(fw)) nextWeight = fw;
+          else if (node.style.fontWeight === 'bold') nextWeight = 800;
+        } else if (tag === 'b' || tag === 'strong') {
+          nextWeight = 800;
+        }
+
+        if (node.dataset && node.dataset.sz) {
+          const ds = Number(node.dataset.sz);
+          if (!isNaN(ds) && ds > 0) nextSize = ds;
+        } else if (node.style && node.style.fontSize) {
+          const px = parseFloat(node.style.fontSize);
+          if (!isNaN(px) && px > 0) nextSize = Math.round(px / z);
+        }
+
+        if (node.style && node.style.textAlign && ['right', 'center', 'left'].includes(node.style.textAlign)) {
+          nextAlign = node.style.textAlign;
+        }
+
+        const isBlock = (tag === 'div' || tag === 'p');
+        if (isBlock) {
+          const curLn = lines[lines.length - 1];
+          if (curLn.runs.length > 0 || lines.length > 1) {
+            lines.push({ align: nextAlign, runs: [] });
+          } else {
+            curLn.align = nextAlign;
+          }
+        }
+        Array.from(node.childNodes).forEach(ch => walk(ch, nextColor, nextWeight, nextSize, nextAlign));
+      }
+      walk(editorEl, defaultColor, defaultWeight, defaultSize, 'right');
+      while (lines.length > 1 && lines[lines.length - 1].runs.length === 0) lines.pop();
+      return lines;
+    }
+
+    function openTextInput(worldX, worldY, screenX, screenY, existingEl) {
+      if (richTextEditor._commitFn) richTextEditor._commitFn();
+
+      const baseColor  = existingEl ? (existingEl.color || brushColor) : brushColor;
+      const baseSize   = existingEl ? (existingEl.fontSize || Math.max(18, (existingEl.size || 4) * TEXT_SCALE)) : defaultTextSize;
+      const baseWeight = existingEl ? (existingEl.fontWeight || 700) : defaultTextWeight;
+
+      let curFont   = existingEl ? (existingEl.fontFamily || 'Cairo') : defaultTextFont;
+      let curSize   = baseSize;
+      let curWeight = baseWeight;
+      let curColor  = baseColor;
+      let curAlign  = existingEl ? (existingEl.align || 'right') : 'right';
+
+      if (existingEl) {
+        existingEl._editing = true;
+        renderStatic();
+        renderActive();
+      }
+
+      const anchorScreenX = worldX * zoom + panX;
+      const anchorScreenY = worldY * zoom + panY;
+
+      // Apply base container styles ONCE at open (never overwrite container color/size when styling partial spans!)
+      richTextEditor.style.fontFamily = `"${curFont}", Cairo, sans-serif`;
+      richTextEditor.style.fontSize   = Math.max(14, baseSize * zoom) + 'px';
+      richTextEditor.style.fontWeight = String(baseWeight);
+      richTextEditor.style.color      = baseColor;
+      richTextEditor.style.top        = (anchorScreenY - 3) + 'px';
+      richTextEditor.style.left       = 'auto';
+      richTextEditor.style.right      = Math.max(12, window.innerWidth - anchorScreenX - 6) + 'px';
+
+      const tbW = Math.min(620, window.innerWidth - 24);
+      const tbLeft = Math.max(12, Math.min(anchorScreenX - tbW, window.innerWidth - tbW - 12));
+      const tbTop  = Math.max(58, anchorScreenY - 52);
+      richTextToolbar.style.left = tbLeft + 'px';
+      richTextToolbar.style.top  = tbTop + 'px';
+
+      function syncToolbarHighlight() {
+        document.getElementById('rt-font-select').value = curFont;
+        richTextToolbar.querySelectorAll('[data-rt-size]').forEach(b => {
+          b.classList.toggle('active', Number(b.dataset.rtSize) === curSize);
+        });
+        richTextToolbar.querySelectorAll('[data-rt-weight]').forEach(b => {
+          b.classList.toggle('active', Number(b.dataset.rtWeight) === curWeight);
+        });
+        richTextToolbar.querySelectorAll('[data-rt-color]').forEach(b => {
+          b.classList.toggle('active', b.dataset.rtColor.toLowerCase() === curColor.toLowerCase());
+        });
+        richTextToolbar.querySelectorAll('[data-rt-align]').forEach(b => {
+          b.classList.toggle('active', b.dataset.rtAlign === curAlign);
+        });
+      }
+
+      // Wrap ONLY selected text (or insert a styled caret span for next typed characters) — NEVER touches rest of text!
+      function applyStyleToSelectionOrCaret(styleProps, dataSz) {
+        richTextEditor.focus();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || !richTextEditor.contains(sel.anchorNode)) {
+          // If box is completely empty, update base style directly
+          if (!richTextEditor.textContent.replace(/\u200B/g, '').trim()) {
+            Object.assign(richTextEditor.style, styleProps);
+          }
+          return;
+        }
+        const range = sel.getRangeAt(0);
+        const span = document.createElement('span');
+        Object.assign(span.style, styleProps);
+        if (dataSz) span.dataset.sz = String(dataSz);
+
+        if (!range.collapsed) {
+          // Partial selection: style ONLY the selected slice!
+          const frag = range.extractContents();
+          // Strip conflicting inline prop from nested spans inside extracted fragment so new style wins cleanly
+          frag.querySelectorAll('span').forEach(s => {
+            Object.keys(styleProps).forEach(k => { s.style[k] = ''; });
+            if (dataSz) delete s.dataset.sz;
+          });
+          span.appendChild(frag);
+          range.insertNode(span);
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        } else {
+          // Caret only: if box is empty update base, else insert styled zero-width span for future typing!
+          if (!richTextEditor.textContent.replace(/\u200B/g, '').trim()) {
+            Object.assign(richTextEditor.style, styleProps);
+          } else {
+            span.appendChild(document.createTextNode('\u200B'));
+            range.insertNode(span);
+            const newRange = document.createRange();
+            newRange.setStart(span.firstChild, 1);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
+      }
+
+      // Align the current line / selected lines inside the editor without affecting other lines!
+      function applyLineAlignment(align) {
+        curAlign = align;
+        richTextEditor.focus();
+        // Ensure content is wrapped in line <div> blocks
+        if (richTextEditor.childNodes.length === 0) {
+          const d = document.createElement('div');
+          d.style.textAlign = align;
+          d.innerHTML = '<br>';
+          richTextEditor.appendChild(d);
+          const sel = window.getSelection();
+          const r = document.createRange();
+          r.setStart(d, 0); r.collapse(true);
+          sel.removeAllRanges(); sel.addRange(r);
+          return;
+        }
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        let node = sel.anchorNode;
+        // Walk up to direct child of richTextEditor
+        while (node && node.parentNode !== richTextEditor) node = node.parentNode;
+        if (node && node.nodeType === 1 && (node.tagName === 'DIV' || node.tagName === 'P')) {
+          node.style.textAlign = align;
+        } else {
+          // Wrap current top-level inline nodes into a <div> with that alignment
+          const div = document.createElement('div');
+          div.style.textAlign = align;
+          while (richTextEditor.firstChild && richTextEditor.firstChild.tagName !== 'DIV') {
+            div.appendChild(richTextEditor.firstChild);
+          }
+          richTextEditor.insertBefore(div, richTextEditor.firstChild);
+        }
+      }
+
+      if (existingEl && Array.isArray(existingEl.richLines) && existingEl.richLines.length) {
+        richTextEditor.innerHTML = richLinesToHtml(existingEl.richLines, baseColor, baseWeight, baseSize, zoom);
+      } else if (existingEl && existingEl.text) {
+        richTextEditor.innerHTML = existingEl.text.split('\n').map(l => `<div style="text-align:${curAlign};">${escapeHtml(l) || '<br>'}</div>`).join('');
+      } else {
+        richTextEditor.innerHTML = `<div style="text-align:right;"><br></div>`;
+      }
+
+      richTextEditor.classList.remove('hidden');
+      richTextToolbar.classList.remove('hidden');
+      syncToolbarHighlight();
+
+      const onToolbarMouseDown = (ev) => {
+        if (ev.target.tagName.toLowerCase() !== 'select') ev.preventDefault();
+        ev.stopPropagation();
+      };
+      const onToolbarClick = (ev) => {
+        ev.stopPropagation();
+        const colBtn = ev.target.closest('[data-rt-color]');
+        if (colBtn) {
+          curColor = colBtn.dataset.rtColor;
+          applyStyleToSelectionOrCaret({ color: curColor });
+          syncToolbarHighlight();
+          return;
+        }
+        const szBtn = ev.target.closest('[data-rt-size]');
+        if (szBtn) {
+          curSize = Number(szBtn.dataset.rtSize);
+          defaultTextSize = curSize;
+          applyStyleToSelectionOrCaret({ fontSize: Math.max(12, curSize * zoom) + 'px' }, curSize);
+          syncToolbarHighlight();
+          return;
+        }
+        const wBtn = ev.target.closest('[data-rt-weight]');
+        if (wBtn) {
+          curWeight = Number(wBtn.dataset.rtWeight);
+          defaultTextWeight = curWeight;
+          applyStyleToSelectionOrCaret({ fontWeight: String(curWeight) });
+          syncToolbarHighlight();
+          return;
+        }
+        const alBtn = ev.target.closest('[data-rt-align]');
+        if (alBtn) {
+          applyLineAlignment(alBtn.dataset.rtAlign);
+          syncToolbarHighlight();
+          return;
+        }
+        if (ev.target.closest('#rt-done-btn')) {
+          commit();
+        }
+      };
+      const onFontChange = (ev) => {
+        curFont = ev.target.value;
+        defaultTextFont = curFont;
+        richTextEditor.style.fontFamily = `"${curFont}", Cairo, sans-serif`;
+        syncToolbarHighlight();
+        richTextEditor.focus();
+      };
 
       let done = false;
       function commit() {
         if (done) return;
         done = true;
-        const val = textInput.value.trim();
+        const richLines = parseEditorToRichLines(richTextEditor, baseColor, baseWeight, baseSize, zoom);
+        const plainText = richLines.map(ln => ln.runs.map(r => r.text).join('')).join('\n').trim();
+
         if (existingEl) {
+          delete existingEl._editing;
           pushUndoSnapshot();
-          if (val) existingEl.text = val;
-          else curPage().elements = curElements().filter(x => x !== existingEl);
+          if (plainText) {
+            existingEl.text       = plainText;
+            existingEl.richLines  = richLines;
+            existingEl.fontFamily = curFont;
+            existingEl.fontSize   = baseSize;
+            existingEl.fontWeight = baseWeight;
+            existingEl.color      = baseColor;
+            existingEl.align      = curAlign;
+          } else {
+            curPage().elements = curElements().filter(x => x !== existingEl);
+            if (selectedElement === existingEl) clearSelection();
+          }
           renderStatic();
-        } else if (val) {
+          renderActive();
+        } else if (plainText) {
           pushUndoSnapshot();
-          curElements().push({ type: 'text', text: val, x: worldX, y: worldY, color: brushColor, size: autoTextSz });
+          const newEl = {
+            type: 'text',
+            text: plainText,
+            richLines,
+            x: worldX,
+            y: worldY,
+            color: baseColor,
+            fontFamily: curFont,
+            fontSize: baseSize,
+            fontWeight: baseWeight,
+            align: curAlign,
+            size: baseSize / TEXT_SCALE
+          };
+          curElements().push(newEl);
           renderStatic();
+          renderActive();
         }
-        textInput.classList.add('hidden');
-        textInput.removeEventListener('blur', commit);
-        textInput.removeEventListener('keydown', onKey);
-        textInput.removeEventListener('input', autoResizeTextBox);
-        textInput._commitFn = null;
+
+        richTextEditor.classList.add('hidden');
+        richTextToolbar.classList.add('hidden');
+        richTextToolbar.removeEventListener('mousedown', onToolbarMouseDown);
+        richTextToolbar.removeEventListener('click', onToolbarClick);
+        document.getElementById('rt-font-select').removeEventListener('change', onFontChange);
+        richTextEditor.removeEventListener('keydown', onKey);
+        document.removeEventListener('pointerdown', onOutsideDown, true);
+        richTextEditor._commitFn = null;
       }
+
       function onKey(ev) {
+        ev.stopPropagation();
         if (ev.key === 'Escape') { ev.preventDefault(); commit(); }
       }
-      textInput.addEventListener('blur', commit);
-      textInput.addEventListener('keydown', onKey);
-      textInput.addEventListener('input', autoResizeTextBox);
-      textInput._commitFn = commit;
-      setTimeout(() => { textInput.focus(); autoResizeTextBox(); }, 20);
+      function onOutsideDown(ev) {
+        if (ev.target.closest('#rich-text-editor') || ev.target.closest('#rich-text-toolbar')) return;
+        commit();
+      }
+
+      richTextToolbar.addEventListener('mousedown', onToolbarMouseDown);
+      richTextToolbar.addEventListener('click', onToolbarClick);
+      document.getElementById('rt-font-select').addEventListener('change', onFontChange);
+      richTextEditor.addEventListener('keydown', onKey);
+      setTimeout(() => document.addEventListener('pointerdown', onOutsideDown, true), 40);
+      richTextEditor._commitFn = commit;
+
+      setTimeout(() => {
+        richTextEditor.focus();
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(richTextEditor);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch (_) {}
+      }, 20);
     }
 
     function openInlineTextEdit(el, sx, sy) {
@@ -3506,6 +4289,39 @@
         };
         nBar.appendChild(makeSzBtn('A−', -2));
         nBar.appendChild(makeSzBtn('A+', 2));
+
+        const childCnt = countMindmapDescendants(mm, node.id);
+        if (childCnt > 0) {
+          const colBtn = document.createElement('button');
+          colBtn.type = 'button';
+          colBtn.textContent = node.collapsed ? `فتح (+${childCnt})` : 'طي';
+          colBtn.title = node.collapsed ? 'إظهار الفروع المطوية' : 'طي فروع هذه العقدة';
+          colBtn.style.cssText = node.collapsed
+            ? 'font-family:Cairo,sans-serif;font-size:11px;font-weight:800;padding:2px 7px;border-radius:7px;background:#f59e0b;color:#fff;border:none;cursor:pointer;white-space:nowrap;'
+            : 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;background:#f1f5f9;color:#334155;border:none;cursor:pointer;white-space:nowrap;';
+          colBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            pushUndoSnapshot();
+            node.collapsed = !node.collapsed;
+            renderStatic(); renderActive();
+          });
+          nBar.appendChild(colBtn);
+        }
+
+        const autoBtn = document.createElement('button');
+        autoBtn.type = 'button';
+        autoBtn.innerHTML = '<i class="ph ph-tree-structure text-xs"></i> ترتيب';
+        autoBtn.title = 'ترتيب فروع الخريطة تلقائيًا';
+        autoBtn.style.cssText = 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;background:#e6f4f1;color:#0f5d57;border:none;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;';
+        autoBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          pushUndoSnapshot();
+          autoLayoutMindmap(mm);
+          renderStatic(); renderActive();
+          showToast('success', 'تم ترتيب الخريطة الذهنية تلقائيًا');
+        });
+        nBar.appendChild(autoBtn);
+
         overlayLayer.appendChild(nBar);
       }
 
@@ -3581,6 +4397,25 @@
           bar.appendChild(dot);
         });
 
+        const sepBg = document.createElement('div');
+        sepBg.style.cssText = 'width:1px;height:16px;background:#e2e8f0;margin:0 1px;';
+        bar.appendChild(sepBg);
+        [['', '#ffffff', 'خلفية بيضاء'], ['#fef9c3', '#fef08a', 'تظليل أصفر'], ['#dcfce7', '#bbf7d0', 'تظليل أخضر'], ['#dbeafe', '#bfdbfe', 'تظليل أزرق']].forEach(([val, prevCol, tip]) => {
+          const sq = document.createElement('button');
+          sq.type = 'button';
+          sq.title = tip;
+          sq.style.cssText = `width:16px;height:16px;border-radius:4px;background:${prevCol};border:1.5px solid #cbd5e1;cursor:pointer;padding:0;flex-shrink:0;`;
+          sq.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (!tbl.selectedCell) return;
+            pushUndoSnapshot();
+            if (!tbl.cellBgs) tbl.cellBgs = Array.from({ length: tbl.rows }, () => Array(tbl.cols).fill(''));
+            if (!tbl.cellBgs[tbl.selectedCell.r]) tbl.cellBgs[tbl.selectedCell.r] = Array(tbl.cols).fill('');
+            tbl.cellBgs[tbl.selectedCell.r][tbl.selectedCell.c] = val;
+            renderStatic();
+          });
+          bar.appendChild(sq);
+        });
         const sep = document.createElement('div');
         sep.style.cssText = 'width:1px;height:16px;background:#e2e8f0;margin:0 2px;';
         bar.appendChild(sep);
@@ -3731,6 +4566,85 @@
         ));
         bar.appendChild(makePdfBtn('<i class="ph ph-plus text-xs"></i>', 'تكبير محتوى الـ PDF', () => zoomPdfElement(pdfEl, 1.18), false));
 
+        const sepSearch = document.createElement('div');
+        sepSearch.style.cssText = 'width:1px;height:16px;background:#e2e8f0;';
+        bar.appendChild(sepSearch);
+
+        bar.appendChild(makePdfBtn('<i class="ph ph-magnifying-glass text-sm"></i>', 'بحث داخل ملف الـ PDF', () => {
+          let existingSearch = overlayLayer.querySelector('.pdf-search-box');
+          if (existingSearch) { existingSearch.remove(); return; }
+          const sBox = document.createElement('div');
+          sBox.className = 'ov-btn pdf-search-box';
+          sBox.style.cssText = `position:absolute;left:${barLeft}px;top:${Math.max(58, barTop - 42)}px;background:#ffffff;border:1px solid #cbd5e1;border-radius:11px;padding:4px 7px;display:flex;align-items:center;gap:5px;box-shadow:0 8px 20px rgba(15,23,42,0.14);z-index:59;direction:rtl;`;
+          const sInp = document.createElement('input');
+          sInp.type = 'text';
+          sInp.placeholder = 'ابحث داخل الـ PDF...';
+          sInp.style.cssText = 'width:145px;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:3px 7px;border:1px solid #cbd5e1;border-radius:7px;outline:none;color:#0f172a;';
+          const sStatus = document.createElement('span');
+          sStatus.style.cssText = 'font-family:Cairo,sans-serif;font-size:10px;font-weight:700;color:#64748b;white-space:nowrap;';
+          const prevM = document.createElement('button');
+          prevM.type = 'button'; prevM.innerHTML = '<i class="ph ph-caret-right"></i>';
+          prevM.style.cssText = 'padding:3px 5px;border-radius:6px;background:#f1f5f9;border:none;cursor:pointer;';
+          const nextM = document.createElement('button');
+          nextM.type = 'button'; nextM.innerHTML = '<i class="ph ph-caret-left"></i>';
+          nextM.style.cssText = 'padding:3px 5px;border-radius:6px;background:#f1f5f9;border:none;cursor:pointer;';
+          const closeS = document.createElement('button');
+          closeS.type = 'button'; closeS.innerHTML = '<i class="ph ph-x text-xs"></i>';
+          closeS.style.cssText = 'padding:3px 5px;border-radius:6px;background:#fef2f2;color:#dc2626;border:none;cursor:pointer;';
+          closeS.addEventListener('click', (e2) => { e2.stopPropagation(); sBox.remove(); });
+          sBox.append(sInp, sStatus, prevM, nextM, closeS);
+          overlayLayer.appendChild(sBox);
+          sInp.focus();
+
+          const normAr = (str) => String(str || '')
+            .replace(/[ً-ٰٟ]/g, '')
+            .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+            .toLowerCase().trim();
+
+          let matchPages = [], matchIdx = 0;
+          const runSearch = async () => {
+            const q = normAr(sInp.value);
+            if (!q) { sStatus.textContent = ''; matchPages = []; return; }
+            let doc = pdfDocsMap.get(pdfEl.pdfId);
+            if (!doc && pdfEl.pdfId && window.pdfjsLib) {
+              const savedBuf = await wbDB.getPdf(pdfEl.pdfId);
+              if (savedBuf) {
+                try { doc = await window.pdfjsLib.getDocument({ data: savedBuf.slice(0) }).promise; pdfDocsMap.set(pdfEl.pdfId, doc); } catch (_) {}
+              }
+            }
+            if (!doc) { sStatus.textContent = 'أعد فتح الـ PDF'; return; }
+            sStatus.textContent = 'جاري البحث...';
+            matchPages = [];
+            for (let p = 1; p <= doc.numPages; p++) {
+              try {
+                const pg = await doc.getPage(p);
+                const tc = await pg.getTextContent();
+                const full = normAr(tc.items.map(it => it.str).join(' '));
+                if (full.includes(q)) matchPages.push(p);
+              } catch (_) {}
+            }
+            if (!matchPages.length) { sStatus.textContent = 'لا توجد نتائج'; return; }
+            matchIdx = 0;
+            sStatus.textContent = `1/${matchPages.length} (ص ${matchPages[0]})`;
+            goPdfPage(pdfEl, matchPages[0]);
+          };
+          const jumpMatch = (dir) => {
+            if (!matchPages.length) return;
+            matchIdx = (matchIdx + dir + matchPages.length) % matchPages.length;
+            sStatus.textContent = `${matchIdx + 1}/${matchPages.length} (ص ${matchPages[matchIdx]})`;
+            goPdfPage(pdfEl, matchPages[matchIdx]);
+          };
+          sInp.addEventListener('pointerdown', e2 => e2.stopPropagation());
+          sInp.addEventListener('click', e2 => e2.stopPropagation());
+          sInp.addEventListener('keydown', (e2) => {
+            e2.stopPropagation();
+            if (e2.key === 'Enter') { e2.preventDefault(); runSearch(); }
+            else if (e2.key === 'Escape') { e2.preventDefault(); sBox.remove(); }
+          });
+          prevM.addEventListener('click', (e2) => { e2.stopPropagation(); jumpMatch(-1); });
+          nextM.addEventListener('click', (e2) => { e2.stopPropagation(); jumpMatch(1); });
+        }, false));
+
         const sep2 = document.createElement('div');
         sep2.style.cssText = 'width:1px;height:16px;background:#e2e8f0;';
         bar.appendChild(sep2);
@@ -3867,6 +4781,62 @@
         ));
 
         bar.appendChild(makeImgBtn(
+          '<i class="ph ph-arrow-clockwise text-sm"></i>',
+          'تدوير الصورة 90°',
+          () => {
+            pushUndoSnapshot();
+            imgEl.rotation = ((imgEl.rotation || 0) + 90) % 360;
+            const oldW = imgEl.w; imgEl.w = imgEl.h; imgEl.h = oldW;
+            const oldNW = imgEl.naturalW; imgEl.naturalW = imgEl.naturalH; imgEl.naturalH = oldNW;
+            resetPdfZoom(imgEl);
+            showToast('info', 'تم تدوير الصورة 90°');
+          },
+          false
+        ));
+
+        bar.appendChild(makeImgBtn(
+          '<i class="ph ph-crop text-sm"></i>',
+          'قص الصورة حسب الإطار الظاهر حاليًا',
+          () => {
+            const imgObj = getMediaImgObj(imgEl);
+            if (!imgObj) return;
+            pushUndoSnapshot();
+            const { drawW, drawH } = getPdfDrawDims(imgEl);
+            const vx = imgEl.viewX || 0, vy = imgEl.viewY || 0;
+            const scaleOut = Math.min(2.0, 1600 / Math.max(imgEl.w, imgEl.h, 1));
+            const off = document.createElement('canvas');
+            off.width = Math.max(1, Math.round(imgEl.w * scaleOut));
+            off.height = Math.max(1, Math.round(imgEl.h * scaleOut));
+            const octx = off.getContext('2d');
+            octx.scale(scaleOut, scaleOut);
+            const rot = ((imgEl.rotation || 0) * Math.PI) / 180;
+            if (rot) {
+              octx.translate(vx + drawW * 0.5, vy + drawH * 0.5);
+              octx.rotate(rot);
+              octx.drawImage(imgObj, -drawW * 0.5, -drawH * 0.5, drawW, drawH);
+            } else {
+              octx.drawImage(imgObj, vx, vy, drawW, drawH);
+            }
+            const croppedUrl = off.toDataURL('image/png');
+            const newImg = new Image();
+            newImg.onload = () => {
+              imgEl.imgObj = newImg;
+              imgEl.mediaId = registerMedia(croppedUrl, newImg);
+              imgEl.naturalW = off.width;
+              imgEl.naturalH = off.height;
+              imgEl.rotation = 0;
+              imgEl.contentZoom = 1;
+              imgEl.viewX = 0;
+              imgEl.viewY = 0;
+              renderStatic(); renderActive();
+              showToast('success', 'تم قص الصورة (يمكنك التراجع بـ Ctrl+Z)');
+            };
+            newImg.src = croppedUrl;
+          },
+          false
+        ));
+
+        bar.appendChild(makeImgBtn(
           '<i class="ph ph-stack-simple text-sm"></i>',
           'إرسال الصورة خلف الكتابة',
           () => {
@@ -3892,6 +4862,120 @@
         });
         bar.appendChild(delImgBtn);
 
+        overlayLayer.appendChild(bar);
+      }
+
+      // Compact Floating Text Mini-Toolbar when a Text Element is selected
+      if (selectedElement.type === 'text' && !selectedElement._editing) {
+        const tEl = selectedElement;
+        const tb = getBox(tEl);
+        const bar = document.createElement('div');
+        bar.className = 'ov-btn';
+        const barLeft = Math.max(12, Math.min((tb.x + tb.w / 2) * zoom + panX - 135, viewW - 280));
+        const barTop  = Math.max(58, tb.y * zoom + panY - 44);
+        bar.style.cssText = `position:absolute;left:${barLeft}px;top:${barTop}px;background:rgba(255,255,255,0.97);backdrop-filter:blur(10px);border:1px solid rgba(15,23,42,0.10);border-radius:12px;padding:4px 7px;display:flex;align-items:center;gap:5px;box-shadow:0 8px 20px -6px rgba(15,23,42,0.14);z-index:55;direction:rtl;`;
+
+        const makeTBtn = (html, title, fn, active) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.innerHTML = html;
+          b.title = title;
+          b.style.cssText = active
+            ? 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;background:#0f5d57;color:#fff;border:none;cursor:pointer;white-space:nowrap;'
+            : 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:3px 7px;border-radius:7px;background:#f1f5f9;color:#334155;border:none;cursor:pointer;white-space:nowrap;';
+          b.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); });
+          return b;
+        };
+
+        bar.appendChild(makeTBtn('<i class="ph ph-pencil-simple"></i> تعديل', 'تعديل النص والألوان', () => {
+          openInlineTextEdit(tEl, tEl.x * zoom + panX, tEl.y * zoom + panY);
+        }, false));
+
+        const curFs = tEl.fontSize || Math.max(18, (tEl.size || 4) * TEXT_SCALE);
+        [['عادي', 22], ['متوسط', 28], ['كبير', 38], ['عنوان', 50]].forEach(([lbl, px]) => {
+          bar.appendChild(makeTBtn(lbl, lbl, () => {
+            pushUndoSnapshot();
+            tEl.fontSize = px;
+            tEl.size = px / TEXT_SCALE;
+            renderStatic(); renderActive();
+          }, Math.abs(curFs - px) <= 3));
+        });
+
+        const delTBtn = document.createElement('button');
+        delTBtn.type = 'button';
+        delTBtn.innerHTML = '<i class="ph ph-trash text-sm"></i>';
+        delTBtn.title = 'حذف النص';
+        delTBtn.style.cssText = 'padding:4px 7px;border-radius:7px;background:#fef2f2;color:#dc2626;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+        delTBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          pushUndoSnapshot();
+          curPage().elements = curElements().filter(x => x !== tEl);
+          clearSelection();
+          renderStatic(); renderActive();
+        });
+        bar.appendChild(delTBtn);
+
+        overlayLayer.appendChild(bar);
+      }
+
+      // Compact Floating Geometric Shape Mini-Toolbar (Colors + Thickness + Dashed + Soft Fill + Duplicate + Delete)
+      if (['rect', 'circle', 'triangle', 'line', 'arrow'].includes(selectedElement.type)) {
+        const shEl = selectedElement;
+        const sb = getBox(shEl);
+        const bar = document.createElement('div');
+        bar.className = 'ov-btn';
+        const barLeft = Math.max(12, Math.min((sb.x + sb.w / 2) * zoom + panX - 140, viewW - 290));
+        const barTop  = Math.max(58, sb.y * zoom + panY - 44);
+        bar.style.cssText = `position:absolute;left:${barLeft}px;top:${barTop}px;background:rgba(255,255,255,0.97);backdrop-filter:blur(10px);border:1px solid rgba(15,23,42,0.10);border-radius:12px;padding:4px 7px;display:flex;align-items:center;gap:5px;box-shadow:0 8px 20px -6px rgba(15,23,42,0.14);z-index:55;direction:rtl;`;
+
+        ['#1e293b', '#b91c1c', '#1d4ed8', '#0f5d57', '#6d28d9'].forEach(col => {
+          const d = document.createElement('button');
+          d.type = 'button'; d.title = 'تغيير لون الشكل';
+          d.style.cssText = `width:17px;height:17px;border-radius:99px;background:${col};border:2px solid ${shEl.color === col ? '#0f172a' : '#e2e8f0'};cursor:pointer;padding:0;`;
+          d.addEventListener('click', (ev) => {
+            ev.stopPropagation(); pushUndoSnapshot();
+            shEl.color = col; if (shEl.fillColor) shEl.fillColor = col;
+            renderStatic(); renderActive();
+          });
+          bar.appendChild(d);
+        });
+
+        const mkBtn = (html, tip, fn, active) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.innerHTML = html; b.title = tip;
+          b.style.cssText = active
+            ? 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:3px 7px;border-radius:7px;background:#0f5d57;color:#fff;border:none;cursor:pointer;'
+            : 'font-family:Cairo,sans-serif;font-size:11px;font-weight:700;padding:3px 7px;border-radius:7px;background:#f1f5f9;color:#334155;border:none;cursor:pointer;';
+          b.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); });
+          return b;
+        };
+
+        bar.appendChild(mkBtn('−', 'ترفيع الخط', () => { pushUndoSnapshot(); shEl.size = Math.max(1.5, (shEl.size || 3) - 1); renderStatic(); renderActive(); }, false));
+        bar.appendChild(mkBtn('+', 'تسميك الخط', () => { pushUndoSnapshot(); shEl.size = Math.min(20, (shEl.size || 3) + 1); renderStatic(); renderActive(); }, false));
+        bar.appendChild(mkBtn('متقطع', 'خط متقطع / متصل', () => { pushUndoSnapshot(); shEl.dashed = !shEl.dashed; renderStatic(); renderActive(); }, !!shEl.dashed));
+
+        if (['rect', 'circle', 'triangle'].includes(shEl.type)) {
+          bar.appendChild(mkBtn('تعبئة', 'تلوين داخل الشكل', () => {
+            pushUndoSnapshot();
+            shEl.fillColor = shEl.fillColor ? '' : (shEl.color || '#0f5d57');
+            renderStatic(); renderActive();
+          }, !!shEl.fillColor));
+        }
+
+        bar.appendChild(mkBtn('<i class="ph ph-copy text-xs"></i>', 'تكرار الشكل', () => {
+          internalClipboard = cloneElements([shEl]);
+          pasteInternalClipboard();
+        }, false));
+
+        const delS = document.createElement('button');
+        delS.type = 'button'; delS.innerHTML = '<i class="ph ph-trash text-sm"></i>'; delS.title = 'حذف الشكل';
+        delS.style.cssText = 'padding:4px 7px;border-radius:7px;background:#fef2f2;color:#dc2626;border:none;cursor:pointer;display:flex;align-items:center;';
+        delS.addEventListener('click', (ev) => {
+          ev.stopPropagation(); pushUndoSnapshot();
+          curPage().elements = curElements().filter(x => x !== shEl);
+          clearSelection(); renderStatic(); renderActive();
+        });
+        bar.appendChild(delS);
         overlayLayer.appendChild(bar);
       }
     }
@@ -4124,12 +5208,40 @@
         syncPenPopoverUI();
       });
     });
+    function loadRecentColors() {
+      try { return JSON.parse(storage.get('wb_recent_colors_v1') || '[]'); } catch (_) { return []; }
+    }
+    function renderRecentColors() {
+      const list = loadRecentColors();
+      const row = document.getElementById('recent-colors-row');
+      const box = document.getElementById('recent-colors-list');
+      if (!row || !box) return;
+      if (!list.length) { row.classList.add('hidden'); row.classList.remove('flex'); return; }
+      row.classList.remove('hidden'); row.classList.add('flex');
+      box.innerHTML = list.map(c => `<button type="button" data-rc="${escapeHtml(c)}" style="width:20px;height:20px;border-radius:99px;background:${escapeHtml(c)};border:2px solid ${brushColor.toLowerCase() === c.toLowerCase() ? '#0f172a' : '#e2e8f0'};cursor:pointer;"></button>`).join('');
+      box.querySelectorAll('[data-rc]').forEach(b => {
+        b.addEventListener('click', () => {
+          brushColor = b.dataset.rc;
+          applyColorToSelectedTableCell(brushColor);
+          syncPresetButtonDot();
+          syncPenPopoverUI();
+          renderRecentColors();
+        });
+      });
+    }
     document.getElementById('custom-color-input').addEventListener('input', (e) => {
       brushColor = e.target.value;
       applyColorToSelectedTableCell(brushColor);
       syncPresetButtonDot();
       syncPenPopoverUI();
     });
+    document.getElementById('custom-color-input').addEventListener('change', (e) => {
+      const col = e.target.value;
+      const list = [col, ...loadRecentColors().filter(c => c.toLowerCase() !== col.toLowerCase())].slice(0, 6);
+      storage.set('wb_recent_colors_v1', JSON.stringify(list));
+      renderRecentColors();
+    });
+    renderRecentColors();
     document.getElementById('size-slider').addEventListener('input', (e) => {
       brushSize = parseFloat(e.target.value);
       syncPresetButtonDot();
@@ -4372,7 +5484,7 @@
           const img = new Image();
           img.onload = () => {
             pdfEl.imgObj = img;
-            pdfEl.imgSrc = rendered.dataUrl;
+            pdfEl.mediaId = registerMedia(rendered.dataUrl, img, pdfEl.mediaId);
             pdfEl._renderedScale = desiredScale;
             renderStatic();
           };
@@ -4440,9 +5552,18 @@
 
     async function goPdfPage(pdfEl, targetPage) {
       if (targetPage < 1 || targetPage > pdfEl.totalPages) return;
-      const pdfDoc = pdfDocsMap.get(pdfEl.pdfId);
+      let pdfDoc = pdfDocsMap.get(pdfEl.pdfId);
+      if (!pdfDoc && pdfEl.pdfId && window.pdfjsLib) {
+        const savedBuf = await wbDB.getPdf(pdfEl.pdfId);
+        if (savedBuf) {
+          try {
+            pdfDoc = await window.pdfjsLib.getDocument({ data: savedBuf.slice(0) }).promise;
+            pdfDocsMap.set(pdfEl.pdfId, pdfDoc);
+          } catch (_) {}
+        }
+      }
       if (!pdfDoc) {
-        showToast('warning', 'لتقليب صفحات PDF محفوظ سابقًا، أعد فتح ملف الـ PDF');
+        showToast('warning', 'ملف الـ PDF الأصلي غير مخزن على هذا الجهاز — أعد إدراجه لتقليب صفحاته');
         return;
       }
       try {
@@ -4451,7 +5572,7 @@
         img.onload = () => {
           pdfEl.pageNum = targetPage;
           pdfEl.imgObj = img;
-          pdfEl.imgSrc = rendered.dataUrl;
+          pdfEl.mediaId = registerMedia(rendered.dataUrl, img, pdfEl.mediaId);
           pdfEl.naturalW = rendered.width;
           pdfEl.naturalH = rendered.height;
           pdfEl._renderedScale = 2.0;
@@ -4477,9 +5598,11 @@
       showToast('info', 'جاري تجهيز ملف PDF...');
       try {
         const buf = await file.arrayBuffer();
+        const bufCopy = buf.slice(0);
         const pdfDoc = await window.pdfjsLib.getDocument({ data: buf }).promise;
         const pdfId = 'pdf_' + Date.now();
         pdfDocsMap.set(pdfId, pdfDoc);
+        wbDB.setPdf(pdfId, bufCopy); // Persist PDF binary locally so reloading keeps full page-flipping & search!
         const rendered = await renderPdfPageToCanvas(pdfDoc, 1);
 
         const img = new Image();
@@ -4941,29 +6064,52 @@
     });
 
     function insertImageFromDataUrl(dataUrl) {
-      const img = new Image();
-      img.onload = () => {
-        const maxW = (viewW * 0.45) / zoom;
-        const sc = Math.min(1, maxW / img.width);
-        const w = img.width * sc, h = img.height * sc;
-        pushUndoSnapshot();
-        const obj = {
-          type: 'image', imgObj: img, imgSrc: dataUrl,
-          naturalW: img.naturalWidth || img.width,
-          naturalH: img.naturalHeight || img.height,
-          contentZoom: 1, viewX: 0, viewY: 0, locked: false,
-          x: (viewW / 2 - w / 2 - panX) / zoom,
-          y: (viewH / 2 - h / 2 - panY) / zoom,
-          w, h
+      const rawImg = new Image();
+      rawImg.onload = () => {
+        // Auto-optimize oversized images (> 1920px) to save RAM and speed up rendering & cloud saves
+        const MAX_DIM = 1920;
+        let finalUrl = dataUrl;
+        let finalImg = rawImg;
+        const nw = rawImg.naturalWidth || rawImg.width;
+        const nh = rawImg.naturalHeight || rawImg.height;
+        const finishInsert = (imgToUse, srcToUse, natW, natH) => {
+          const maxW = (viewW * 0.45) / zoom;
+          const sc = Math.min(1, maxW / natW);
+          const w = natW * sc, h = natH * sc;
+          const mediaId = registerMedia(srcToUse, imgToUse);
+          pushUndoSnapshot();
+          const obj = {
+            type: 'image', imgObj: imgToUse, mediaId,
+            naturalW: natW, naturalH: natH,
+            contentZoom: 1, viewX: 0, viewY: 0, rotation: 0, locked: false,
+            x: (viewW / 2 - w / 2 - panX) / zoom,
+            y: (viewH / 2 - h / 2 - panY) / zoom,
+            w, h
+          };
+          curElements().push(obj);
+          selectedElement = obj;
+          setTool('select');
+          renderStatic();
+          renderActive();
+          showToast('success', 'تم إدراج الصورة');
         };
-        curElements().push(obj);
-        selectedElement = obj;
-        setTool('select');
-        renderStatic();
-        renderActive();
-        showToast('success', 'تم إدراج الصورة');
+
+        if (nw > MAX_DIM || nh > MAX_DIM) {
+          const scale = MAX_DIM / Math.max(nw, nh);
+          const cw = Math.round(nw * scale), ch = Math.round(nh * scale);
+          const off = document.createElement('canvas');
+          off.width = cw; off.height = ch;
+          off.getContext('2d').drawImage(rawImg, 0, 0, cw, ch);
+          const isPng = dataUrl.startsWith('data:image/png');
+          finalUrl = off.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.88);
+          finalImg = new Image();
+          finalImg.onload = () => finishInsert(finalImg, finalUrl, cw, ch);
+          finalImg.src = finalUrl;
+        } else {
+          finishInsert(rawImg, dataUrl, nw, nh);
+        }
       };
-      img.src = dataUrl;
+      rawImg.src = dataUrl;
     }
 
     let internalClipboard = null;
@@ -5167,31 +6313,97 @@
       });
     }
 
+    async function refreshTransferPasteBtn() {
+      const btn = document.getElementById('drawer-paste-page');
+      if (!btn) return;
+      const saved = await wbDB.get('transferred_page');
+      btn.classList.toggle('hidden', !saved);
+    }
+
+    function movePageOrder(idx, delta) {
+      const target = idx + delta;
+      if (target < 0 || target >= pages.length) return;
+      const [moved] = pages.splice(idx, 1);
+      pages.splice(target, 0, moved);
+      if (currentPageIndex === idx) currentPageIndex = target;
+      else if (currentPageIndex === target) currentPageIndex = idx;
+      hasUnsavedChanges = true;
+      updatePageIndicator();
+      renderPageThumbnails();
+      renderStatic();
+    }
+
     function renderPageThumbnails() {
+      refreshTransferPasteBtn();
       const list = document.getElementById('pages-thumb-list');
       list.innerHTML = '';
       pages.forEach((p, idx) => {
         const card = document.createElement('div');
         const active = idx === currentPageIndex;
+        const pageTitle = p.name ? p.name : `صفحة ${idx + 1}`;
         card.className = `rounded-xl border-2 p-2 cursor-pointer transition-colors ${active ? 'border-[#0f5d57] bg-teal-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`;
         card.innerHTML = `
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-xs font-extrabold ${active ? 'text-teal-800' : 'text-slate-700'}">صفحة ${idx + 1}</span>
-            <div class="flex items-center gap-1">
-              <button type="button" class="thumb-dup w-6 h-6 rounded-md hover:bg-slate-100 text-slate-500 flex items-center justify-center" title="تكرار"><i class="ph ph-copy text-xs"></i></button>
-              <button type="button" class="thumb-del w-6 h-6 rounded-md hover:bg-rose-50 text-rose-500 flex items-center justify-center" title="حذف"><i class="ph ph-trash text-xs"></i></button>
+          <div class="flex items-center justify-between gap-1 mb-1.5">
+            <span class="thumb-title text-xs font-bold truncate flex-1 ${active ? 'text-teal-800' : 'text-slate-700'}" title="اضغط مرتين لتسمية الصفحة">${escapeHtml(pageTitle)}</span>
+            <div class="flex items-center gap-0.5 flex-shrink-0">
+              <button type="button" class="thumb-up w-5 h-5 rounded hover:bg-slate-100 text-slate-500 flex items-center justify-center ${idx === 0 ? 'opacity-30 pointer-events-none' : ''}" title="تحريك لأعلى"><i class="ph ph-arrow-up text-[11px]"></i></button>
+              <button type="button" class="thumb-dn w-5 h-5 rounded hover:bg-slate-100 text-slate-500 flex items-center justify-center ${idx === pages.length - 1 ? 'opacity-30 pointer-events-none' : ''}" title="تحريك لأسفل"><i class="ph ph-arrow-down text-[11px]"></i></button>
+              <button type="button" class="thumb-xfer w-5 h-5 rounded hover:bg-amber-50 text-amber-600 flex items-center justify-center" title="نسخ للنقل لسبورة أخرى"><i class="ph ph-export text-[11px]"></i></button>
+              <button type="button" class="thumb-dup w-5 h-5 rounded hover:bg-slate-100 text-slate-500 flex items-center justify-center" title="تكرار"><i class="ph ph-copy text-[11px]"></i></button>
+              <button type="button" class="thumb-del w-5 h-5 rounded hover:bg-rose-50 text-rose-500 flex items-center justify-center" title="حذف"><i class="ph ph-trash text-[11px]"></i></button>
             </div>
           </div>
-          <div class="h-20 rounded-lg border border-slate-200 flex items-center justify-center text-[11px] font-bold ${p.bgState === 3 ? 'bg-slate-900 text-slate-300' : 'bg-white text-slate-400'}">
+          <div class="h-16 rounded-lg border border-slate-200 flex items-center justify-center text-[11px] font-bold ${p.bgState === 3 ? 'bg-slate-900 text-slate-300' : 'bg-white text-slate-400'}">
             ${p.elements.length > 0 ? p.elements.length + ' عنصر' : 'صفحة فارغة'}
           </div>
         `;
         card.addEventListener('click', () => switchPage(idx));
+        const titleEl = card.querySelector('.thumb-title');
+        titleEl.addEventListener('dblclick', (ev) => {
+          ev.stopPropagation();
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.value = p.name || `صفحة ${idx + 1}`;
+          inp.className = 'w-full text-xs font-bold bg-white border border-teal-600 rounded px-1.5 py-0.5 outline-none text-slate-800';
+          titleEl.replaceWith(inp);
+          inp.focus(); inp.select();
+          const saveTitle = () => {
+            p.name = inp.value.trim();
+            hasUnsavedChanges = true;
+            renderPageThumbnails();
+          };
+          inp.addEventListener('click', e2 => e2.stopPropagation());
+          inp.addEventListener('blur', saveTitle);
+          inp.addEventListener('keydown', e2 => {
+            e2.stopPropagation();
+            if (e2.key === 'Enter' || e2.key === 'Escape') { e2.preventDefault(); saveTitle(); }
+          });
+        });
+        card.querySelector('.thumb-up').addEventListener('click', (ev) => { ev.stopPropagation(); movePageOrder(idx, -1); });
+        card.querySelector('.thumb-dn').addEventListener('click', (ev) => { ev.stopPropagation(); movePageOrder(idx, 1); });
+        card.querySelector('.thumb-xfer').addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const serialized = serializePages()[idx];
+          await wbDB.set('transferred_page', serialized);
+          refreshTransferPasteBtn();
+          showToast('success', 'تم نسخ الصفحة — افتح أي سبورة أخرى واضغط «لصق» لنقلها');
+        });
         card.querySelector('.thumb-dup').addEventListener('click', (ev) => { ev.stopPropagation(); currentPageIndex = idx; addNewPage(true); });
         card.querySelector('.thumb-del').addEventListener('click', (ev) => { ev.stopPropagation(); deletePageAt(idx); });
         list.appendChild(card);
       });
     }
+
+    document.getElementById('drawer-paste-page').addEventListener('click', async () => {
+      const saved = await wbDB.get('transferred_page');
+      if (!saved) { showToast('warning', 'لا توجد صفحة منسوخة للنقل'); return; }
+      const [restored] = restorePages([saved]);
+      pages.push(restored);
+      hasUnsavedChanges = true;
+      switchPage(pages.length - 1);
+      renderPageThumbnails();
+      showToast('success', 'تم لصق الصفحة المنقولة في هذه السبورة');
+    });
 
     document.getElementById('btn-prev-page').addEventListener('click', () => switchPage(currentPageIndex - 1));
     document.getElementById('btn-next-page').addEventListener('click', () => {
@@ -5462,11 +6674,13 @@
     // ═══════════════════════════════════════════════════════════
     function serializePages() {
       return pages.map(p => ({
+        name: p.name || '',
         bgState: p.bgState,
         elements: p.elements.map(el => {
           if (el.type === 'image' || el.type === 'pdf') {
             const c = { ...el };
             delete c.imgObj;
+            c.imgSrc = getMediaSrc(el);
             return c;
           }
           return el;
@@ -5476,15 +6690,28 @@
 
     function restorePages(rawPages) {
       return rawPages.map(p => ({
+        name: p.name || '',
         bgState: p.bgState !== undefined ? p.bgState : 1,
         undoStack: [],
         redoStack: [],
         elements: (p.elements || []).map(el => {
           if ((el.type === 'image' || el.type === 'pdf') && el.imgSrc) {
             const img = new Image();
+            const mediaId = registerMedia(el.imgSrc, img, el.mediaId);
             img.onload = () => renderStatic();
             img.src = el.imgSrc;
-            return { ...el, imgObj: img };
+            const out = { ...el, mediaId, imgObj: img };
+            delete out.imgSrc;
+            if (el.type === 'pdf' && el.pdfId && !pdfDocsMap.has(el.pdfId) && window.pdfjsLib) {
+              wbDB.getPdf(el.pdfId).then(savedBuf => {
+                if (savedBuf) {
+                  window.pdfjsLib.getDocument({ data: savedBuf.slice(0) }).promise
+                    .then(doc => pdfDocsMap.set(el.pdfId, doc))
+                    .catch(() => {});
+                }
+              });
+            }
+            return out;
           }
           return el;
         })
@@ -5797,6 +7024,29 @@
       showToast('success', 'تم تصدير جميع الصفحات إلى PDF');
     }
 
+    function getBoardMetaCache() {
+      try { return JSON.parse(storage.get('wb_board_meta_v1') || '{}'); } catch (_) { return {}; }
+    }
+    function setBoardMetaCache(id, meta) {
+      const all = getBoardMetaCache();
+      all[id] = meta;
+      storage.set('wb_board_meta_v1', JSON.stringify(all));
+    }
+    function parseBoardMeta(b) {
+      const cache = getBoardMetaCache()[b.id] || {};
+      const rawName = String(b.name || 'سبورة').trim();
+      let cleanName = rawName, grade = b.grade || '', group = b.group || '';
+      if (rawName.includes(' || ')) {
+        const parts = rawName.split(' || ').map(s => s.trim());
+        cleanName = parts[0] || 'سبورة';
+        if (!grade && parts[1]) grade = parts[1];
+        if (!group && parts[2]) group = parts[2];
+      }
+      if (!grade && cache.grade) grade = cache.grade;
+      if (!group && cache.group) group = cache.group;
+      return { cleanName, grade: grade.trim(), group: group.trim() };
+    }
+
     function saveCurrentBoardToCloud() {
       const code = storage.get('adminCode') || storage.get('employeeCode') || '';
       if (!code) {
@@ -5804,14 +7054,26 @@
         return;
       }
       const lessonName = document.getElementById('lesson-name').value.trim() || 'سبورة بدون عنوان';
+      const grade = (document.getElementById('wb-grade-select').value || '').trim();
+      const group = (document.getElementById('wb-group-select').value || '').trim();
+
+      let storedName = lessonName;
+      if (grade && group) storedName = `${lessonName} || ${grade} || ${group}`;
+      else if (grade) storedName = `${lessonName} || ${grade}`;
+      else if (group) storedName = `${lessonName} || عام || ${group}`;
+
+      setBoardMetaCache(currentBoardId, { cleanName: lessonName, grade, group });
+
       const pkg = {
-        id: currentBoardId, version: boardVersion,
-        name: lessonName,
+        id: currentBoardId,
+        name: storedName,
+        grade,
+        group,
         thumbnail: staticCanvas.toDataURL('image/jpeg', 0.45),
         data: JSON.stringify({
           lessonName,
-          grade: document.getElementById('wb-grade-select').value,
-          group: document.getElementById('wb-group-select').value,
+          grade,
+          group,
           lastPublishedLessonName: lastPublishedLessonName || '',
           lastPublishedPdfUrl: lastPublishedPdfUrl || '',
           pages: serializePages()
@@ -5820,49 +7082,33 @@
       showToast('info', 'جاري الحفظ في السحابة...');
       runGS('saveBoardToCloud', pkg).then(res => {
         if (res && (res.success || (res.data && res.data.success))) {
-          boardVersion = res.version || '';
           clearAutoSave();
           showToast('success', (res && res.message) || 'تم حفظ السبورة بالسحابة بنجاح');
         } else {
-          showToast('error', (res && res.message) || 'تعذر الاتصال بالسحابة الآن');
+          showToast('error', 'تعذر الاتصال بالسحابة الآن');
         }
       });
     }
 
     let savedBoardsCache = [];
+    let sbNavGrade = null;
+    let sbNavGroup = null;
+
     function openSavedBoardsModal() {
+      sbNavGrade = null;
+      sbNavGroup = null;
+      document.getElementById('search-saved-boards').value = '';
       document.getElementById('modal-saved-boards').classList.remove('hidden');
       const grid = document.getElementById('saved-boards-grid');
+      document.getElementById('saved-boards-breadcrumb').innerHTML = '';
       grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-xs font-bold">جاري تحميل السبورات...</div>';
       runGS('getAllBoards').then(list => {
-        if (!Array.isArray(list)) { grid.textContent = 'تعذر تحميل السبورات. أغلق الأرشيف وأعد فتحه.'; return; }
-        savedBoardsCache = list;
-        renderSavedBoardsGrid(savedBoardsCache);
+        savedBoardsCache = (Array.isArray(list) ? list : []).map(b => ({ ...b, _meta: parseBoardMeta(b) }));
+        renderSavedBoardsExplorer();
       });
     }
 
-    function renderSavedBoardsGrid(list) {
-      const grid = document.getElementById('saved-boards-grid');
-      if (!list.length) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-xs font-bold">لا توجد سبورات محفوظة حاليًا</div>';
-        return;
-      }
-      grid.innerHTML = list.map(b => {
-        const d = b.date ? new Date(b.date).toLocaleDateString('ar-EG') : '';
-        return `
-          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-col justify-between">
-            <img src="${b.thumbnail || ''}" class="w-full h-24 object-cover rounded-xl bg-white mb-2 border border-slate-200" alt="${escapeHtml(b.name)}">
-            <div class="mb-2">
-              <div class="font-extrabold text-slate-800 text-xs truncate">${escapeHtml(b.name || 'سبورة')}</div>
-              <div class="text-[11px] text-slate-400 font-semibold">${escapeHtml(d)}</div>
-            </div>
-            <div class="flex gap-1.5">
-              <button type="button" data-open-board="${escapeHtml(b.fileId)}" data-board-id="${escapeHtml(b.id)}" class="flex-1 bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-1.5 rounded-xl text-xs">فتح</button>
-              <button type="button" data-del-board="${escapeHtml(b.id)}" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-2.5 py-1.5 rounded-xl text-xs"><i class="ph ph-trash"></i></button>
-            </div>
-          </div>`;
-      }).join('');
-
+    function bindBoardCardActions(grid) {
       grid.querySelectorAll('[data-open-board]').forEach(btn => {
         btn.addEventListener('click', () => {
           const fid = btn.dataset.openBoard, bid = btn.dataset.boardId;
@@ -5872,13 +7118,15 @@
             if (res && res.success && res.data) {
               try {
                 const parsed = JSON.parse(res.data);
-                boardVersion = res.version || '';
                 currentBoardId = String(bid || ('board_' + Date.now())).trim();
                 lastPublishedLessonName = parsed.lastPublishedLessonName || parsed.lessonName || '';
                 lastPublishedPdfUrl = parsed.lastPublishedPdfUrl || '';
                 if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
                 if (parsed.grade) { document.getElementById('wb-grade-select').value = parsed.grade; onGradeChange(parsed.grade); }
-                if (parsed.group) setTimeout(() => { document.getElementById('wb-group-select').value = parsed.group; }, 100);
+                if (parsed.group) setTimeout(() => { document.getElementById('wb-group-select').value = parsed.group; refreshPickerScope(); }, 100);
+                if (parsed.grade || parsed.group) {
+                  setBoardMetaCache(currentBoardId, { cleanName: parsed.lessonName || '', grade: parsed.grade || '', group: parsed.group || '' });
+                }
                 if (parsed.pages && parsed.pages.length) {
                   pages = restorePages(parsed.pages);
                   clearAutoSave();
@@ -5905,9 +7153,208 @@
       });
     }
 
-    document.getElementById('search-saved-boards').addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      renderSavedBoardsGrid(savedBoardsCache.filter(b => (b.name || '').toLowerCase().includes(q)));
+    function renderBoardCardsHtml(list, showBadge) {
+      return list.map(b => {
+        const d = b.date ? new Date(b.date).toLocaleDateString('ar-EG') : '';
+        const badgeTxt = showBadge && (b._meta.grade || b._meta.group)
+          ? `<div class="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-100 rounded-md px-1.5 py-0.5 inline-block mb-1 truncate max-w-full">${escapeHtml([b._meta.grade, b._meta.group].filter(Boolean).join(' • '))}</div>`
+          : '';
+        return `
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 flex flex-col justify-between">
+            <img src="${b.thumbnail || ''}" class="w-full h-24 object-cover rounded-xl bg-white mb-2 border border-slate-200" alt="${escapeHtml(b._meta.cleanName)}">
+            <div class="mb-2">
+              ${badgeTxt}
+              <div class="font-bold text-slate-800 text-xs truncate">${escapeHtml(b._meta.cleanName || 'سبورة')}</div>
+              <div class="text-[11px] text-slate-400 font-semibold">${escapeHtml(d)}</div>
+            </div>
+            <div class="flex gap-1.5">
+              <button type="button" data-open-board="${escapeHtml(b.fileId)}" data-board-id="${escapeHtml(b.id)}" class="flex-1 bg-[#0f5d57] hover:bg-[#0a4540] text-white font-bold py-1.5 rounded-xl text-xs">فتح</button>
+              <button type="button" data-del-board="${escapeHtml(b.id)}" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold px-2.5 py-1.5 rounded-xl text-xs"><i class="ph ph-trash"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderSavedBoardsExplorer() {
+      const grid = document.getElementById('saved-boards-grid');
+      const bc   = document.getElementById('saved-boards-breadcrumb');
+      const q    = (document.getElementById('search-saved-boards').value || '').trim().toLowerCase();
+
+      if (!savedBoardsCache.length) {
+        bc.innerHTML = '';
+        grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-xs font-bold">لا توجد سبورات محفوظة حاليًا</div>';
+        return;
+      }
+
+      if (q) {
+        bc.innerHTML = `<span class="text-teal-800">نتائج البحث عن "${escapeHtml(q)}"</span>`;
+        const matches = savedBoardsCache.filter(b =>
+          (b._meta.cleanName || '').toLowerCase().includes(q) ||
+          (b._meta.grade || '').toLowerCase().includes(q) ||
+          (b._meta.group || '').toLowerCase().includes(q)
+        );
+        if (!matches.length) {
+          grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 text-xs font-bold">لا توجد سبورات مطابقة</div>';
+          return;
+        }
+        grid.innerHTML = renderBoardCardsHtml(matches, true);
+        bindBoardCardActions(grid);
+        return;
+      }
+
+      let bcHtml = `<button type="button" data-nav-root="1" class="px-2 py-1 rounded-lg ${sbNavGrade === null ? 'bg-teal-50 text-teal-800' : 'hover:bg-slate-100 text-slate-600'}">كل الصفوف</button>`;
+      if (sbNavGrade !== null) {
+        const gLabel = sbNavGrade === '__GENERAL__' ? 'سبورات عامة' : sbNavGrade;
+        bcHtml += `<i class="ph ph-caret-left text-slate-400"></i><button type="button" data-nav-grade="1" class="px-2 py-1 rounded-lg ${sbNavGroup === null ? 'bg-teal-50 text-teal-800' : 'hover:bg-slate-100 text-slate-600'}">${escapeHtml(gLabel)}</button>`;
+      }
+      if (sbNavGroup !== null) {
+        const grLabel = sbNavGroup === '__GRADE_GENERAL__' ? 'سبورات عامة للصف' : sbNavGroup;
+        bcHtml += `<i class="ph ph-caret-left text-slate-400"></i><span class="px-2 py-1 rounded-lg bg-teal-50 text-teal-800">${escapeHtml(grLabel)}</span>`;
+      }
+      bc.innerHTML = bcHtml;
+      const rootBtn = bc.querySelector('[data-nav-root]');
+      if (rootBtn) rootBtn.addEventListener('click', () => { sbNavGrade = null; sbNavGroup = null; renderSavedBoardsExplorer(); });
+      const grBtn = bc.querySelector('[data-nav-grade]');
+      if (grBtn) grBtn.addEventListener('click', () => { sbNavGroup = null; renderSavedBoardsExplorer(); });
+
+      if (sbNavGrade === null) {
+        const gradeMap = new Map();
+        const generalBoards = [];
+        savedBoardsCache.forEach(b => {
+          const g = b._meta.grade;
+          if (!g || g === 'عام') {
+            generalBoards.push(b);
+          } else {
+            if (!gradeMap.has(g)) gradeMap.set(g, { boards: [], groups: new Set() });
+            gradeMap.get(g).boards.push(b);
+            if (b._meta.group) gradeMap.get(g).groups.add(b._meta.group);
+          }
+        });
+
+        let cards = '';
+        gradeMap.forEach((info, gradeName) => {
+          const gCount = info.groups.size;
+          const bCount = info.boards.length;
+          cards += `
+            <button type="button" data-open-grade="${escapeHtml(gradeName)}" class="text-right bg-slate-50 hover:bg-teal-50/70 border border-slate-200 hover:border-teal-600 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors group">
+              <div class="flex items-center justify-between w-full">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#0f5d57] group-hover:bg-[#0f5d57] group-hover:text-white flex items-center justify-center transition-colors">
+                  <i class="ph ph-graduation-cap text-xl"></i>
+                </div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${bCount} سبورة</span>
+              </div>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">${escapeHtml(gradeName)}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">${gCount > 0 ? gCount + ' مجموعة دراسية' : 'بدون مجموعات محددة'}</div>
+              </div>
+            </button>`;
+        });
+
+        if (generalBoards.length > 0) {
+          cards += `
+            <button type="button" data-open-grade="__GENERAL__" class="text-right bg-slate-50 hover:bg-amber-50/60 border border-slate-200 hover:border-amber-500 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors group">
+              <div class="flex items-center justify-between w-full">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center transition-colors">
+                  <i class="ph ph-stack text-xl"></i>
+                </div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${generalBoards.length} سبورة</span>
+              </div>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">سبورات عامة</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">غير مرتبطة بصف أو مجموعة</div>
+              </div>
+            </button>`;
+        }
+
+        grid.innerHTML = cards;
+        grid.querySelectorAll('[data-open-grade]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            sbNavGrade = btn.dataset.openGrade;
+            sbNavGroup = null;
+            renderSavedBoardsExplorer();
+          });
+        });
+        return;
+      }
+
+      if (sbNavGrade === '__GENERAL__') {
+        const list = savedBoardsCache.filter(b => !b._meta.grade || b._meta.grade === 'عام');
+        grid.innerHTML = renderBoardCardsHtml(list, false);
+        bindBoardCardActions(grid);
+        return;
+      }
+
+      const gradeBoards = savedBoardsCache.filter(b => b._meta.grade === sbNavGrade);
+      if (sbNavGroup === null) {
+        const groupMap = new Map();
+        const noGroupBoards = [];
+        gradeBoards.forEach(b => {
+          const gr = b._meta.group;
+          if (!gr) noGroupBoards.push(b);
+          else {
+            if (!groupMap.has(gr)) groupMap.set(gr, []);
+            groupMap.get(gr).push(b);
+          }
+        });
+
+        if (groupMap.size === 0) {
+          grid.innerHTML = renderBoardCardsHtml(noGroupBoards, false);
+          bindBoardCardActions(grid);
+          return;
+        }
+
+        let cards = '';
+        groupMap.forEach((boards, groupName) => {
+          cards += `
+            <button type="button" data-open-group="${escapeHtml(groupName)}" class="text-right bg-slate-50 hover:bg-teal-50/70 border border-slate-200 hover:border-teal-600 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors group">
+              <div class="flex items-center justify-between w-full">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#0f5d57] group-hover:bg-[#0f5d57] group-hover:text-white flex items-center justify-center transition-colors">
+                  <i class="ph ph-users-three text-xl"></i>
+                </div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${boards.length} سبورة</span>
+              </div>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">${escapeHtml(groupName)}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(sbNavGrade)}</div>
+              </div>
+            </button>`;
+        });
+
+        if (noGroupBoards.length > 0) {
+          cards += `
+            <button type="button" data-open-group="__GRADE_GENERAL__" class="text-right bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-400 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-colors">
+              <div class="flex items-center justify-between w-full">
+                <div class="w-10 h-10 rounded-xl bg-slate-200/70 text-slate-700 flex items-center justify-center">
+                  <i class="ph ph-chalkboard text-xl"></i>
+                </div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${noGroupBoards.length} سبورة</span>
+              </div>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">سبورات عامة للصف</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">بدون مجموعة محددة</div>
+              </div>
+            </button>`;
+        }
+
+        grid.innerHTML = cards;
+        grid.querySelectorAll('[data-open-group]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            sbNavGroup = btn.dataset.openGroup;
+            renderSavedBoardsExplorer();
+          });
+        });
+        return;
+      }
+
+      const targetBoards = sbNavGroup === '__GRADE_GENERAL__'
+        ? gradeBoards.filter(b => !b._meta.group)
+        : gradeBoards.filter(b => b._meta.group === sbNavGroup);
+      grid.innerHTML = renderBoardCardsHtml(targetBoards, false);
+      bindBoardCardActions(grid);
+    }
+
+    document.getElementById('search-saved-boards').addEventListener('input', () => {
+      renderSavedBoardsExplorer();
     });
 
     function saveWhiteboardToLibrary() {
@@ -5987,28 +7434,275 @@
       const list = linked.length ? linked : platformSettings.groups;
       groupSel.innerHTML = '<option value="">جميع المجموعات</option>' + list.map(gr => `<option value="${escapeHtml(gr)}">${escapeHtml(gr)}</option>`).join('');
     }
-    document.getElementById('wb-grade-select').addEventListener('change', (e) => onGradeChange(e.target.value));
+    document.getElementById('wb-grade-select').addEventListener('change', (e) => {
+      onGradeChange(e.target.value);
+      refreshPickerScope();
+    });
+    document.getElementById('wb-group-select').addEventListener('change', () => {
+      refreshPickerScope();
+    });
 
-    // Autosave (Debounced 25s — ONLY when there are real unsaved changes)
+    // ═══════════════════════════════════════════════════════════
+    // 14B. RANDOM STUDENT PICKER (Auto-loaded from Sheet by Grade & Group, Name ONLY without code!)
+    // ═══════════════════════════════════════════════════════════
+    const pickerWidget     = document.getElementById('picker-widget');
+    const pickerStage      = document.getElementById('picker-stage');
+    const pickerResultName = document.getElementById('picker-result-name');
+    const pickerScopeBadge = document.getElementById('picker-scope-badge');
+    const pickerCountBadge = document.getElementById('picker-count-badge');
+    const pickerListEl     = document.getElementById('picker-students-list');
+    const pickerSpinBtn    = document.getElementById('picker-spin-btn');
+
+    let allSheetStudents = null; // cached raw array from getStudentsForAssistant
+    let pickerPool       = [];   // active clean student names for current Grade/Group
+    let pickerPickedSet  = new Set();
+    let pickerExcluded   = new Set();
+    let pickerSpinning   = false;
+
+    function stripStudentCode(rawName) {
+      return String(rawName || '')
+        .replace(/\s*[\(\[（]\s*[\dA-Za-z\-_]+\s*[\)\]）]\s*/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function normalizeArText(s) {
+      return String(s || '').trim().replace(/\s+/g, ' ');
+    }
+
+    async function loadStudentsFromSheet(forceReload) {
+      if (allSheetStudents && !forceReload) {
+        refreshPickerScope();
+        return;
+      }
+      pickerScopeBadge.textContent = 'جاري جلب أسماء الطلبة...';
+      pickerCountBadge.textContent = '...';
+      const data = await runGS('getStudentsForAssistant');
+      if (Array.isArray(data)) {
+        allSheetStudents = data;
+      } else {
+        allSheetStudents = [];
+        showToast('warning', 'تعذر جلب قائمة الطلبة من الشيت الآن');
+      }
+      refreshPickerScope();
+    }
+
+    function refreshPickerScope() {
+      if (!pickerWidget.classList.contains('open')) return;
+      const selGrade = normalizeArText(document.getElementById('wb-grade-select').value);
+      const selGroup = normalizeArText(document.getElementById('wb-group-select').value);
+
+      if (!allSheetStudents) {
+        loadStudentsFromSheet(false);
+        return;
+      }
+
+      const scopeLabel = [selGrade || 'كل الصفوف', selGroup || 'كل المجموعات'].join(' • ');
+      pickerScopeBadge.textContent = scopeLabel;
+
+      const seen = new Set();
+      const filtered = [];
+      allSheetStudents.forEach(st => {
+        if (!st) return;
+        const stStatus = String(st.status || '').trim();
+        if (stStatus === 'موقوف' || stStatus === 'محذوف' || stStatus === 'غير نشط') return;
+
+        const stGrade = normalizeArText(st.grade || '');
+        const stGroup = normalizeArText(st.group || st.class || '');
+        if (selGrade && stGrade && stGrade !== selGrade) return;
+        if (selGrade && !stGrade) return;
+        if (selGroup && stGroup !== selGroup) return;
+
+        const cleanName = stripStudentCode(st.name);
+        if (cleanName && !seen.has(cleanName)) {
+          seen.add(cleanName);
+          filtered.push(cleanName);
+        }
+      });
+
+      pickerPool = filtered;
+      loadTodayAbsentees();
+      renderPickerStudentsList();
+    }
+
+    function getAbsentStorageKey() {
+      const g  = normalizeArText(document.getElementById('wb-grade-select').value);
+      const gr = normalizeArText(document.getElementById('wb-group-select').value);
+      const day = new Date().toISOString().slice(0, 10);
+      return `wb_absent_${day}_${g}_${gr}`;
+    }
+    function loadTodayAbsentees() {
+      try {
+        const arr = JSON.parse(storage.get(getAbsentStorageKey()) || '[]');
+        pickerExcluded = new Set(Array.isArray(arr) ? arr : []);
+      } catch (_) { pickerExcluded = new Set(); }
+    }
+    function saveTodayAbsentees() {
+      storage.set(getAbsentStorageKey(), JSON.stringify([...pickerExcluded]));
+    }
+
+    function renderPickerStudentsList() {
+      const noRepeat = document.getElementById('picker-no-repeat').checked;
+      const q = normalizeArText(document.getElementById('picker-search-student')?.value || '').toLowerCase();
+      const available = pickerPool.filter(n => !pickerExcluded.has(n) && (!noRepeat || !pickerPickedSet.has(n)));
+      pickerCountBadge.textContent = `${available.length} / ${pickerPool.length}`;
+      const absCount = pickerPool.filter(n => pickerExcluded.has(n)).length;
+      const absBadge = document.getElementById('picker-absent-badge');
+      if (absBadge) absBadge.textContent = absCount > 0 ? `غائب: ${absCount}` : '';
+
+      if (!pickerPool.length) {
+        pickerListEl.innerHTML = '<div class="text-[11px] text-slate-400 font-semibold py-1">اختر الصف والمجموعة من الشريط العلوي لجلب الطلبة</div>';
+        return;
+      }
+
+      const shown = q ? pickerPool.filter(n => n.toLowerCase().includes(q)) : pickerPool;
+      pickerListEl.innerHTML = shown.map(name => {
+        const isExcl = pickerExcluded.has(name);
+        const isPicked = pickerPickedSet.has(name);
+        const cls = isExcl
+          ? 'bg-rose-50 text-rose-400 line-through border-rose-200'
+          : (isPicked ? 'bg-teal-50 text-teal-800 border-teal-200' : 'bg-white text-slate-700 border-slate-200 hover:border-teal-500');
+        return `<button type="button" data-toggle-st="${escapeHtml(name)}" class="px-2 py-0.5 rounded-lg border text-[11px] font-bold transition-colors ${cls}" title="${isExcl ? 'غائب — اضغط لإرجاعه' : 'حاضر — اضغط لاستبعاده كغائب'}">${isExcl ? '✕ ' : ''}${escapeHtml(name)}</button>`;
+      }).join('');
+
+      pickerListEl.querySelectorAll('[data-toggle-st]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const n = btn.dataset.toggleSt;
+          if (pickerExcluded.has(n)) pickerExcluded.delete(n);
+          else pickerExcluded.add(n);
+          saveTodayAbsentees();
+          renderPickerStudentsList();
+        });
+      });
+    }
+    document.getElementById('picker-search-student').addEventListener('input', renderPickerStudentsList);
+
+    function spinRandomStudent() {
+      if (pickerSpinning) return;
+      const noRepeat = document.getElementById('picker-no-repeat').checked;
+      let candidates = pickerPool.filter(n => !pickerExcluded.has(n) && (!noRepeat || !pickerPickedSet.has(n)));
+
+      if (!pickerPool.length) {
+        showToast('warning', 'لا يوجد طلبة في هذا الصف/المجموعة — اختر الصف والمجموعة أولاً');
+        return;
+      }
+      if (!candidates.length) {
+        pickerPickedSet.clear();
+        candidates = pickerPool.filter(n => !pickerExcluded.has(n));
+        if (!candidates.length) { showToast('warning', 'كل الطلبة مستبعدون حاليًا'); return; }
+        showToast('info', 'تم اختيار جميع الطلبة — بدء دورة جديدة');
+      }
+
+      const winner = candidates[Math.floor(Math.random() * candidates.length)];
+      pickerSpinning = true;
+      pickerStage.classList.remove('winner');
+      pickerSpinBtn.disabled = true;
+
+      const totalSteps = 18;
+      let step = 0;
+      function nextTick() {
+        step++;
+        if (step < totalSteps) {
+          const preview = candidates[Math.floor(Math.random() * candidates.length)];
+          pickerResultName.textContent = preview;
+          playTimerTick(step);
+          const delay = 45 + Math.pow(step / totalSteps, 2.2) * 190;
+          setTimeout(nextTick, delay);
+        } else {
+          pickerResultName.textContent = winner;
+          pickerStage.classList.add('winner');
+          pickerPickedSet.add(winner);
+          pickerSpinning = false;
+          pickerSpinBtn.disabled = false;
+          renderPickerStudentsList();
+          playStampSound('check');
+          const rect = pickerStage.getBoundingClientRect();
+          const worldPt = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          spawnConfetti(worldPt.x, worldPt.y);
+        }
+      }
+      nextTick();
+    }
+
+    document.getElementById('btn-picker-toggle').addEventListener('click', () => {
+      pickerWidget.classList.toggle('open');
+      if (pickerWidget.classList.contains('open')) loadStudentsFromSheet(false);
+    });
+    document.getElementById('picker-close-btn').addEventListener('click', () => {
+      pickerWidget.classList.remove('open');
+    });
+    document.getElementById('picker-refresh-btn').addEventListener('click', () => {
+      loadStudentsFromSheet(true);
+    });
+    document.getElementById('picker-reset-btn').addEventListener('click', () => {
+      pickerPickedSet.clear();
+      pickerExcluded.clear();
+      saveTodayAbsentees();
+      pickerStage.classList.remove('winner');
+      pickerResultName.textContent = 'اضغط لاختيار طالب';
+      renderPickerStudentsList();
+    });
+    document.getElementById('picker-no-repeat').addEventListener('change', renderPickerStudentsList);
+    pickerSpinBtn.addEventListener('click', spinRandomStudent);
+
+    // Make Picker Widget draggable
+    (function bindPickerDrag() {
+      const handle = document.getElementById('picker-drag-handle');
+      let dragging = false, offX = 0, offY = 0;
+      handle.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+        dragging = true;
+        const rect = pickerWidget.getBoundingClientRect();
+        offX = e.clientX - rect.left;
+        offY = e.clientY - rect.top;
+        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+      handle.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const nx = Math.max(8, Math.min(e.clientX - offX, window.innerWidth - pickerWidget.offsetWidth - 8));
+        const ny = Math.max(56, Math.min(e.clientY - offY, window.innerHeight - pickerWidget.offsetHeight - 8));
+        pickerWidget.style.left = nx + 'px';
+        pickerWidget.style.top  = ny + 'px';
+        pickerWidget.style.right = 'auto';
+      });
+      handle.addEventListener('pointerup', () => { dragging = false; });
+      handle.addEventListener('pointercancel', () => { dragging = false; });
+    })();
+
+    // Reliable High-Capacity Autosave (IndexedDB + 8s debounce + pagehide flush)
     let autoSaveTimer = null;
+    function flushAutoSaveNow() {
+      if (!hasUnsavedChanges || !pages.some(p => p.elements.length > 0)) {
+        storage.remove('wb_autosave_v2');
+        wbDB.del('autosave_latest');
+        return;
+      }
+      const payload = {
+        pages: serializePages(),
+        currentPageIndex,
+        boardId: currentBoardId,
+        lessonName: document.getElementById('lesson-name').value,
+        grade: document.getElementById('wb-grade-select').value,
+        group: document.getElementById('wb-group-select').value,
+        updatedAt: Date.now()
+      };
+      wbDB.set('autosave_latest', payload);
+      // Lightweight fallback only if small (< 1.5 MB)
+      try {
+        const s = JSON.stringify(payload);
+        if (s.length < 1500000) storage.set('wb_autosave_v2', s);
+        else storage.remove('wb_autosave_v2');
+      } catch (_) {}
+    }
     function scheduleAutoSave() {
       if (autoSaveTimer) clearTimeout(autoSaveTimer);
       if (!hasUnsavedChanges) return;
       autoSaveTimer = setTimeout(() => {
         autoSaveTimer = null;
-        if (!hasUnsavedChanges || !pages.some(p => p.elements.length > 0)) {
-          storage.remove('wb_autosave_v2');
-          return;
-        }
-        storage.set('wb_autosave_v2', JSON.stringify({
-          pages: serializePages(),
-          currentPageIndex,
-          boardId: currentBoardId, version: boardVersion,
-          lessonName: document.getElementById('lesson-name').value,
-          updatedAt: Date.now()
-        }));
-      }, 1500);
+        flushAutoSaveNow();
+      }, 8000);
     }
+    window.addEventListener('pagehide', () => { if (hasUnsavedChanges) flushAutoSaveNow(); });
 
     // ═══════════════════════════════════════════════════════════
     // 15. INIT
@@ -6023,32 +7717,35 @@
     if (storage.get('wbPanLocked') === 'true') isPanLocked = true;
     if (storage.get('wbSmartShapes') === 'false') smartShapesEnabled = false;
 
-    // Offer autosave recovery via clean in-page modal (never confirm())
-    const rawAuto = storage.get('wb_autosave_v2');
-    if (rawAuto) {
-      try {
-        const parsed = JSON.parse(rawAuto);
-        if (parsed && parsed.pages && parsed.pages.length && (Date.now() - parsed.updatedAt) < 86400000) {
-          const mins = Math.max(1, Math.round((Date.now() - parsed.updatedAt) / 60000));
-          showConfirm(
-            'استعادة الجلسة السابقة',
-            `يوجد شرح غير محفوظ منذ ${mins} دقيقة. هل تريد استعادته؟`,
-            () => {
-              pages = restorePages(parsed.pages);
-              boardVersion = parsed.version || '';
-              currentBoardId = parsed.boardId || currentBoardId;
-              if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
-              hasUnsavedChanges = true;
-              switchPage(Math.min(parsed.currentPageIndex || 0, pages.length - 1));
-              showToast('success', 'تمت استعادة الجلسة');
-            },
-            () => {
-              clearAutoSave();
-            }
-          );
-        }
-      } catch (_) {}
-    }
+    // Offer autosave recovery from IndexedDB (with localStorage fallback)
+    (async function checkAutosaveRecovery() {
+      let parsed = await wbDB.get('autosave_latest');
+      if (!parsed) {
+        const rawAuto = storage.get('wb_autosave_v2');
+        if (rawAuto) { try { parsed = JSON.parse(rawAuto); } catch (_) {} }
+      }
+      if (parsed && parsed.pages && parsed.pages.length && (Date.now() - parsed.updatedAt) < 172800000) {
+        const mins = Math.max(1, Math.round((Date.now() - parsed.updatedAt) / 60000));
+        const timeLbl = mins >= 60 ? `${Math.round(mins / 60)} ساعة` : `${mins} دقيقة`;
+        showConfirm(
+          'استعادة الجلسة السابقة',
+          `يوجد شرح غير محفوظ (${parsed.pages.length} صفحة) منذ ${timeLbl}. هل تريد استعادته بالكامل؟`,
+          () => {
+            pages = restorePages(parsed.pages);
+            currentBoardId = parsed.boardId || currentBoardId;
+            if (parsed.lessonName) document.getElementById('lesson-name').value = parsed.lessonName;
+            if (parsed.grade) { document.getElementById('wb-grade-select').value = parsed.grade; onGradeChange(parsed.grade); }
+            if (parsed.group) setTimeout(() => { document.getElementById('wb-group-select').value = parsed.group; }, 120);
+            hasUnsavedChanges = true;
+            switchPage(Math.min(parsed.currentPageIndex || 0, pages.length - 1));
+            showToast('success', 'تمت استعادة الجلسة وملفات الـ PDF بنجاح');
+          },
+          () => {
+            clearAutoSave();
+          }
+        );
+      }
+    })();
 
     loadGradesAndGroups();
   })();
