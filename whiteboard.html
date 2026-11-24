@@ -472,6 +472,7 @@
     }
   </style>
 <link rel="stylesheet" href="./platform-ui.css">
+<script src="./platform-brand.js"></script>
 </head>
 <body>
 
@@ -5959,6 +5960,7 @@
       const gradeSel = document.getElementById('wb-grade-select');
       const groupSel = document.getElementById('wb-group-select');
       const settings = await runGS('getPlatformSettings');
+      if (settings && settings.brandPalette) applyPlatformPalette(settings.brandPalette);
 
       const gSet = new Set(), grSet = new Set(), rels = [];
       if (settings) {

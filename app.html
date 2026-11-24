@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#176349">
     <title>منصة الهليهي</title>
     
     <link rel="manifest" href="app-manifest.json">
@@ -39,7 +39,7 @@
             const ua = navigator.userAgent || "";
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
             const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
+            const isApp = true;
 
             let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
             let platform = 'تطبيق المنصة (App)';
@@ -71,94 +71,14 @@
                 .catch(() => sendPayload(locationStr));
         } catch(e){}
     }
-
 </script>
 
-    <script src="https://cdn.tailwindcss.com">
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: "class"
         };
     
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
 </script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -166,47 +86,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/themes/introjs-modern.css">
     <script src="https://cdn.jsdelivr.net/npm/intro.js/minified/intro.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         .swal2-container { z-index: 999999 !important; }
@@ -588,6 +468,9 @@
     .introjs-arrow.top { border-bottom-color: #ffffff !important; }
     .introjs-arrow.bottom { border-top-color: #ffffff !important; }
         </style>
+<link rel="stylesheet" href="./platform-ui.css">
+<script src="./platform-brand.js"></script>
+<script src="./task-input.js"></script>
 </head>
 <body>
     <script>
@@ -595,45 +478,6 @@
             document.write('<style>#loginScreen { display: none !important; }</style>');
         }
     
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
 </script>
 
     <div id="loginScreen" class="fixed inset-0 bg-white z-[200] flex flex-col items-center justify-center p-6">
@@ -714,7 +558,7 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div class="flex-1">
-                        <div class="text-[10px] text-white/80 font-bold">نسبة إنجازك الأسبوعي</div>
+                        <div class="text-[10px] text-white/80 font-bold">نسبة إنجاز المهام</div>
                         <div class="text-base font-extrabold" id="progressPercent" style="margin-top: 1px;">0%</div>
                     </div>
                 </div>
@@ -939,6 +783,15 @@
     </div>
 
     <script>
+function recitationOutcome(grade, bookingStatus) {
+    const absence = /^(?:غائب|غايب|غياب|لم يتم التسميع|لم يسمع)$/;
+    const status = String(bookingStatus ?? '').trim();
+    const value = String(grade ?? '').trim();
+    if (absence.test(status) || absence.test(value)) return 'absent';
+    if (status === 'تم التسميع') return 'completed';
+    return value ? 'completed' : 'pending';
+}
+
         // === الرابط السحري للـ API ===
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwhe5Ytj8rQie0i4nJGlHVpvoz9JOo6531dhbxKpRtbSOPPe94WJ7eOk6HvrrQ0r044NA/exec';
         // ============================
@@ -1763,22 +1616,11 @@
             initSocialLinks();
         }
         function initSocialLinks() {
-            if (typeof google === 'undefined' || !google.script) {
-                // Default fallback if not in Apps Script context (for debugging/testing)
-                window.platformSocialLinks = [
-                    { label: "فيسبوك المدرس", icon: "fab fa-facebook-f", url: "https://www.facebook.com/arabicbymahmoud", active: true, showInSide: true },
-                    { label: "يوتيوب", icon: "fab fa-youtube", url: "https://youtube.com/@arabicbymahmoud", active: true, showInSide: true },
-                    { label: "واتساب", icon: "fab fa-whatsapp", url: "https://wa.me/201558251686", active: true, showInSide: true }
-                ];
+            api('getPlatformSocialLinks').then(result => {
+                window.platformSocialLinks = Array.isArray(result.links) ? result.links : [];
                 renderPlatformSocialLinks();
-                return;
-            }
-            google.script.run.withSuccessHandler(function(links) {
-                window.platformSocialLinks = links || [];
-                renderPlatformSocialLinks();
-            }).getPlatformSocialLinks();
+            });
         }
-
         function renderPlatformSocialLinks() {
             const links = window.platformSocialLinks || [];
             const sideLinks = links.filter(l => l.active && l.showInSide);
@@ -1847,7 +1689,7 @@
             const pendEx = dash.pendingExams || 0;
             
             const totalComp = compHw + compRec + compEx;
-            const totalTasks = totalComp + pendHw + pendRec + pendEx;
+            const totalTasks = totalComp + pendHw + pendRec + pendEx + (dash.absentRecitations || 0);
             const percent = totalTasks > 0 ? Math.round((totalComp / totalTasks) * 100) : 0;
             
             const progressPercentEl = document.getElementById('progressPercent');
@@ -1860,7 +1702,7 @@
                 
                 let encouragement = "واصل يا بطل! يمكنك تحقيق المزيد.";
                 if (percent === 100 && totalTasks > 0) {
-                    encouragement = "أنت خارق! لقد أكملت جميع مهامك الأسبوعية بالكامل. 🌟";
+                    encouragement = "أنت خارق! لقد أكملت جميع المهام المعروضة بالكامل. 🌟";
                 } else if (percent >= 75) {
                     encouragement = "إنجاز رائع! اقتربت من إنهاء جميع المهام الأسبوعية. 🔥";
                 } else if (percent >= 50) {
@@ -2051,8 +1893,11 @@
                             isDone = false; gradeDisplay = 'في الانتظار'; statusLabel = 'المطلوب حله:';
                         }
                     } else if (targetType === 'التسميع') {
-                        if (item.grade && item.grade !== "") {
-                            isDone = true; gradeDisplay = item.grade; statusLabel = 'درجة التسميع:';
+                        const outcome = item.recitationOutcome || recitationOutcome(item.grade);
+                if (outcome === 'absent') {
+                    isDone = false; gradeDisplay = 'لم يتم التسميع'; statusLabel = 'حالة التسميع:';
+                } else if (outcome === 'completed') {
+                            isDone = true; gradeDisplay = String(item.grade ?? '').trim() || 'تم التسميع'; statusLabel = 'درجة التسميع:';
                         } else if (item.pages && item.pages !== "") {
                             isDone = false; gradeDisplay = 'صـ: ' + item.pages; statusLabel = 'المطلوب تسميعه:';
                         } else {
@@ -2132,10 +1977,12 @@
                         }
                         if(item.correctionLink) html += `<button onclick="window.open('${item.correctionLink}')" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold text-sm"><i class="fas fa-eye"></i> مشاهدة التصحيح</button>`;
                         else if(isExpired && !item.isUploaded) html += downloadBtn + `<button disabled class="w-full bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> التسليم مغلق (انتهت المدة)</button>`;
-                        else if(item.isUploaded) html += downloadBtn + `<button onclick="deleteUpload('${item.lesson}')" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm"><i class="fas fa-trash"></i> حذف المرفوع</button>`;
-                        else html += downloadBtn + `<button onclick="openUploadUI('${item.lesson}')" class="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-blue-200"><i class="fas fa-upload"></i> رفع الواجب</button>`;
+                        else if(item.isUploaded) html += downloadBtn + `<button data-lesson="${taskAttribute(item.lesson)}" onclick="openUploadUI(this.dataset.lesson)" class="w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm"><i class="fas fa-trash"></i> استبدال الواجب</button>`;
+                        else html += downloadBtn + `<button data-lesson="${taskAttribute(item.lesson)}" onclick="openUploadUI(this.dataset.lesson)" class="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-blue-200"><i class="fas fa-upload"></i> رفع الواجب</button>`;
                     } else if (targetType === 'التسميع') {
-                        if(isDone) {
+                        if ((item.recitationOutcome || recitationOutcome(item.grade)) === 'absent') {
+                            html += `<button class="w-full" data-lesson="${taskAttribute(item.lesson)}" onclick="openBookingUI(this.dataset.lesson)">حجز موعد جديد</button>`;
+                        } else if(isDone) {
                             html += `<div class="w-full text-center bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-2 rounded-xl font-bold text-sm border border-green-200 dark:border-green-800"><i class="fas fa-check-circle"></i> تم التسميع</div>`;
                         } else if (item.isBooked) {
                             html += `
@@ -2151,11 +1998,11 @@
                                 html += `<button disabled class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> دخول التسميع</button>`;
                             }
                             
-                            html += `<button onclick="cancelBooking('${item.lesson}')" class="w-auto px-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm" title="إلغاء الموعد"><i class="fas fa-times"></i></button>
+                            html += `<button data-lesson="${taskAttribute(item.lesson)}" onclick="openBookingUI(this.dataset.lesson)" class="w-auto px-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-2 rounded-xl font-bold text-sm" title="تغيير الموعد">تغيير الموعد</button>
                             </div>`;
                         }
                         else if(isExpired) html += `<button disabled class="w-full bg-slate-200 dark:bg-slate-700 text-slate-500 py-2 rounded-xl font-bold text-sm opacity-60 cursor-not-allowed"><i class="fas fa-lock"></i> الحجز مغلق (انتهت المدة)</button>`;
-                        else html += `<button onclick="openBookingUI('${item.lesson}')" class="w-full border-2 border-blue-600 text-blue-600 py-2 rounded-xl font-bold text-sm"><i class="fas fa-calendar-plus"></i> حجز تسميع</button>`;
+                        else html += `<button data-lesson="${taskAttribute(item.lesson)}" onclick="openBookingUI(this.dataset.lesson)" class="w-full border-2 border-blue-600 text-blue-600 py-2 rounded-xl font-bold text-sm"><i class="fas fa-calendar-plus"></i> حجز تسميع</button>`;
                     } else if (targetType === 'الاختبارات والامتحانات') {
                         const examLink = item.examLink || item.link || '';
                         const examTitle = item.title || item.examTitle || '';
@@ -2195,7 +2042,7 @@
                 </div>
                 <input type="file" id="fileInp" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)">
                 <div id="selectedFilesList" class="mb-4 text-xs font-bold text-slate-600 flex flex-col gap-2"></div>
-                <button onclick="executeUpload('${lesson}')" id="btnDoUpload" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50" disabled>بدء الرفع</button>
+                <button data-lesson="${taskAttribute(lesson)}" onclick="executeUpload(this.dataset.lesson)" id="btnDoUpload" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50" disabled>بدء الرفع</button>
             `;
             document.getElementById('actionModal').style.display = 'flex';
         }
@@ -2210,10 +2057,14 @@
             const btn = document.getElementById('btnDoUpload');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع...'; btn.disabled = true;
             
-            const filesData = await Promise.all(filesToUpload.map(f => new Promise(resolve => {
-                const r = new FileReader(); r.onload = e => resolve({ name: f.name, mimeType: f.type, data: e.target.result.split(',')[1] }); r.readAsDataURL(f);
-            })));
-
+            let filesData = [];
+            try {
+                for (const file of filesToUpload) filesData.push(await prepareHomeworkImage(file));
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'بدء الرفع';
+                return Swal.fire('خطأ', error.message, 'error');
+            }
             const res = await api('upload', { files: filesData, lesson: lesson });
             if(res.success) {
                 Swal.fire('نجاح', 'تم رفع الواجب!', 'success');
@@ -2251,7 +2102,7 @@
                 <input type="date" id="bookDate" min="${new Date().toISOString().split('T')[0]}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl mb-4 font-bold outline-none focus:border-blue-500" onchange="fetchTimes(this.value)">
                 <label class="block font-bold text-xs mb-1 text-slate-500">اختر الوقت</label>
                 <select id="bookTime" onchange="document.getElementById('btnDoBook').disabled = !this.value" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl mb-6 font-bold outline-none focus:border-blue-500"><option value="">التاريخ أولاً...</option></select>
-                <button onclick="executeBooking('${lesson}')" id="btnDoBook" disabled class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50">تأكيد الموعد</button>
+                <button data-lesson="${taskAttribute(lesson)}" onclick="executeBooking(this.dataset.lesson)" id="btnDoBook" disabled class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50">تأكيد الموعد</button>
             `;
             document.getElementById('actionModal').style.display = 'flex';
         }
@@ -2805,53 +2656,6 @@
         }
 
         // 9. القائمة الإضافية (و الحصص)
-        async function loadPlaylistData(reqId = null) {
-            if (!reqId) {
-                window.activeSectionRequestId = (window.activeSectionRequestId || 0) + 1;
-                reqId = window.activeSectionRequestId;
-            }
-            const container = document.getElementById('playlistContainer');
-            const cacheKey = 'playlist';
-            
-            if (window.apkCache[cacheKey]) {
-                container.innerHTML = window.apkCache[cacheKey];
-            } else {
-                container.innerHTML = getAppTasksSkeletonHtml();
-            }
-            
-            try {
-                const res = await api('playlist');
-                if (reqId !== window.activeSectionRequestId) return;
-                let html = '';
-                if(res.error || !res.playlist || !res.playlist.length) {
-                    html = '<p class="text-center text-slate-500 font-bold">لا توجد حصص حالياً.</p>';
-                } else {
-                    res.playlist.forEach(l => {
-                        const safeTitle = l.title.replace(/'/g, "\\'");
-                        if (l.isYoutube) {
-                            html += `
-                            <button onclick="openVideo('${l.id}', '${safeTitle}')" class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-right font-bold text-slate-700 flex justify-between items-center w-full mb-3">
-                                <span class="truncate pr-2">${l.title}</span>
-                                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-play"></i></div>
-                            </button>`;
-                        } else {
-                            html += `
-                            <button onclick="window.open('${l.url}', '_blank')" class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-right font-bold text-slate-700 flex justify-between items-center w-full mb-3">
-                                <span class="truncate pr-2">${l.title}</span>
-                                <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fas fa-external-link-alt"></i></div>
-                            </button>`;
-                        }
-                    });
-                }
-                container.innerHTML = html;
-                window.apkCache[cacheKey] = html;
-            } catch(e) {
-                if (reqId === window.activeSectionRequestId) {
-                    container.innerHTML = '<p class="text-center text-red-500 font-bold">فشل الاتصال بالخادم.</p>';
-                }
-            }
-        }
-
         async function loadMenuData(type) {
             window.activeSectionRequestId = (window.activeSectionRequestId || 0) + 1;
             const reqId = window.activeSectionRequestId;
@@ -3316,6 +3120,7 @@
         function applyPlatformSettings() {
             if (!session) return;
             const sec = session.sections || {};
+      applyPlatformPalette(sec.brandPalette);
             const setDisplay = (id, isVisible) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = isVisible ? '' : 'none';
@@ -3420,45 +3225,6 @@
         document.addEventListener('webkitfullscreenchange', onAppYtFullscreenChange);
         document.addEventListener('mozfullscreenchange', onAppYtFullscreenChange);
     
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true; // this is app.html APK/Webview
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
-    }
-
 </script>
     <!-- Dynamic Social Media Floating Widget Container with Side-Tab Toggle -->
     <div id="socialWrapper" class="social-wrapper" style="display: none;">
@@ -3570,7 +3336,7 @@
             navigator.serviceWorker.ready.then(reg => {
                 reg.showNotification("بدء الحصة المباشرة الآن! ⚠️", {
                     body: `حصتك المباشرة بدأت الآن. انقر هنا للانضمام فوراً.`,
-                    icon: "https://g.top4top.io/p_3313pmxec1.png",
+                    icon: "./icon.png",
                     vibrate: [200, 100, 200, 100, 200, 100, 200],
                     tag: "class-start-alarm",
                     requireInteraction: true,
@@ -3692,7 +3458,7 @@
             if (this.isVisible(statsEl)) steps.push({ element: statsEl, title: 'الإحصائيات', intro: 'من هنا تقدر تتابع عدد الواجبات، التسميعات، والاختبارات اللي أنجزتها.', position: 'bottom' });
             
             const progEl = document.querySelector('#weeklyProgressDashboardCard');
-            if (this.isVisible(progEl)) steps.push({ element: progEl, title: 'نسبة الإنجاز', intro: 'مؤشر يوضح نسبة إنجازك الأسبوعي للمهام.', position: 'bottom' });
+            if (this.isVisible(progEl)) steps.push({ element: progEl, title: 'نسبة الإنجاز', intro: 'مؤشر يوضح نسبة إنجاز المهام للمهام.', position: 'bottom' });
                 
             const leadEl = document.querySelector('#leaderboardWidget');
             if (this.getSec().leaderboard !== false && this.isVisible(leadEl)) steps.push({ element: leadEl, title: 'لوحة الشرف', intro: 'هنا بتظهر لوحة الشرف للأوائل ومجموع نقاطك ورتبتك بين زمايلك.', position: 'top' });
@@ -3822,44 +3588,6 @@
 
     function startWelcomeTour() {
         appTourManager.init();
-    }
-    function collectAndSendStudentSession(studentCode) {
-        try {
-            if (!studentCode) return;
-            const ua = navigator.userAgent || "";
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-            const isTablet = /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk)/i.test(ua);
-            const isApp = true;
-
-            let deviceType = isTablet ? 'جهاز لوحي (Tablet)' : (isMobile ? 'هاتف ذكي (Mobile)' : 'كمبيوتر (Desktop)');
-            let platform = 'تطبيق المنصة (App)';
-            let browserInfo = 'تطبيق أندرويد (APK Webview)';
-            let locationStr = "مصر";
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-                if (tz.includes("Cairo")) locationStr = "مصر (القاهرة)";
-                else if (tz.includes("Riyadh")) locationStr = "السعودية (الرياض)";
-                else if (tz.includes("Dubai")) locationStr = "الإمارات (دبي)";
-                else if (tz.includes("Kuwait")) locationStr = "الكويت";
-                else if (tz) locationStr = tz.split('/').pop().replace(/_/g, ' ');
-            } catch(e){}
-
-            const sendPayload = (loc) => {
-                api('recordStudentSessionGS', { password: studentCode, deviceType, platform, browser: browserInfo, location: loc || locationStr }).catch(()=>{});
-            };
-
-            fetch('https://ipapi.co/json/', { timeout: 3000 })
-                .then(r => r.json())
-                .then(geo => {
-                    if (geo && (geo.country_name || geo.city)) {
-                        const loc = [geo.country_name, geo.region, geo.city].filter(Boolean).join(' - ');
-                        sendPayload(loc);
-                    } else {
-                        sendPayload(locationStr);
-                    }
-                })
-                .catch(() => sendPayload(locationStr));
-        } catch(e){}
     }
 // تحديث الرسالة التلقائي عند فتح التطبيق من الخلفية
         document.addEventListener('visibilitychange', function() {
