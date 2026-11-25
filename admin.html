@@ -971,11 +971,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 </button>
                 <span style="font-weight:900; font-size:1rem; color:var(--dark);">مِنَصَّةُ الهِلِّيهِي</span>
             </div>
-            <div style="display: flex; gap: 6px; align-items: center;">
-                <button class="btn btn-primary btn-sm" onclick="openGlobalSearch()" title="البحث الشامل" style="border-radius:10px; padding:6px 10px;"><i class="fas fa-search"></i></button>
-                <button id="installPwaBtn" class="btn btn-success btn-sm" style="display:none; font-weight:bold;"><i class="fas fa-download"></i></button>
-                <span id="userName" style="display:none;"></span>
-            </div>
+            <span id="userName" style="display:none;"></span>
         </div>
 
         <div class="main-content">
@@ -1060,7 +1056,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
  </div>
                 <div class="eh-sidebar-footer eh-sb-footer-tools">
-                    <button type="button" id="footerWhiteboardBtn" class="eh-sb-icon-btn" style="display:none;" onclick="window.open('whiteboard.html', '_blank')" title="السبورة الذكية"><i class="fas fa-chalkboard"></i></button>
+                    <button type="button" id="footerWhiteboardBtn" class="eh-sb-icon-btn hidden" style="display:none !important;" onclick="window.open('whiteboard.html', '_blank')" title="السبورة الذكية"><i class="fas fa-chalkboard"></i></button>
                     <button type="button" class="eh-sb-icon-btn" onclick="openGlobalSearch()" title="البحث الشامل"><i class="fas fa-search"></i></button>
                     <button type="button" class="theme-toggle-btn eh-sb-icon-btn" onclick="toggleTheme()" data-no-lock="true" title="تبديل الوضع الليلي"><i class="fas fa-moon"></i><i class="fas fa-sun"></i></button>
                     <button type="button" class="eh-sb-icon-btn" onclick="logout(this)" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
@@ -1153,6 +1149,10 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                                 <span class="eh-launch-lbl">إضافة موظف</span>
                             </button>
                         </div>
+                    </div>
+                    <!-- شريط الإجراءات السريعة للمساعد والموظف (يُبنى تلقائياً حسب الأقسام المفتوحة له فقط) -->
+                    <div id="dashStaffQuickActionsWrap" class="hidden" style="margin-top: 0; padding-top: 30px; border-top: 1.5px solid #EFECE3;">
+                        <div class="eh-launchpad-grid" id="dashStaffQuickActionsGrid"></div>
                     </div>
  </div>
                 <div id="studentsSection" class="hidden">
@@ -2307,7 +2307,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
                         <div>
                             <h2 class="section-title" style="padding-bottom:0; border-bottom:none; margin-bottom:4px;"><i class="fas fa-folder-open"></i> ملفات الإدارة</h2>
-                            <p style="margin:0; color:var(--gray); font-size:0.86rem;">مكتبة الملفات والنماذج الإدارية والتعليمية للموظفين (الرفع والحذف للمدير فقط)</p>
+                            
                         </div>
                         <button class="btn btn-sm btn-outline-primary" onclick="loadAdminFilesUI(this)"><i class="fas fa-sync-alt"></i> تحديث الملفات</button>
                     </div>
@@ -2964,7 +2964,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
                                 <div>
                                     <h3 style="margin:0; color:var(--dark); font-size:1.15rem;"><i class="fas fa-list-alt" style="color:var(--primary);"></i> سجل رسائل الواتساب وحالات الإرسال</h3>
-                                    <p style="margin:4px 0 0; color:var(--gray); font-size:0.82rem;">يعرض كل الرسائل (الناجحة والفاشلة مع السبب وقيد الانتظار). الرسائل الفاشلة لا تتكرر تلقائياً إلا بالضغط على زر إعادة الإرسال.</p>
+                                    
  </div>
                                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                     <button class="btn btn-sm btn-primary" onclick="loadWhatsAppLogUI(this)"><i class="fas fa-sync-alt"></i> تحديث السجل</button>
@@ -3000,7 +3000,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="whatsappSettingsConfig" class="tab-content hidden">
                         <div class="form-container" style="background:#fff;padding:25px;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                             <h3 style="color:var(--dark);font-size:1.2rem;margin-bottom:10px;display:flex;align-items:center;gap:10px;"><i class="fab fa-whatsapp" style="color:#25D366;font-size:1.4rem;"></i> ربط ارسال الرسائل عبر واتساب (HuggingFace API)</h3>
-                            <p style="color:var(--gray);font-size:0.9rem;margin-bottom:20px;">ادخل رابط الخادم (Endpoint) الخاص بواتساب ومفتاح الامان ليتمكن النظام من ارسال الرسائل والتقارير لاولياء الامور تلقائيا.</p>
+                            
                             <div style="display:grid;grid-template-columns:1fr;gap:15px;max-width:800px;">
                                 <div class="form-group">
                                     <label style="font-weight:600;">رابط الـ Endpoint (HuggingFace URL):</label>
@@ -3307,7 +3307,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="platformSettingsGroupVisibility" class="tab-content hidden">
                     <div class="card" style="margin-bottom: 20px; border: 1.5px solid #C6DED2;">
                         <h3 style="margin-top:0; color:var(--primary);"><i class="fas fa-users-slash"></i> التحكم الجماعي في إظهار وإخفاء أقسام الطلاب (القائمة الجانبية والتطبيق)</h3>
-                        <p style="font-size:0.86rem; color:var(--gray); margin-bottom:14px;">اختر نوع الدراسة أو الصف أو المجموعة، وحدد الأقسام التي تريد فتحها أو إخفاءها لهؤلاء الطلاب دفعة واحدة (الاستثناءات الفردية للطالب تظل لها الأولوية).</p>
+                        
                         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-bottom:14px;">
                             <div class="form-group" style="margin:0;">
                                 <label>نوع الدراسة</label>
@@ -4522,8 +4522,10 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     }
                     localStorage.setItem('adminCode', code);
                     try { localStorage.setItem(adminCacheKey_('cachedAdminEmp'), JSON.stringify(res.employee)); } catch(e) {}
+                    try { resetSessionUIState_(); } catch (_re) {}
                     window.currentEmployee = res.employee;
                     try { applyEmployeePermissions(); } catch (_pe) { console.error('applyEmployeePermissions error:', _pe); }
+                    try { if (typeof syncFooterWhiteboardAndSectionButtons_ === 'function') syncFooterWhiteboardAndSectionButtons_(); } catch (_se) {}
                     var _sp1 = document.getElementById('autoAuthSplash'); if (_sp1) _sp1.style.display = 'none';
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
@@ -4598,6 +4600,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             }).then((result) => {
                 if (result.isConfirmed) {
                     clearStaffCache_();
+                    try { resetSessionUIState_(true); } catch (_re2) {}
                     localStorage.removeItem('adminCode');
                     localStorage.removeItem(adminCacheKey_('cachedAdminEmp'));
                     localStorage.removeItem(adminCacheKey_('cachedAdminStats'));
@@ -10967,12 +10970,20 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
     const lsKey = 'cache_my_perf_' + cacheKey;
 
     function renderMyAlert_(res) {
+        const heroPill0 = document.getElementById('myPerfHeroPillBtn');
         if (!res || !res.success || !Array.isArray(res.employees) || res.employees.length === 0) {
             alertWrap.classList.add('hidden');
             alertWrap.innerHTML = '';
+            if (heroPill0) { heroPill0.classList.add('hidden'); heroPill0.style.display = 'none'; }
             return;
         }
-        const emp = res.employees.find(function(e) { return String(e.code).trim() === myCode; }) || res.employees[0];
+        const emp = res.employees.find(function(e) { return String(e.code).trim() === myCode; });
+        if (!emp) {
+            alertWrap.classList.add('hidden');
+            alertWrap.innerHTML = '';
+            if (heroPill0) { heroPill0.classList.add('hidden'); heroPill0.style.display = 'none'; }
+            return;
+        }
         if (emp && emp.notStartedYet) {
             alertWrap.classList.remove('hidden');
             alertWrap.innerHTML = '<div style="background:#EAF4EF; border:1.5px solid #C6DED2; border-radius:14px; padding:16px 20px; color:#134230; font-weight:700; display:flex; align-items:center; gap:10px;"><i class="fas fa-hourglass-half fa-lg"></i><span>يبدأ احتساب تقييم أدائك تلقائياً اعتباراً من يوم <b>' + escapeHtml_(emp.perfStartDate || '') + '</b> (لا تُحتسب عليك أي مهام أو تراكمات قبل هذا التاريخ).</span></div>';
@@ -19513,7 +19524,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
     <!-- النافذة المنبثقة الموحدة لإضافة وتسجيل المهام (الواجب / التسميع / الاختبارات) -->
     <div id="ehSectionFormModal" class="hidden" style="position:fixed; inset:0; z-index:9940; background:rgba(15,23,42,0.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:12px;">
-        <div style="background:var(--surface, #fff); width:min(840px, 96vw); max-height:90vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 22px 55px rgba(10,32,22,0.28); border:1px solid var(--border);">
+        <div style="background:var(--surface, #fff); width:min(980px, 96vw); max-height:90vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 22px 55px rgba(10,32,22,0.28); border:1px solid var(--border);">
             <div style="background:linear-gradient(135deg, #1E6146, #154733); color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
                 <strong id="ehSectionFormModalTitle" style="font-size:1rem; font-weight:900; display:flex; align-items:center; gap:8px;"><i class="fas fa-layer-group" style="color:#E6B450;"></i> <span></span></strong>
                 <button type="button" onclick="closeSectionToolModal()" style="background:rgba(255,255,255,0.16); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:1.15rem; line-height:1;">×</button>
@@ -19607,32 +19618,79 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var canWhiteboard = isAdmin || role === 'معلم' || role === 'مدير' || role === 'مالك المنصة';
 
             var wbBtn = document.getElementById('footerWhiteboardBtn');
-            if (wbBtn) wbBtn.style.display = canWhiteboard ? 'inline-flex' : 'none';
+            if (wbBtn) {
+                if (canWhiteboard) {
+                    wbBtn.classList.remove('hidden');
+                    wbBtn.style.setProperty('display', 'inline-flex', 'important');
+                } else {
+                    wbBtn.classList.add('hidden');
+                    wbBtn.style.setProperty('display', 'none', 'important');
+                }
+            }
 
-            // إظهار أزرار الإدارة في الرأس حسب صلاحية المستخدم
+            // 1. أزرار رأس الأقسام (تسجيل واجب، تسجيل تسميع، مواعيد التسميع، أدوات الاختبارات): للمدير فقط
+            ['wajibHeaderActions', 'tasmiyaHeaderActions', 'ikhtibaratHeaderActions'].forEach(function(id) {
+                var box = document.getElementById(id);
+                if (box) box.style.setProperty('display', isAdmin ? 'flex' : 'none', 'important');
+            });
             document.querySelectorAll('.eh-admin-only-btn').forEach(function(el) {
                 el.style.display = isAdmin ? (el.classList.contains('eh-sec-actions') ? 'flex' : 'inline-flex') : 'none';
             });
-            document.querySelectorAll('.eh-admin-or-sec-btn').forEach(function(el) {
-                if (isAdmin) {
-                    el.style.display = 'inline-flex';
-                } else {
-                    var secKey = el.getAttribute('data-sec-check') || '';
-                    var allowedS = Array.isArray(emp && emp.allowedSections) ? emp.allowedSections.join(',') : String((emp && emp.allowedSections) || '');
-                    var okS = (allowedS === 'ALL' || allowedS === 'الكل' || (secKey && allowedS.indexOf(secKey) !== -1));
-                    el.style.display = okS ? 'inline-flex' : 'none';
+
+            // 2. أزرار الانطلاق السريع في الرئيسية:
+            //    - المدير يرى الـ 8 أزرار الإدارية
+            //    - المساعد / الموظف يرى فقط أزرار عمله اليومي حسب الأقسام المفتوحة له
+            var adminLp = document.getElementById('dashQuickActionsWrap');
+            var staffLp = document.getElementById('dashStaffQuickActionsWrap');
+            var staffGrid = document.getElementById('dashStaffQuickActionsGrid');
+
+            if (isAdmin) {
+                if (adminLp) { adminLp.classList.remove('hidden'); adminLp.style.display = 'block'; }
+                if (staffLp) { staffLp.classList.add('hidden'); staffLp.style.display = 'none'; }
+                document.querySelectorAll('#dashQuickActionsWrap .eh-launch-btn').forEach(function(b) { b.style.display = 'inline-flex'; });
+            } else {
+                if (adminLp) { adminLp.classList.add('hidden'); adminLp.style.display = 'none'; }
+                if (staffLp && staffGrid && emp) {
+                    var allowedRaw = Array.isArray(emp.allowedSections) ? emp.allowedSections.join(',') : String(emp.allowedSections || '');
+                    var isAllSec = (allowedRaw === 'ALL' || allowedRaw === 'الكل');
+                    var hasSec = function(k) { return isAllSec || allowedRaw.indexOf(k) !== -1; };
+
+                    var staffBtns = [];
+                    if (hasSec('tasmiya')) {
+                        staffBtns.push({ icon: 'fa-video', label: 'دخول جلسة التسميع', action: "if(typeof openTasmiyaMeetSession==='function') openTasmiyaMeetSession()" });
+                        staffBtns.push({ icon: 'fa-microphone', label: 'حجوزات التسميع', action: "goToTab('tasmiya', 'reserve')" });
+                    }
+                    if (hasSec('wajib')) {
+                        staffBtns.push({ icon: 'fa-check-double', label: 'تصحيح الواجبات', action: "goToTab('wajib', 'correct')" });
+                    }
+                    if (hasSec('ikhtibarat')) {
+                        staffBtns.push({ icon: 'fa-file-signature', label: 'إعداد الاختبارات', action: "showSection('ikhtibarat')" });
+                    }
+                    if (hasSec('adminFiles')) {
+                        staffBtns.push({ icon: 'fa-folder-open', label: 'ملفات الإدارة', action: "showSection('adminFiles')" });
+                    }
+                    if (hasSec('students')) {
+                        staffBtns.push({ icon: 'fa-users', label: 'الطلاب', action: "showSection('students')" });
+                    }
+                    if (hasSec('library')) {
+                        staffBtns.push({ icon: 'fa-book', label: 'المكتبة', action: "showSection('library')" });
+                    }
+
+                    if (staffBtns.length > 0) {
+                        staffGrid.innerHTML = staffBtns.map(function(b) {
+                            return '<button type="button" class="eh-launch-btn" onclick="' + b.action + '">' +
+                                '<span class="eh-launch-ico"><i class="fas ' + b.icon + '"></i></span>' +
+                                '<span class="eh-launch-lbl">' + b.label + '</span>' +
+                            '</button>';
+                        }).join('');
+                        staffLp.classList.remove('hidden');
+                        staffLp.style.display = 'block';
+                    } else {
+                        staffLp.classList.add('hidden');
+                        staffLp.style.display = 'none';
+                    }
                 }
-            });
-            document.querySelectorAll('.eh-admin-or-perm-btn').forEach(function(el) {
-                if (isAdmin) {
-                    el.style.display = 'inline-flex';
-                } else {
-                    var tabKey = el.getAttribute('data-tab-check') || '';
-                    var allowed = String((emp && emp.allowedTabs) || '');
-                    var ok = (allowed === 'ALL' || allowed === 'الكل' || (tabKey && allowed.indexOf(tabKey) !== -1));
-                    el.style.display = ok ? 'inline-flex' : 'none';
-                }
-            });
+            }
         }
 
         // فتح الشغل اليومي الأساسي مباشرة عند الدخول للواجب أو التسميع أو الاختبارات
@@ -19977,19 +20035,87 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var existing = (Array.isArray(window.allScheduleData) && window.allScheduleData.length > 0)
                 ? window.allScheduleData
                 : (typeof allScheduleData !== 'undefined' && Array.isArray(allScheduleData) ? allScheduleData : []);
+            if (existing.length === 0) {
+                try {
+                    if (typeof adminCacheKey_ === 'function') {
+                        var cachedRaw = localStorage.getItem(adminCacheKey_('fast_cache_schedule_v1'));
+                        if (cachedRaw) {
+                            var parsedC = JSON.parse(cachedRaw);
+                            if (Array.isArray(parsedC) && parsedC.length > 0) existing = parsedC;
+                        }
+                    }
+                } catch (_ce) {}
+            }
             if (existing.length > 0 && typeof renderScheduleCardsOverview === 'function') {
                 renderScheduleCardsOverview(existing);
-                return;
             }
             if (typeof runGS === 'function') {
-                runGS('getGroupScheduleAdmin').then(function(res) {
-                    var items = Array.isArray(res) ? res : ((res && (res.items || res.schedule || res.data)) || []);
+                var empCode = (window.currentEmployee && window.currentEmployee.code) ? window.currentEmployee.code : '';
+                runGS('getScheduleDataAdmin', empCode).then(function(res) {
+                    var items = res;
+                    if (typeof items === 'string') {
+                        try { items = JSON.parse(items); } catch (_pe) { items = []; }
+                    }
+                    if (!Array.isArray(items)) {
+                        items = (items && (items.items || items.schedule || items.data)) || [];
+                    }
                     if (Array.isArray(items)) {
                         window.allScheduleData = items;
                         if (typeof allScheduleData !== 'undefined') allScheduleData = items;
                         if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(items);
                     }
                 }).catch(function() {});
+            }
+        }
+    </script>
+
+    <style id="elhelihey-no-underline-v11">
+        a.btn, a.btn:hover, a.btn:focus, a.btn:active, a.btn:visited,
+        #mainApp a.btn, #mainApp a[class*="btn"] {
+            text-decoration: none !important;
+        }
+        /* Clean uncluttered inner layout inside #ehSectionFormModal */
+        #ehSectionFormModalBody .schedule-overview-wrapper,
+        #ehSectionFormModalBody .form-container,
+        #ehSectionFormModalBody .tab-content {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        #ehSectionFormModalBody .form-container {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+            gap: 14px !important;
+        }
+    </style>
+
+    <script>
+        function resetSessionUIState_(clearStorage) {
+            var hp = document.getElementById('myPerfHeroPillBtn');
+            if (hp) { hp.classList.add('hidden'); hp.style.display = 'none'; }
+            var ma = document.getElementById('myPerformanceAlertSection');
+            if (ma) { ma.classList.add('hidden'); ma.innerHTML = ''; }
+            var ep = document.getElementById('employeePerformanceContainer');
+            if (ep) ep.innerHTML = '';
+            var sg = document.getElementById('dashStaffQuickActionsGrid');
+            if (sg) sg.innerHTML = '';
+            ['statWajib', 'statTasmiya', 'statExams'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = '0';
+            });
+            try { if (typeof __myEmpPerfCache !== 'undefined') __myEmpPerfCache = { data: null, time: 0, key: '' }; } catch (_e) {}
+            window._weeklyExamsRes = null;
+            window.allScheduleData = [];
+            if (clearStorage) {
+                try {
+                    Object.keys(localStorage).forEach(function(k) {
+                        if (k.indexOf('cache_my_perf_') === 0 || k.indexOf('cache_emp_perf_') === 0) {
+                            localStorage.removeItem(k);
+                        }
+                    });
+                } catch (_le) {}
             }
         }
     </script>
