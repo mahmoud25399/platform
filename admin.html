@@ -1067,26 +1067,30 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 <div id="dashboardSection">
                     <!-- Upcoming Live Lesson Quick-Join Banner (5 mins before start / live — Admin & Responsible Teacher Only) -->
                     <div id="upcomingLiveLessonBanner" class="hidden" style="margin-bottom: 18px;"></div>
+                    <div id="upcomingTasmiyaBanner" class="hidden" style="margin-bottom: 18px;"></div>
 
-                    <!-- Welcome Greeting Banner (Forest Emerald Hero) -->
+                    <!-- Welcome Greeting Banner (Spacious Forest Emerald Hero + Left Glass KPI Square) -->
                     <div id="dashboardWelcomeBanner" class="eh-dash-hero">
-                        <div style="display:flex; flex-direction:column; gap:8px; max-width:740px;">
-                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                <span style="color:#E6B450; font-size:0.82rem; font-weight:800; display:inline-flex; align-items:center; gap:6px;">
+                        <div style="display:flex; flex-direction:column; gap:10px; max-width:680px; flex:1; min-width:240px;">
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <span style="color:#E6B450; font-size:0.84rem; font-weight:800; display:inline-flex; align-items:center; gap:6px;">
                                     <i class="fas fa-sparkles"></i> مِنَصَّةُ الهِلِّيهِي التَّعْلِيمِيَّة
                                 </span>
-                                <span style="background:rgba(230,180,80,0.18); border:1px solid rgba(230,180,80,0.38); padding:2px 11px; border-radius:99px; font-weight:800; font-size:0.74rem; color:#F5D487; display:inline-flex; align-items:center; gap:5px;">
+                                <span style="background:rgba(230,180,80,0.18); border:1px solid rgba(230,180,80,0.38); padding:3px 12px; border-radius:99px; font-weight:800; font-size:0.75rem; color:#F5D487; display:inline-flex; align-items:center; gap:5px;">
                                     <i class="fas fa-user-tag"></i> <span id="dashWelcomeEmpRole">مدير النظام</span>
                                 </span>
-                                <button type="button" id="myPerfHeroPillBtn" class="hidden" onclick="openSectionToolModal('myPerformanceAlertSection', 'ملخص أدائك هذا الشهر')" style="background:#E6B450; color:#133B2A; border:none; padding:3px 12px; border-radius:99px; font-weight:900; font-size:0.75rem; cursor:pointer; display:none; align-items:center; gap:5px; font-family:'Cairo',sans-serif;">
-                                    <i class="fas fa-chart-line"></i> <span id="myPerfHeroPillText">أدائي هذا الشهر</span>
-                                </button>
                             </div>
-                            <h2 style="margin:0; font-size:1.65rem; color:#ffffff; font-weight:900; line-height:1.3;">
+                            <h2 style="margin:0; font-size:1.78rem; color:#ffffff; font-weight:900; line-height:1.35;">
                                 أهلاً وسهلاً بك، <span id="dashWelcomeEmpName" style="color:#F5D487;">أستاذ</span>
                             </h2>
-                            <p class="motivational-message" id="adminMotivationalMessage" style="margin:0; color:rgba(255,255,255,0.86); font-size:0.92rem; line-height:1.6; font-weight:500;"></p>
+                            <p class="motivational-message" id="adminMotivationalMessage" style="margin:0; color:rgba(255,255,255,0.86); font-size:0.94rem; line-height:1.65; font-weight:500;"></p>
                         </div>
+
+                        <button type="button" id="myPerfHeroPillBtn" class="eh-hero-perf-box hidden" onclick="openSectionToolModal('myPerformanceAlertSection', 'ملخص أدائك هذا الشهر')" style="display:none;">
+                            <span class="eh-hpb-label"><i class="fas fa-chart-line"></i> أدائي هذا الشهر</span>
+                            <span class="eh-hpb-score" id="myPerfHeroPillText">—</span>
+                            <span class="eh-hpb-sub">عرض التفاصيل <i class="fas fa-arrow-left" style="font-size:0.7rem;"></i></span>
+                        </button>
                     </div>
 
                     <div class="eh-quick-grid" id="dashCardsContainer">
@@ -2495,6 +2499,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                                         <select id="pcAutoSchedPriority" class="form-control" style="width:135px; padding:4px 8px; font-size:0.8rem;">
                                             <option value="oldest">الأقدم أولاً</option>
                                             <option value="newest">الأحدث أولاً</option>
+                                            <option value="mixed">عشوائي (مزيج قديم وجديد)</option>
                                         </select>
                                     </div>
                                     <div style="display:flex; align-items:center; gap:8px;">
@@ -5456,21 +5461,27 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             var isAdminInitW = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
             var pendHeadInitW = containerAll ? containerAll.previousElementSibling : null;
             var todayHeadInitW = document.querySelector('#wajibCorrect h3');
+            var _hasWajibRendered = !!(window._ehSectionLoaded && window._ehSectionLoaded.wajib && containerToday.innerHTML.indexOf('table') !== -1);
             if (!isAdminInitW) {
                 if (todayHeadInitW) todayHeadInitW.innerHTML = '<i class="fas fa-calendar-check"></i> واجباتك المجدولة اليوم';
                 if (pendHeadInitW) pendHeadInitW.style.display = 'none';
-                containerAll.classList.add('hidden');
-                containerAll.innerHTML = '';
-                containerToday.innerHTML = getAdminSkeletonTableHtml(3);
+                if (!_hasWajibRendered) {
+                    containerAll.classList.add('hidden');
+                    containerAll.innerHTML = '';
+                    containerToday.innerHTML = getAdminSkeletonTableHtml(3);
+                }
             } else {
                 if (pendHeadInitW) pendHeadInitW.style.display = '';
                 containerAll.classList.remove('hidden');
-                containerAll.innerHTML = getAdminSkeletonTableHtml(4);
-                containerToday.innerHTML = getAdminSkeletonTableHtml(2);
+                if (!_hasWajibRendered) {
+                    containerAll.innerHTML = getAdminSkeletonTableHtml(4);
+                    containerToday.innerHTML = getAdminSkeletonTableHtml(2);
+                }
             }
 
             runGS('getPendingWajibCorrections').then(function(data) {
                 if (mySeq !== window._wajibPendingReqSeq) return;
+                window._ehSectionLoaded = window._ehSectionLoaded || {}; window._ehSectionLoaded.wajib = true;
                 if (!data || data.length === 0) {
                     var emptyMsg = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-check-circle fa-2x" style="color:var(--success);"></i><p style="margin-top:10px;">لا توجد واجبات تحتاج تصحيح حالياً</p></div>';
                     containerAll.innerHTML = emptyMsg;
@@ -5601,19 +5612,27 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             var mySeqT = window._tasmiyaResReqSeq;
             var isAdminInitT = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
             var pendHeadInitT = containerAll ? containerAll.previousElementSibling : null;
+            var _hasTasmiyaRendered = !!(window._ehSectionLoaded && window._ehSectionLoaded.tasmiya && containerToday.innerHTML.indexOf('table') !== -1);
             if (!isAdminInitT) {
-                if (pendHeadInitT) pendHeadInitT.innerHTML = '';
-                containerAll.classList.add('hidden');
-                containerAll.innerHTML = '';
-                containerToday.innerHTML = getAdminSkeletonTableHtml(3);
+                if (!_hasTasmiyaRendered) {
+                    if (pendHeadInitT) pendHeadInitT.innerHTML = '';
+                    containerAll.classList.add('hidden');
+                    containerAll.innerHTML = '';
+                    containerToday.innerHTML = getAdminSkeletonTableHtml(3);
+                }
             } else {
                 containerAll.classList.remove('hidden');
-                containerAll.innerHTML = getAdminSkeletonTableHtml(4);
-                containerToday.innerHTML = getAdminSkeletonTableHtml(2);
+                if (!_hasTasmiyaRendered) {
+                    containerAll.innerHTML = getAdminSkeletonTableHtml(4);
+                    containerToday.innerHTML = getAdminSkeletonTableHtml(2);
+                }
             }
             
             runGS('getPendingReservedTasmiya').then(function(data) {
                 if (mySeqT !== window._tasmiyaResReqSeq) return;
+                window._ehSectionLoaded = window._ehSectionLoaded || {}; window._ehSectionLoaded.tasmiya = true;
+                window._ehCachedTasmiyaList = Array.isArray(data) ? data : [];
+                if (typeof updateUpcomingTasmiyaBanner_ === 'function') updateUpcomingTasmiyaBanner_();
                 if (!data || data.length === 0) {
                     var emptyMsg = '<div style="text-align:center;padding:30px;color:var(--gray);"><i class="fas fa-calendar-check fa-2x" style="color:var(--success);"></i><p style="margin-top:10px;">لا توجد حجوزات تسميع حالياً</p></div>';
                     containerAll.innerHTML = emptyMsg;
@@ -11156,7 +11175,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
         var _heroPill = document.getElementById('myPerfHeroPillBtn');
         var _heroPillTxt = document.getElementById('myPerfHeroPillText');
         if (_heroPill) { _heroPill.classList.remove('hidden'); _heroPill.style.display = 'inline-flex'; }
-        if (_heroPillTxt) _heroPillTxt.textContent = comp !== null ? ('أدائي هذا الشهر: ' + comp + '/100') : 'أدائي هذا الشهر';
+        if (_heroPillTxt) _heroPillTxt.innerHTML = comp !== null ? (comp + '<small style="font-size:0.88rem; opacity:0.75; font-weight:700;">/100</small>') : '—';
         alertWrap.classList.add('hidden');
         alertWrap.innerHTML =
         '<div style="background:var(--surface); border:1.5px solid ' + borderCol + '; border-radius:16px; padding:18px; box-shadow:var(--shadow-sm);">' +
@@ -11210,8 +11229,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
             return;
         }
     } else {
-        alertWrap.classList.remove('hidden');
-        alertWrap.innerHTML = getEmpPerfSkeletonHtml();
+        alertWrap.classList.add('hidden');
     }
 
     runGS('getEmployeesKPIDashboardGS', firstDayStr, todayStr).then(function(res) {
@@ -17466,7 +17484,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }
             var asCfg = emp.autoSchedule || { enabled: true, restDays: [5], priority: 'oldest', includeLegacy: false };
             if (document.getElementById('pcAutoSchedEnabled')) document.getElementById('pcAutoSchedEnabled').checked = asCfg.enabled !== false;
-            if (document.getElementById('pcAutoSchedPriority')) document.getElementById('pcAutoSchedPriority').value = asCfg.priority === 'newest' ? 'newest' : 'oldest';
+            if (document.getElementById('pcAutoSchedPriority')) document.getElementById('pcAutoSchedPriority').value = (asCfg.priority === 'newest' || asCfg.priority === 'mixed') ? asCfg.priority : 'oldest';
             var rDays = Array.isArray(asCfg.restDays) ? asCfg.restDays.map(Number) : [5];
             if (document.getElementById('pcAutoRest_5')) document.getElementById('pcAutoRest_5').checked = rDays.indexOf(5) !== -1;
             if (document.getElementById('pcAutoRest_6')) document.getElementById('pcAutoRest_6').checked = rDays.indexOf(6) !== -1;
@@ -17674,7 +17692,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 if (el) { el.classList.add('hidden'); el.style.setProperty('display', 'none', 'important'); }
             });
             schedWrap.classList.remove('hidden');
-            schedWrap.innerHTML = '<div class="eh-skel-box"><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div></div>';
+            if (!window._weeklyExamsRes || !schedWrap.innerHTML.trim()) {
+                schedWrap.innerHTML = getAdminSkeletonTableHtml(3);
+            }
 
             runGS('getEmployeeWeeklyExamsGS', window.currentEmployee ? window.currentEmployee.code : '').then(function(res) {
                 if (!res || !res.success) {
@@ -17701,7 +17721,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                                     : '<span style="background:#fef3c7; color:#92400e; padding:3px 10px; border-radius:99px; font-size:0.74rem; font-weight:800;">بانتظار الإعداد</span>'));
                         var safeKey = escapeHtml_(t.taskKey).replace(/'/g, "\\'");
                         var actionsHtml = t.completed
-                            ? '<span style="color:#16a34a; font-weight:800; font-size:0.8rem;">مكتمل ✓</span>'
+                            ? ('<button type="button" class="btn btn-sm btn-outline-primary" onclick="openGuidedExamEdit(\'' + safeKey + '\', this)"><i class="fas fa-edit"></i> تعديل الاختبار</button>')
                             : ('<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
                                 (!t.claim ? '<button type="button" class="btn btn-sm btn-outline-primary" onclick="claimWeeklyExamTaskUI(\'' + safeKey + '\', this)"><i class="fas fa-hand-paper"></i> استلام المهمة</button>' : '') +
                                 '<button type="button" class="btn btn-sm btn-primary" onclick="openGuidedExamWizard(\'' + safeKey + '\')"><i class="fas fa-magic"></i> إعداد الاختبار</button>' +
@@ -17783,7 +17803,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 ];
             }
 
-            window._guidedExamCtx = { task: task, blueprint: bp, branches: activeBranches };
+            window._guidedExamCtx = { task: task, blueprint: bp, branches: activeBranches, isEdit: false, oldExamName: '' };
+            var mTitleNew = document.getElementById('gepModalTitle'); if (mTitleNew) mTitleNew.innerHTML = '<i class="fas fa-code" style="color:#E6B450;"></i> الخطوة 2: اسم الاختبار ولصق الكود';
             var totalQ = activeBranches.reduce(function(a, b) { return a + (Number(b.count) || 5); }, 0);
             var subEl = document.getElementById('gewSubtitle');
             if (subEl) subEl.textContent = 'الصف: ' + task.grade + ' • إجمالي الأسئلة: ' + totalQ + ' سؤال (الفروع والأعداد محددة تلقائياً من المدير)';
@@ -17949,9 +17970,11 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
         }
 
-        function previewGuidedExamJson() {
+        function openGuidedPreviewStep() {
+            var examName = ((document.getElementById('gepExamTitle') || {}).value || '').trim();
             var raw = (document.getElementById('gepJsonInput') || {}).value || '';
             var area = document.getElementById('gepPreviewArea');
+            if (!examName) return showNotify('warning', 'يرجى كتابة اسم الاختبار أولاً.');
             if (!raw.trim()) return showNotify('warning', 'الصق كود JSON أولاً.');
             var cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
             try {
@@ -17961,11 +17984,67 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 if (typeof renderExamSectionsHtml === 'function') {
                     area.innerHTML = renderExamSectionsHtml(sections, 'guidedPreview');
                 } else {
-                    area.innerHTML = '<div style="padding:12px; background:#dcfce7; color:#166534; border-radius:10px; font-weight:700;"><i class="fas fa-check-circle"></i> كود JSON صالح ويحتوي على ' + sections.length + ' أقسام جاهزة للنشر!</div>';
+                    area.innerHTML = '<div style="padding:16px; background:#EAF4EF; color:#134230; border-radius:12px; font-weight:700;"><i class="fas fa-check-circle"></i> كود JSON صالح ويحتوي على ' + sections.length + ' أقسام جاهزة للنشر!</div>';
                 }
             } catch (e) {
-                area.innerHTML = '<div style="padding:12px; background:#fee2e2; color:#991b1b; border-radius:10px; font-weight:700;"><i class="fas fa-times-circle"></i> كود JSON غير صالح: ' + escapeHtml_(e.message) + '</div>';
+                return showNotify('error', 'كود JSON غير صالح: ' + e.message);
             }
+
+            var ctx = window._guidedExamCtx || {};
+            var sub = document.getElementById('geprSubtitle');
+            if (sub) sub.textContent = examName + (ctx.task ? (' • ' + ctx.task.grade + ' (' + (ctx.task.group || 'الكل') + ')') : '');
+            var pubBtn = document.getElementById('geprPublishBtn');
+            if (pubBtn) {
+                pubBtn.innerHTML = ctx.isEdit
+                    ? '<i class="fas fa-sync-alt"></i> حفظ التعديلات واستبدال الرابط'
+                    : '<i class="fas fa-cloud-upload-alt"></i> حفظ ونشر الاختبار للطلاب';
+            }
+            var m = document.getElementById('guidedExamPreviewModal');
+            if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; }
+        }
+
+        function closeGuidedPreviewStep() {
+            var m = document.getElementById('guidedExamPreviewModal');
+            if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+        }
+
+        function openGuidedExamEdit(taskKey, btn) {
+            var res = window._weeklyExamsRes;
+            if (!res) return;
+            var allTasks = (res.tasks || []).concat(res.overdueTasks || []);
+            var task = allTasks.find(function(t) { return t.taskKey === taskKey; });
+            if (!task) return;
+            var bp = res.blueprint || {};
+            var meta = task.publishedMeta || {};
+
+            window._guidedExamCtx = {
+                task: task,
+                blueprint: bp,
+                isEdit: true,
+                oldExamName: meta.title || ''
+            };
+
+            if (btn) toggleLoading(btn, true);
+            runGS('getWeeklyExamEditDataGS', taskKey).then(function(editRes) {
+                if (btn) toggleLoading(btn, false);
+                var titleEl = document.getElementById('gepExamTitle');
+                var jsonEl = document.getElementById('gepJsonInput');
+                if (editRes && editRes.success) {
+                    if (titleEl) titleEl.value = editRes.title || meta.title || '';
+                    if (jsonEl) jsonEl.value = editRes.contentJson || '';
+                    window._guidedExamCtx.oldExamName = editRes.title || meta.title || '';
+                } else {
+                    if (titleEl) titleEl.value = meta.title || ('اختبار ' + task.grade + ' - ' + task.releaseDate);
+                    if (jsonEl) jsonEl.value = '';
+                    showNotify('warning', (editRes && editRes.message) || 'يمكنك لصق الكود المحدّث للاستبدال');
+                }
+                var mTitle = document.getElementById('gepModalTitle');
+                if (mTitle) mTitle.innerHTML = '<i class="fas fa-edit" style="color:#E6B450;"></i> تعديل الاختبار المنشور (سيتم استبدال الرابط القديم تلقائياً)';
+                openGuidedPublishStep();
+            }).catch(function(err) {
+                if (btn) toggleLoading(btn, false);
+                showNotify('error', err.message);
+            });
         }
 
         function publishGuidedExamUI(btn) {
@@ -17994,21 +18073,25 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var groupName = (t.group && t.group !== 'الكل') ? t.group : '';
             var className = groupName ? (t.grade + ' - ' + groupName) : t.grade;
             var publishDate = (adv.autoPublishOnReleaseDay !== false) ? (t.releaseDate || '') : '';
-            var payload = {
-                'اسم الاختبار': examName,
-                'الدرجة': '',
-                'ملاحظات': '',
-                'تاريخ الانتهاء': '',
-                'تاريخ الظهور': publishDate
+
+            var reqPayload = {
+                taskKey: t.taskKey,
+                examName: examName,
+                className: className,
+                publishDate: publishDate,
+                examJsonString: JSON.stringify(examConfig),
+                isEdit: !!ctx.isEdit,
+                oldExamName: ctx.oldExamName || ''
             };
 
             if (btn) toggleLoading(btn, true);
-            runGS('uploadAndSaveIkhtibaratJSON', 'group', payload, className, JSON.stringify(examConfig)).then(function(res) {
+            runGS('saveOrUpdateWeeklyExamGS', reqPayload).then(function(res) {
                 if (btn) toggleLoading(btn, false);
                 if (res && res.success) {
-                    showNotify('success', 'تم نشر الاختبار بنجاح وتحديث جدولك الأسبوعي!');
+                    showNotify('success', res.message || 'تم حفظ ونشر الاختبار بنجاح!');
                     if (document.getElementById('gepExamTitle')) document.getElementById('gepExamTitle').value = '';
                     if (document.getElementById('gepJsonInput')) document.getElementById('gepJsonInput').value = '';
+                    closeGuidedPreviewStep();
                     closeGuidedPublishStep();
                     closeGuidedExamWizard();
                     initAssistantExamScheduleView();
@@ -18396,32 +18479,48 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         </div>
     </div>
 
-    <!-- نافذة إعداد الاختبار للمساعد — الخطوة 2 (فوقها): لصق JSON والمعاينة والنشر -->
+    <!-- نافذة إعداد الاختبار — الخطوة 2: اسم الاختبار ولصق كود JSON -->
     <div id="guidedExamPublishModal" class="hidden" style="position:fixed; inset:0; z-index:9980; background:rgba(15,23,42,0.68); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:12px;">
-        <div style="background:var(--surface, #fff); width:min(740px, 96vw); max-height:92vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.32);">
-            <div style="background:linear-gradient(135deg, #134230, #1A563E); color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div style="background:var(--surface, #fff); width:min(760px, 96vw); max-height:92vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.32);">
+            <div style="background:linear-gradient(135deg, #1E6146, #154733); color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
                 <div>
-                    <div style="font-weight:900; font-size:1.02rem;"><i class="fas fa-cloud-upload-alt"></i> الخطوة 2: لصق الكود ومعاينة ونشر الاختبار</div>
-                    <div id="gepAutoInfo" style="font-size:0.78rem; opacity:0.92; margin-top:2px;"></div>
+                    <div id="gepModalTitle" style="font-weight:900; font-size:1.02rem;"><i class="fas fa-code" style="color:#E6B450;"></i> الخطوة 2: اسم الاختبار ولصق الكود</div>
+                    <div id="gepAutoInfo" style="font-size:0.78rem; opacity:0.9; margin-top:2px;"></div>
                 </div>
                 <button type="button" onclick="closeGuidedPublishStep()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:1.1rem;">×</button>
             </div>
-            <div style="padding:16px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:12px;">
+            <div style="padding:18px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px;">
                 <div id="gepTargetBadges" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                 <div class="form-group" style="margin:0;">
                     <label style="font-size:0.84rem; font-weight:800;">اسم الاختبار (ليظهر للطلاب)</label>
                     <input type="text" id="gepExamTitle" class="form-control" placeholder="مثال: اختبار الأسبوع الثالث - نحو وقراءة ونصوص">
                 </div>
-                <div class="form-group" style="margin:0; background:#EAF4EF; padding:12px; border-radius:12px; border:1.5px dashed #1A563E;">
-                    <label style="font-size:0.84rem; font-weight:800; color:#134230;"><i class="fas fa-code"></i> لصق كود JSON من NotebookLM</label>
-                    <textarea id="gepJsonInput" class="form-control" rows="6" dir="ltr" style="font-family:monospace; background:#fff; margin-top:6px;" placeholder="[ { ... } ]"></textarea>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="previewGuidedExamJson()" style="margin-top:8px; width:100%;"><i class="fas fa-eye"></i> معاينة الاختبار قبل النشر</button>
+                <div class="form-group" style="margin:0; background:#FAF9F5; padding:14px; border-radius:12px; border:1.5px dashed #B9D3C6;">
+                    <label style="font-size:0.84rem; font-weight:800; color:#143B2B;"><i class="fas fa-code" style="color:#1A563E;"></i> لصق كود JSON من NotebookLM</label>
+                    <textarea id="gepJsonInput" class="form-control" rows="10" dir="ltr" style="font-family:monospace; background:#fff; margin-top:8px;" placeholder="[ { ... } ]"></textarea>
                 </div>
-                <div id="gepPreviewArea" style="max-height:300px; overflow-y:auto;"></div>
             </div>
-            <div style="padding:12px 16px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <button type="button" class="btn btn-outline-secondary" onclick="closeGuidedPublishStep()"><i class="fas fa-arrow-right"></i> رجوع للبرومبت</button>
-                <button type="button" class="btn btn-success" onclick="publishGuidedExamUI(this)" style="flex:1; min-width:200px;"><i class="fas fa-cloud-upload-alt"></i> حفظ ونشر الاختبار للطلاب</button>
+            <div style="padding:12px 18px; border-top:1px solid #E8E5DC; background:#F6F5F0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <button type="button" class="btn btn-outline-secondary" id="gepBackBtn" onclick="closeGuidedPublishStep()"><i class="fas fa-arrow-right"></i> رجوع</button>
+                <button type="button" class="btn btn-primary" onclick="openGuidedPreviewStep()" style="flex:1; min-width:220px;"><i class="fas fa-eye"></i> معاينة الاختبار كاملة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إعداد الاختبار — الخطوة 3: معاينة كاملة واسعة + حفظ ونشر / استبدال الرابط -->
+    <div id="guidedExamPreviewModal" class="hidden" style="position:fixed; inset:0; z-index:9995; background:rgba(15,23,42,0.75); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:12px;">
+        <div style="background:var(--surface, #fff); width:min(940px, 96vw); height:90vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 28px 70px rgba(0,0,0,0.38);">
+            <div style="background:linear-gradient(135deg, #1E6146, #154733); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <div>
+                    <div style="font-weight:900; font-size:1.05rem;"><i class="fas fa-eye" style="color:#E6B450;"></i> الخطوة 3: معاينة الاختبار قبل النشر</div>
+                    <div id="geprSubtitle" style="font-size:0.8rem; opacity:0.9; margin-top:2px;"></div>
+                </div>
+                <button type="button" onclick="closeGuidedPreviewStep()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:1.1rem;">×</button>
+            </div>
+            <div id="gepPreviewArea" style="padding:20px; overflow-y:auto; flex:1; background:#FAF9F5;"></div>
+            <div style="padding:14px 20px; border-top:1px solid #E8E5DC; background:#F6F5F0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <button type="button" class="btn btn-outline-secondary" onclick="closeGuidedPreviewStep()"><i class="fas fa-arrow-right"></i> رجوع لتعديل الكود</button>
+                <button type="button" class="btn btn-primary" id="geprPublishBtn" onclick="publishGuidedExamUI(this)" style="flex:1; min-width:240px;"><i class="fas fa-cloud-upload-alt"></i> حفظ ونشر الاختبار للطلاب</button>
             </div>
         </div>
     </div>
@@ -20107,6 +20206,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             });
             try { if (typeof __myEmpPerfCache !== 'undefined') __myEmpPerfCache = { data: null, time: 0, key: '' }; } catch (_e) {}
             window._weeklyExamsRes = null;
+            window._ehSectionLoaded = {};
+            window._ehCachedTasmiyaList = [];
+            var utb = document.getElementById('upcomingTasmiyaBanner'); if (utb) { utb.classList.add('hidden'); utb.innerHTML = ''; }
             window.allScheduleData = [];
             if (clearStorage) {
                 try {
@@ -20118,6 +20220,194 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 } catch (_le) {}
             }
         }
+    </script>
+
+    <style id="elhelihey-hero-kpi-v12">
+        #dashboardWelcomeBanner.eh-dash-hero {
+            min-height: 158px !important;
+            padding: 32px 34px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 24px !important;
+            flex-wrap: wrap !important;
+        }
+        .eh-hero-perf-box {
+            background: rgba(255, 255, 255, 0.09);
+            border: 1.5px solid rgba(230, 180, 80, 0.48);
+            border-radius: 16px;
+            padding: 16px 24px;
+            min-width: 170px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #ffffff;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+            position: relative;
+            z-index: 2;
+        }
+        .eh-hero-perf-box:hover {
+            transform: translateY(-2px);
+            background: rgba(230, 180, 80, 0.18);
+            border-color: #E6B450;
+        }
+        .eh-hpb-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #E6B450;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .eh-hpb-score {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.15;
+            margin: 2px 0;
+        }
+        .eh-hpb-sub {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.78);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        @media (max-width: 680px) {
+            #dashboardWelcomeBanner.eh-dash-hero {
+                padding: 22px 20px !important;
+                min-height: auto !important;
+            }
+            .eh-hero-perf-box {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 12px 16px;
+            }
+            .eh-hpb-score { font-size: 1.35rem; }
+        }
+    </style>
+
+    <script>
+        // ====================================================================
+        // إشعار جلسة التسميع القريبة للمساعد (قبل الموعد بـ 5 دقائق وحتى 15 دقيقة من بدايتها)
+        // ====================================================================
+        function parseTasmiyaMins_(timeStr) {
+            if (!timeStr) return null;
+            var t24 = (typeof convert12To24Hour === 'function') ? convert12To24Hour(String(timeStr)) : '';
+            if (!t24) {
+                var m = String(timeStr).match(/(\d{1,2}):(\d{2})/);
+                if (m) t24 = m[1] + ':' + m[2];
+            }
+            if (!t24) return null;
+            var parts = t24.split(':');
+            var hh = parseInt(parts[0], 10);
+            var mm = parseInt(parts[1], 10) || 0;
+            if (isNaN(hh)) return null;
+            return hh * 60 + mm;
+        }
+
+        function updateUpcomingTasmiyaBanner_() {
+            var banner = document.getElementById('upcomingTasmiyaBanner');
+            if (!banner) return;
+            var emp = window.currentEmployee || null;
+            if (!emp) { banner.classList.add('hidden'); banner.innerHTML = ''; return; }
+
+            // يظهر للمساعد والموظف المسموح له بالتسميع (وليس للمدير لأن المدير لديه بانر الحصص)
+            var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(emp));
+            var allowedRaw = Array.isArray(emp.allowedSections) ? emp.allowedSections.join(',') : String(emp.allowedSections || '');
+            var canTasmiya = !isAdmin && (allowedRaw === 'ALL' || allowedRaw === 'الكل' || allowedRaw.indexOf('tasmiya') !== -1);
+            if (!canTasmiya) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            var list = Array.isArray(window._ehCachedTasmiyaList) ? window._ehCachedTasmiyaList : [];
+            if (list.length === 0) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            var todayStr = (typeof getLocalDateString === 'function') ? getLocalDateString() : '';
+            var now = new Date();
+            var nowMins = now.getHours() * 60 + now.getMinutes();
+
+            var activeItems = [];
+            list.forEach(function(item) {
+                if (!item || item.reserveDate !== todayStr) return;
+                var startMins = parseTasmiyaMins_(item.appointment);
+                if (startMins === null) return;
+                var diff = startMins - nowMins; // +5 = يبدأ بعد 5 دقائق، 0 = يبدأ الآن، -15 = شغال منذ 15 دقيقة
+                if (diff <= 5 && diff >= -15) {
+                    activeItems.push({ item: item, diff: diff });
+                }
+            });
+
+            if (activeItems.length === 0) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            activeItems.sort(function(a, b) { return a.diff - b.diff; });
+            var top = activeItems[0];
+            var it = top.item;
+            var statusBadge = top.diff > 0
+                ? ('تبدأ خلال ' + top.diff + ' ' + (top.diff === 1 ? 'دقيقة' : 'دقائق'))
+                : 'جلسة التسميع جارية الآن';
+            var safeSt = String(it.student || '').replace(/'/g, "\\'");
+            var safeLes = String(it.lesson || '').replace(/'/g, "\\'");
+            var extraCount = activeItems.length > 1 ? (' (+' + (activeItems.length - 1) + ' حجز آخر الآن)') : '';
+
+            banner.classList.remove('hidden');
+            banner.innerHTML =
+                '<div style="background:linear-gradient(135deg, #1E6146 0%, #134230 100%); border:1.5px solid #E6B450; border-radius:16px; padding:16px 20px; color:#fff; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; box-shadow:0 10px 26px rgba(26,86,62,0.22);">' +
+                    '<div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">' +
+                        '<div style="width:44px; height:44px; border-radius:12px; background:rgba(230,180,80,0.2); border:1px solid #E6B450; color:#E6B450; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;"><i class="fas fa-microphone-alt"></i></div>' +
+                        '<div>' +
+                            '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">' +
+                                '<span style="background:#E6B450; color:#133B2A; padding:2px 10px; border-radius:99px; font-size:0.74rem; font-weight:900;">● ' + statusBadge + '</span>' +
+                                '<span style="font-size:0.8rem; color:#F5D487; font-weight:700;"><i class="fas fa-clock"></i> ' + escapeHtml_(it.appointment || '') + extraCount + '</span>' +
+                            '</div>' +
+                            '<div style="font-size:0.98rem; font-weight:900; color:#fff;">الطالب: ' + escapeHtml_(typeof stripCode === 'function' ? stripCode(it.student) : (it.student || '')) + ' — ' + escapeHtml_(it.lesson || '') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                        '<button type="button" class="btn btn-sm" onclick="if(typeof openTasmiyaMeetSession===\'function\') openTasmiyaMeetSession()" style="background:#E6B450 !important; color:#133B2A !important; border:none !important; font-weight:900;"><i class="fas fa-video" style="color:#133B2A !important;"></i> دخول الجلسة</button>' +
+                        '<button type="button" class="btn btn-sm" onclick="if(typeof openTasmiyaEvalModal===\'function\') openTasmiyaEvalModal(\'' + safeSt + '\', \'' + safeLes + '\', ' + (it.serial || 0) + ')" style="background:rgba(255,255,255,0.14) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.28) !important;"><i class="fas fa-check" style="color:#E6B450 !important;"></i> تقييم الآن</button>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        function pollTasmiyaForAssistantAlert_() {
+            var emp = window.currentEmployee || null;
+            if (!emp) return;
+            var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(emp));
+            var allowedRaw = Array.isArray(emp.allowedSections) ? emp.allowedSections.join(',') : String(emp.allowedSections || '');
+            var canTasmiya = !isAdmin && (allowedRaw === 'ALL' || allowedRaw === 'الكل' || allowedRaw.indexOf('tasmiya') !== -1);
+            if (!canTasmiya) return;
+            if (typeof runGS === 'function') {
+                runGS('getPendingReservedTasmiya').then(function(data) {
+                    window._ehCachedTasmiyaList = Array.isArray(data) ? data : [];
+                    updateUpcomingTasmiyaBanner_();
+                }).catch(function() {});
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(pollTasmiyaForAssistantAlert_, 1500);
+            setInterval(updateUpcomingTasmiyaBanner_, 30000);
+            setInterval(pollTasmiyaForAssistantAlert_, 120000);
+        });
     </script>
 </body>
 </html>
