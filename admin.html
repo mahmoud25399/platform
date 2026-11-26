@@ -1823,110 +1823,137 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
  </div>
 
-                    <!-- التبويب الثاني: مولد البرومت -->
+                    <!-- التبويب الثاني: مولد الاختبارات (مرتب في 3 بطاقات واضحة) -->
                     <div id="ikhtibaratPrompt" class="tab-content hidden">
-                        <div class="form-container" style="background:#fff; padding:20px; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
-                            <h3 style="color:var(--primary); margin-bottom:15px;"><i class="fas fa-magic"></i> إعداد بيانات التوليد لـ NotebookLM</h3>
-                            
-                            <div class="form-group">
-                                <label>الصف الدراسي</label>
-                                <select class="form-control" id="ikhtibaratPromptGrade">
-                                    <option value="الرابع الابتدائي">الرابع الابتدائي</option>
-                                    <option value="الخامس الابتدائي">الخامس الابتدائي</option>
-                                    <option value="السادس الابتدائي">السادس الابتدائي</option>
-                                    <option value="الأول الإعدادي">الأول الإعدادي</option>
-                                    <option value="الثاني الإعدادي">الثاني الإعدادي</option>
-                                    <option value="الثالث الإعدادي">الثالث الإعدادي</option>
-                                </select>
- </div>
+                        <div style="display:flex; flex-direction:column; gap:16px;">
 
-                            <div class="form-group">
-                                <label>إجمالي عدد الأسئلة</label>
-                                <input type="number" class="form-control" id="ikhtibaratPromptCount" value="20">
- </div>
+                            <!-- البطاقة 1: بيانات الاختبار الأساسية -->
+                            <div style="background:#fff; padding:18px 20px; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+                                    <span style="width:28px; height:28px; border-radius:8px; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem;">1</span>
+                                    <h3 style="margin:0; color:var(--primary); font-size:1.05rem;">بيانات الاختبار الأساسية</h3>
+                                </div>
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:700;">الصف الدراسي</label>
+                                        <select class="form-control" id="ikhtibaratPromptGrade">
+                                            <option value="الرابع الابتدائي">الرابع الابتدائي</option>
+                                            <option value="الخامس الابتدائي">الخامس الابتدائي</option>
+                                            <option value="السادس الابتدائي">السادس الابتدائي</option>
+                                            <option value="الأول الإعدادي">الأول الإعدادي</option>
+                                            <option value="الثاني الإعدادي">الثاني الإعدادي</option>
+                                            <option value="الثالث الإعدادي">الثالث الإعدادي</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:700;">إجمالي عدد الأسئلة</label>
+                                        <input type="number" class="form-control" id="ikhtibaratPromptCount" value="20" min="1">
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:700;">مستوى الصعوبة</label>
+                                        <select class="form-control" id="ikhtibaratPromptDiff">
+                                            <option value="متوسط يحاكي الامتحانات الرسمية">عادي (يحاكي الامتحانات الرسمية)</option>
+                                            <option value="قدرات عليا للطالب المتميز">متميز (قدرات عليا)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div class="form-group">
-                                <label>مستوى الصعوبة</label>
-                                <select class="form-control" id="ikhtibaratPromptDiff">
-                                    <option value="متوسط يحاكي الامتحانات الرسمية">عادي (يحاكي الامتحانات الرسمية)</option>
-                                    <option value="قدرات عليا للطالب المتميز">متميز (قدرات عليا ومخمشة)</option>
-                                </select>
- </div>
-
-                            <div class="form-group full-width">
-                                <label style="font-weight:800; color:var(--dark); margin-bottom:10px;">فروع الاختبار المطلوبة (أضف أكثر من درس، المفاهيم الأدبية والبلاغية، عدد الأسئلة، ونوع السؤال)</label>
-                                <div id="examBranchesBuilder" style="display:flex; flex-direction:column; gap:12px;">
+                            <!-- البطاقة 2: الفروع والدروس المستهدفة -->
+                            <div style="background:#fff; padding:18px 20px; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+                                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="width:28px; height:28px; border-radius:8px; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem;">2</span>
+                                        <h3 style="margin:0; color:var(--primary); font-size:1.05rem;">الفروع والدروس المستهدفة</h3>
+                                    </div>
+                                    <small style="color:#64748b;">فعّل الفروع المطلوبة فقط وأضف الدروس وعدد الأسئلة لكل فرع</small>
+                                </div>
+                                <div id="examBranchesBuilder" style="display:flex; flex-direction:column; gap:14px;">
                                     <!-- القراءة -->
-                                    <div class="exam-branch-card" data-branch="read" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <div class="exam-branch-card" data-branch="read" style="background:#FAF9F5; border:1.5px solid #D8E6DF; border-radius:12px; padding:14px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">
                                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:800; color:var(--primary); margin:0;">
-                                                <input type="checkbox" id="branchRead" checked onchange="toggleExamBranchBody('read', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> القراءة
- </label>
+                                                <input type="checkbox" id="branchRead" checked onchange="toggleExamBranchBody('read', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> <i class="fas fa-book-open"></i> القراءة
+                                            </label>
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExamBranchItem('read')"><i class="fas fa-plus"></i> إضافة درس</button>
- </div>
+                                        </div>
                                         <div id="branchBody_read" style="display:flex; flex-direction:column; gap:8px;"></div>
- </div>
+                                    </div>
 
                                     <!-- النصوص -->
-                                    <div class="exam-branch-card" data-branch="poetry" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <div class="exam-branch-card" data-branch="poetry" style="background:#FAF9F5; border:1.5px solid #D8E6DF; border-radius:12px; padding:14px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">
                                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:800; color:var(--primary); margin:0;">
-                                                <input type="checkbox" id="branchPoetry" checked onchange="toggleExamBranchBody('poetry', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> النصوص الشعرية
- </label>
+                                                <input type="checkbox" id="branchPoetry" checked onchange="toggleExamBranchBody('poetry', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> <i class="fas fa-feather-alt"></i> النصوص الشعرية
+                                            </label>
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExamBranchItem('poetry')"><i class="fas fa-plus"></i> إضافة نص</button>
- </div>
+                                        </div>
                                         <div id="branchBody_poetry" style="display:flex; flex-direction:column; gap:8px;"></div>
- </div>
+                                    </div>
 
                                     <!-- النحو -->
-                                    <div class="exam-branch-card" data-branch="grammar" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <div class="exam-branch-card" data-branch="grammar" style="background:#FAF9F5; border:1.5px solid #D8E6DF; border-radius:12px; padding:14px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">
                                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:800; color:var(--primary); margin:0;">
-                                                <input type="checkbox" id="branchGrammar" checked onchange="toggleExamBranchBody('grammar', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> النحو
- </label>
+                                                <input type="checkbox" id="branchGrammar" checked onchange="toggleExamBranchBody('grammar', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> <i class="fas fa-spell-check"></i> النحو
+                                            </label>
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExamBranchItem('grammar')"><i class="fas fa-plus"></i> إضافة قاعدة</button>
- </div>
+                                        </div>
                                         <div id="branchBody_grammar" style="display:flex; flex-direction:column; gap:8px;"></div>
- </div>
+                                    </div>
 
                                     <!-- الإملاء -->
-                                    <div class="exam-branch-card" data-branch="dict" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <div class="exam-branch-card" data-branch="dict" style="background:#FAF9F5; border:1.5px solid #D8E6DF; border-radius:12px; padding:14px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed #cbd5e1;">
                                             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:800; color:var(--primary); margin:0;">
-                                                <input type="checkbox" id="branchDict" checked onchange="toggleExamBranchBody('dict', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> الإملاء
- </label>
+                                                <input type="checkbox" id="branchDict" checked onchange="toggleExamBranchBody('dict', this.checked)" style="width:18px; height:18px; accent-color:var(--primary);"> <i class="fas fa-pen-nib"></i> الإملاء
+                                            </label>
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExamBranchItem('dict')"><i class="fas fa-plus"></i> إضافة قاعدة</button>
- </div>
+                                        </div>
                                         <div id="branchBody_dict" style="display:flex; flex-direction:column; gap:8px;"></div>
- </div>
- </div>
- </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div class="form-group full-width" style="text-align: center;">
-                                <button class="btn btn-primary" onclick="generateExamPrompt()" style="padding:12px 25px; font-size:1.1rem; width:100%;"><i class="fas fa-cogs"></i> توليد أمر الـ Prompt</button>
- </div>
+                            <!-- البطاقة 3: طريقة التوليد (تلقائي AI أو يدوي NotebookLM) -->
+                            <div style="background:#fff; padding:18px 20px; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+                                    <span style="width:28px; height:28px; border-radius:8px; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem;">3</span>
+                                    <h3 style="margin:0; color:var(--primary); font-size:1.05rem;">توليد الاختبار</h3>
+                                </div>
 
-                            <div class="form-group full-width" style="margin-top:10px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="margin: 0; color: var(--primary-dark); font-weight: bold;"><i class="fas fa-clipboard-list"></i> النص الجاهز للنسخ لـ NotebookLM</label>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button class="btn btn-sm" onclick="document.getElementById('generatedPrompt').value=''" style="padding: 5px 15px; border-radius: 8px; font-size: 0.9rem; background: #fee2e2; color: #ef4444; border: 1px solid #f87171;">
-                                            <i class="fas fa-trash-alt"></i> تفريغ
- </button>
-                                        <button class="btn btn-sm btn-primary" onclick="copyPromptText()" style="padding: 5px 15px; border-radius: 8px; font-size: 0.9rem;">
-                                            <i class="fas fa-copy"></i> نسخ الكود
- </button>
- </div>
- </div>
-                                <textarea class="form-control" id="generatedPrompt" rows="8" readonly style="background:#f8fafc; direction:rtl; font-family:monospace; resize:vertical; border: 2px dashed #cbd5e1;"></textarea>
-                                <div style="margin-top:14px; display:flex; justify-content:flex-end;">
-                                    <button type="button" class="btn btn-primary" onclick="openSectionToolModal('ikhtibaratBuild', 'الخطوة 2: لصق الكود ونشر الاختبار (JSON)')" style="width:100%;">
-                                        التالي: لصق الكود ومعاينة ونشر الاختبار <i class="fas fa-arrow-left"></i>
+                                <!-- المسار الأول: التوليد التلقائي بالذكاء الاصطناعي (يتحكم فيه المدير من صلاحيات الموظف) -->
+                                <div class="ai-exam-gen-wrap" style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:12px; padding:14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                                    <div>
+                                        <div style="font-weight:800; color:#14532D; font-size:0.95rem;"><i class="fas fa-robot"></i> المسار السريع: التوليد التلقائي من كتب جوجل درايف (AI)</div>
+                                        <div style="font-size:0.8rem; color:#166534; margin-top:2px;">يقرأ كتاب الصف تلقائياً ويولّد الأسئلة ويفتحلك المعاينة للتعديل والنشر مباشرة.</div>
+                                    </div>
+                                    <button type="button" class="btn btn-success ai-exam-gen-btn" onclick="generateRegularExamAutoAI(this)" style="padding:11px 22px; font-weight:800; min-width:240px;">
+                                        <i class="fas fa-wand-magic-sparkles"></i> توليد الاختبار تلقائياً (AI)
                                     </button>
                                 </div>
- </div>
- </div>
- </div>
+
+                                <!-- المسار الثاني: التوليد اليدوي عبر NotebookLM -->
+                                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:14px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                                        <label style="margin:0; color:var(--primary-dark); font-weight:800;"><i class="fas fa-clipboard-list"></i> المسار اليدوي: توليد أمر البرومبت لـ NotebookLM</label>
+                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="generateExamPrompt()" style="padding:6px 14px;"><i class="fas fa-cogs"></i> توليد البرومبت</button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyPromptText()" style="padding:6px 14px;"><i class="fas fa-copy"></i> نسخ</button>
+                                            <button type="button" class="btn btn-sm" onclick="document.getElementById('generatedPrompt').value=''" style="padding:6px 12px; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5;"><i class="fas fa-trash-alt"></i> تفريغ</button>
+                                        </div>
+                                    </div>
+                                    <textarea class="form-control" id="generatedPrompt" rows="6" readonly style="background:#fff; direction:rtl; font-family:monospace; font-size:0.84rem; resize:vertical; border:1.5px dashed #cbd5e1;"></textarea>
+                                    <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-primary" onclick="openSectionToolModal('ikhtibaratBuild', 'الخطوة 2: لصق الكود ومعاينة ونشر الاختبار (JSON)')" style="width:100%; padding:10px;">
+                                            التالي: لصق الكود ومعاينة ونشر الاختبار <i class="fas fa-arrow-left"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
 
                     <!-- التبويب الثاني: بناء الاختبار من الـ JSON -->
                     <div id="ikhtibaratBuild" class="tab-content hidden">
@@ -2018,27 +2045,57 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <div id="ikhtibaratPendingList" class="table-responsive"><div class="eh-skel-box"><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div></div></div>
  </div>
 
-                    <!-- التبويب الرابع: إعدادات البرومبت المحفوظة -->
+                    <!-- التبويب الرابع: إعدادات البرومبت والذكاء الاصطناعي -->
                     <div id="ikhtibaratSettings" class="tab-content hidden">
-                        <div class="form-container" style="background:#fff; padding:20px; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
-                            <h3 style="color:var(--primary); margin-bottom:15px;"><i class="fas fa-cogs"></i> إعدادات قالب الذكاء الاصطناعي (Prompt Template)</h3>
-                            <div style="background:#EAF4EF; padding:15px; border-radius:8px; margin-bottom:15px; font-size:0.85rem; border:1px solid #C6DED2;">
-                                <strong> متغيرات يمكنك استخدامها ليتم استبدالها تلقائياً:</strong><br>
-                                <span dir="ltr" style="display:inline-block; margin-top:8px;">
-                                    <code>{{GRADE}}</code> | <code>{{COUNT}}</code> | <code>{{DIFF}}</code> | <code>{{TARGET_LESSONS}}</code> | <code>{{SPECIFIC_INSTRUCTIONS}}</code> | <code>{{INSTRUCTIONS_DYNAMIC}}</code> | <code>{{JSON_EXAMPLES}}</code>
- </span>
- </div>
-                            <div class="form-group full-width">
-                                <label style="font-weight:bold;">نص البرومبت الثابت:</label>
-                                <textarea class="form-control" id="examPromptTemplateInput" rows="15" style="font-family:monospace; resize:vertical; line-height:1.6;"></textarea>
- </div>
-                            <div class="form-group full-width">
-                                <button class="btn btn-success" onclick="saveExamPromptSettings(this)" style="width:100%; font-size:1.1rem; padding:12px;">
-                                    <i class="fas fa-save"></i> حفظ الإعدادات
- </button>
- </div>
- </div>
- </div>
+                        <div style="display:flex; flex-direction:column; gap:16px;">
+                            <!-- بطاقة الربط مع Gemini API ودرايف -->
+                            <div style="background:#fff; padding:20px; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow-sm);">
+                                <h3 style="color:var(--primary); margin:0 0 14px 0; font-size:1.05rem;"><i class="fas fa-robot"></i> الربط التلقائي مع Gemini API وكتب جوجل درايف (مجاني بدون فيزا)</h3>
+                                <div style="background:#F0FDF4; padding:16px; border-radius:12px; border:1px solid #BBF7D0; display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:800; display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
+                                            <span><i class="fas fa-key" style="color:#15803d;"></i> مفتاح Gemini API (Google AI Studio)</span>
+                                            <span id="geminiKeyStatusBadge" style="font-size:0.74rem; padding:2px 10px; border-radius:10px; background:#e2e8f0; color:#475569; white-space:nowrap;">غير مضبوط</span>
+                                        </label>
+                                        <div style="display:flex; gap:8px;">
+                                            <input type="password" class="form-control" id="geminiApiKeyInput" dir="ltr" style="flex:1;" placeholder="AIzaSy... (اتركه فارغاً للإبقاء على المفتاح المحفوظ)">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="const el=document.getElementById('geminiApiKeyInput'); el.type = (el.type==='password'?'text':'password');" title="إظهار / إخفاء"><i class="fas fa-eye"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label style="font-weight:800; display:block; margin-bottom:6px;"><i class="fab fa-google-drive" style="color:#1d4ed8;"></i> رابط أو معرّف مجلد الكتب والمذكرات (Google Drive)</label>
+                                        <input type="text" class="form-control" id="curriculumFolderIdInput" dir="ltr" placeholder="https://drive.google.com/drive/folders/... أو Folder ID">
+                                        <small style="color:#475569; display:block; margin-top:6px; line-height:1.5;">
+                                            سمِّ كل ملف PDF باسم الصف مثل: <b>الرابع الابتدائي - الأضواء.pdf</b> أو <b>الأول الإعدادي - الامتحان.pdf</b> (ويدعم إضافة مذكرات لنفس الصف تلقائياً).
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- بطاقة نص البرومبت الثابت -->
+                            <div style="background:#fff; padding:20px; border-radius:14px; border:1px solid var(--border); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:14px;">
+                                <h3 style="color:var(--primary); margin:0; font-size:1.05rem;"><i class="fas fa-cogs"></i> إعدادات قالب الذكاء الاصطناعي (Prompt Template)</h3>
+                                <div style="background:#EAF4EF; padding:12px 15px; border-radius:10px; font-size:0.84rem; border:1px solid #C6DED2;">
+                                    <strong>المتغيرات التلقائية المتاحة:</strong>
+                                    <div dir="ltr" style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
+                                        <code>{{GRADE}}</code> <code>{{COUNT}}</code> <code>{{DIFF}}</code> <code>{{TARGET_LESSONS}}</code> <code>{{SPECIFIC_INSTRUCTIONS}}</code> <code>{{INSTRUCTIONS_DYNAMIC}}</code> <code>{{JSON_EXAMPLES}}</code>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-weight:800; display:block; margin-bottom:6px;">نص البرومبت الثابت:</label>
+                                    <textarea class="form-control" id="examPromptTemplateInput" rows="15" style="font-family:monospace; resize:vertical; line-height:1.7; width:100%;"></textarea>
+                                </div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button class="btn btn-success" onclick="saveExamPromptSettings(this)" style="flex:2; min-width:220px; font-size:1.02rem; padding:12px;">
+                                        <i class="fas fa-save"></i> حفظ إعدادات البرومبت والذكاء الاصطناعي
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="resetToUpgradedExamPrompt()" style="flex:1; min-width:200px; font-size:0.95rem; padding:12px;">
+                                        <i class="fas fa-rotate-left"></i> استعادة البرومبت المطوّر الجديد
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
  </div>
 
                 <div id="scheduleSection" class="hidden">
@@ -2580,6 +2637,52 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <div style="display:flex; justify-content:flex-end;">
                                 <button type="button" class="btn btn-primary" onclick="savePerfControlSettings('all', this)"><i class="fas fa-save"></i> حفظ إعدادات الأداء والمهل والتقفيل</button>
                             </div>
+                        </div>
+
+                        <!-- بطاقة إجازات وتعليق المهام (تجميد التقييم وترحيل الاختبارات ليوم النزول التالي) -->
+                        <div style="background:var(--surface, #fff); border:1.5px solid #FDE68A; border-radius:14px; padding:16px 18px; margin-bottom:16px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed #FCD34D;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="width:32px; height:32px; border-radius:9px; background:#FEF3C7; color:#B45309; display:inline-flex; align-items:center; justify-content:center;"><i class="fas fa-pause-circle"></i></span>
+                                    <div>
+                                        <h4 style="margin:0; font-size:0.98rem; font-weight:800; color:#92400E;">إجازات وتعليق المهام (تجميد التقييم وترحيل الاختبارات)</h4>
+                                        <small style="color:#78350F;">أي يوم معلّق يُستثنى من التقييم والتراكم، والاختبارات تترحّل تلقائياً ليوم النزول التالي.</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTaskPausesUI()"><i class="fas fa-sync-alt"></i> تحديث</button>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(175px, 1fr)); gap:10px; margin-bottom:12px;">
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.78rem; font-weight:700;">الموظف</label>
+                                    <select id="tpEmpSelect" class="form-control" style="font-size:0.84rem;">
+                                        <option value="ALL">جميع الموظفين</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.78rem; font-weight:700;">من تاريخ</label>
+                                    <input type="date" id="tpStartDate" class="form-control" style="font-size:0.84rem;">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.78rem; font-weight:700;">إلى تاريخ</label>
+                                    <input type="date" id="tpEndDate" class="form-control" style="font-size:0.84rem;">
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label style="font-size:0.78rem; font-weight:700;">السبب (اختياري)</label>
+                                    <input type="text" id="tpReason" class="form-control" style="font-size:0.84rem;" placeholder="مثال: تأجيل اختبارات الأسبوع / إجازة">
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                                <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:0.83rem; font-weight:700;">
+                                    <span style="color:#475569;">الأقسام المعلّقة:</span>
+                                    <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; margin:0;"><input type="checkbox" class="tp-sec-cb" value="ikhtibarat" checked style="accent-color:#dc2626;"> الاختبارات (ترحيل)</label>
+                                    <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; margin:0;"><input type="checkbox" class="tp-sec-cb" value="wajib" style="accent-color:#1A563E;"> الواجب</label>
+                                    <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer; margin:0;"><input type="checkbox" class="tp-sec-cb" value="tasmiya" style="accent-color:#0f766e;"> التسميع</label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-warning" onclick="saveTaskPauseUI(this)" style="font-weight:800; padding:7px 18px; color:#1e293b;">
+                                    <i class="fas fa-plus-circle"></i> إضافة تعليق / إجازة
+                                </button>
+                            </div>
+                            <div id="taskPausesListWrap" style="display:flex; flex-direction:column; gap:6px;"></div>
                         </div>
 
                         <div style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; padding:16px;">
@@ -3569,6 +3672,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="tasmiya:schedule" class="emp-tab-cb" checked> <span>التسميع: مواعيد التسميع</span></label>
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:manual" class="emp-tab-cb" checked> <span>الاختبارات: إضافة يدوية</span></label>
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:build" class="emp-tab-cb" checked> <span>الاختبارات: بناء اختبار JSON</span></label>
+                            <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer; color:#15803d; font-weight:700;"><input type="checkbox" value="ikhtibarat:ai" class="emp-tab-cb"> <span>الاختبارات: توليد تلقائي بالذكاء الاصطناعي (AI)</span></label>
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="ikhtibarat:grade" class="emp-tab-cb" checked> <span>الاختبارات: رصد الدرجات</span></label>
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="schedule:overview" class="emp-tab-cb" checked> <span>الجدول: عرض المواعيد</span></label>
                             <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer;"><input type="checkbox" value="schedule:editor" class="emp-tab-cb" checked> <span>الجدول: تعديل الجدول</span></label>
@@ -5735,16 +5839,59 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--danger);"><i class="fas fa-exclamation-circle"></i> خطأ: ' + err.message + '</div>';
             });
         }
+        window.DEFAULT_EXAM_PROMPT_TEMPLATE_ = `أنت خبير امتحانات لغة عربية للمنهج المصري 2026/2027 (منصة مستر محمود الهليهي).
+الصف: {{GRADE}} | العدد: {{COUNT}} سؤالاً | الصعوبة: {{DIFF}}
+الدروس المستهدفة:
+{{TARGET_LESSONS}}
+الضوابط الإلزامية (للفروع المطلوبة فقط):
+1- ممنوع تماماً التشكيل بالحركات في النصوص والأسئلة والبدائل؛ اكتب بحروف عربية مجردة بلا تشكيل نهائياً، واستثنِ فقط حركة الحرف الأخير في سؤال ضبط الإعراب بالنحو.
+2- جميع الأسئلة اختيار من متعدد (4 بدائل متجانسة بدون ترقيم أ/ب وبدون "جميع ما سبق") مع توزيع correctIndex عشوائياً (رقم صحيح 0 إلى 3).
+3- القراءة والشعر: انسخ الفقرات والأبيات حرفياً بدقة إملائية كاملة من المصادر دون تحريف أو تأليف.
+4- النحو: تطبيق عملي حصراً على جمل جديدة (ممنوع الأسئلة النظرية مثل «مما تتكون الجملة؟» أو «ما علامة الرفع؟»). خصص للتراكمي بالنحو: رابع 15%، خامس 20%، سادس 25%، 1ع 30%، 2ع 35%، 3ع 40%.
+5- الإملاء: يجب أن تختلف البدائل الأربعة في الحروف نفسها (الرسم الإملائي مثل: كالأسد / كلأسد / كأسد / كالاسد)، ويُمنع تماماً التمييز بين بديلين بالتشكيل فقط (مثل كالأسدُ وكالأسدِ).
+{{SPECIFIC_INSTRUCTIONS}}
+{{INSTRUCTIONS_DYNAMIC}}
+أخرج مصفوفة JSON صالحة فقط بلا مقدمات أو Markdown بنفس المفاتيح حرفياً:
+[{{JSON_EXAMPLES}}]`;
+
+        function resetToUpgradedExamPrompt() {
+            const templateInput = document.getElementById('examPromptTemplateInput');
+            if (templateInput) {
+                templateInput.value = window.DEFAULT_EXAM_PROMPT_TEMPLATE_;
+                showNotify('success', 'تم تحميل البرومبت المطوّر الجديد في الخانة — اضغط «حفظ الإعدادات» لتثبيته.');
+            }
+        }
+
         function saveExamPromptSettings(btn) {
-            const templateContent = document.getElementById('examPromptTemplateInput').value.trim();
+            const templateContent = (document.getElementById('examPromptTemplateInput')?.value || '').trim();
             if (!templateContent) return showNotify('error', 'لا يمكن ترك قالب البرومبت فارغاً!');
+            const apiKeyVal = (document.getElementById('geminiApiKeyInput')?.value || '').trim();
+            const folderVal = (document.getElementById('curriculumFolderIdInput')?.value || '').trim();
+
             if (!window.currentPlatformSettings) window.currentPlatformSettings = {};
-            window.currentPlatformSettings.examPromptTemplate = templateContent;
+            const payload = Object.assign({}, window.currentPlatformSettings, {
+                examPromptTemplate: templateContent,
+                curriculumFolderId: folderVal
+            });
+            if (apiKeyVal) payload.geminiApiKey = apiKeyVal;
+
             toggleLoading(btn, true);
-            runGS('savePlatformSettings', window.currentPlatformSettings).then(res => {
+            runGS('savePlatformSettings', payload).then(res => {
                 toggleLoading(btn, false);
-                if (res && res.success) showNotify('success', 'تم حفظ قالب البرومبت بنجاح! ');
-                else showNotify('error', 'فشل حفظ الإعدادات');
+                if (res && res.success) {
+                    if (res.settings) window.currentPlatformSettings = Object.assign({}, window.currentPlatformSettings, res.settings);
+                    else {
+                        window.currentPlatformSettings.examPromptTemplate = templateContent;
+                        window.currentPlatformSettings.curriculumFolderId = folderVal;
+                        if (apiKeyVal) window.currentPlatformSettings.geminiApiKeyConfigured = true;
+                    }
+                    const keyInput = document.getElementById('geminiApiKeyInput');
+                    if (keyInput) keyInput.value = '';
+                    loadExamPromptTemplate();
+                    showNotify('success', 'تم حفظ إعدادات البرومبت والذكاء الاصطناعي بنجاح!');
+                } else {
+                    showNotify('error', (res && res.message) || 'فشل حفظ الإعدادات');
+                }
             }).catch(err => { toggleLoading(btn, false); showNotify('error', err.message); });
         }
 
@@ -5752,7 +5899,25 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const settings = window.currentPlatformSettings || {};
             const templateInput = document.getElementById('examPromptTemplateInput');
             if (templateInput) {
-                templateInput.value = settings.examPromptTemplate || `أنت خبير تربوي متخصص في وضع امتحانات اللغة العربية للمناهج المصرية، وتعمل لصالح منصة 'مستر محمود الهليهي' التعليمية.\nمطلوب منك إعداد اختبار شامل لطلاب ({{GRADE}}).\n\nالدروس المستهدفة من المصادر المرفقة هي:\n{{TARGET_LESSONS}}\n\nتعليمات هامة جداً للمحتوى:\n{{SPECIFIC_INSTRUCTIONS}}\n\nجدول مواصفات الاختبار وتوزيع الأسئلة (إجمالي {{COUNT}} سؤال لمستوى: {{DIFF}}):\n{{INSTRUCTIONS_DYNAMIC}}\n\nطريقة الإخراج المطلوبة (JSON Format):\nأخرج النتيجة فقط ككود JSON صالح يتبع هذا الهيكل بدقة:\n\`\`\`json\n[\n{{JSON_EXAMPLES}}\n]\n\`\`\``;
+                templateInput.value = settings.examPromptTemplate || window.DEFAULT_EXAM_PROMPT_TEMPLATE_;
+            }
+            const folderInput = document.getElementById('curriculumFolderIdInput');
+            if (folderInput) {
+                folderInput.value = settings.curriculumFolderId || '';
+            }
+            const badge = document.getElementById('geminiKeyStatusBadge');
+            const keyInput = document.getElementById('geminiApiKeyInput');
+            if (badge) {
+                if (settings.geminiApiKeyConfigured) {
+                    badge.textContent = 'مضبوط ومحفوظ ✓';
+                    badge.style.background = '#dcfce7';
+                    badge.style.color = '#166534';
+                    if (keyInput) keyInput.placeholder = 'المفتاح محفوظ بأمان (اتركه فارغاً للإبقاء عليه أو اكتب مفتاحاً جديداً للاستبدال)';
+                } else {
+                    badge.textContent = 'غير مضبوط';
+                    badge.style.background = '#fee2e2';
+                    badge.style.color = '#991b1b';
+                }
             }
         }
         // ===============================================
@@ -9767,7 +9932,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
             var timer = null;
             if (controller) {
-                timer = setTimeout(function() { controller.abort(); }, 120000);
+                var _reqTimeoutMs = (funcName === 'generateExamWithGeminiGS' || funcName === 'prepareCurriculumForGeminiGS') ? 240000 : 120000;
+                timer = setTimeout(function() { controller.abort(); }, _reqTimeoutMs);
             }
             return fetch(url, {
                 method : 'POST',
@@ -11176,7 +11342,8 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
         var _heroPillTxt = document.getElementById('myPerfHeroPillText');
         if (_heroPill) { _heroPill.classList.remove('hidden'); _heroPill.style.display = 'inline-flex'; }
         if (_heroPillTxt) _heroPillTxt.innerHTML = comp !== null ? (comp + '<small style="font-size:0.88rem; opacity:0.75; font-weight:700;">/100</small>') : '—';
-        alertWrap.classList.add('hidden');
+        if (!alertWrap.closest('#sectionToolModal')) alertWrap.classList.add('hidden');
+        else { alertWrap.classList.remove('hidden'); alertWrap.style.display = 'block'; }
         alertWrap.innerHTML =
         '<div style="background:var(--surface); border:1.5px solid ' + borderCol + '; border-radius:16px; padding:18px; box-shadow:var(--shadow-sm);">' +
             '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border);">' +
@@ -11229,7 +11396,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
             return;
         }
     } else {
-        alertWrap.classList.add('hidden');
+        if (!alertWrap.closest('#sectionToolModal')) alertWrap.classList.add('hidden');
     }
 
     runGS('getEmployeesKPIDashboardGS', firstDayStr, todayStr).then(function(res) {
@@ -11776,8 +11943,11 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             });
 
             // تطبيق صلاحيات التبويبات الفرعية (allowedTabs)
+            const isMgrOrOwner = (emp.role === 'مدير' || emp.role === 'مالك المنصة' || String(emp.role || '').includes('مدير') || String(emp.role || '').includes('مالك'));
+            let canUseAiExams = isMgrOrOwner;
             if (emp.allowedTabs && emp.allowedTabs !== 'ALL' && emp.allowedTabs !== 'الكل') {
                 const allowedTabsList = Array.isArray(emp.allowedTabs) ? emp.allowedTabs : String(emp.allowedTabs).split(',').map(s => s.trim());
+                if (!isMgrOrOwner) canUseAiExams = allowedTabsList.includes('ikhtibarat:ai');
                 document.querySelectorAll('[onclick*="switchTab("]').forEach(btn => {
                     const m = (btn.getAttribute('onclick') || '').match(/switchTab\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]\)/);
                     if (m) {
@@ -11785,7 +11955,13 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                         btn.style.display = allowedTabsList.includes(key) ? '' : 'none';
                     }
                 });
+            } else if (!isMgrOrOwner) {
+                canUseAiExams = true;
             }
+            window.currentCanUseAiExams_ = canUseAiExams;
+            document.querySelectorAll('.ai-exam-gen-wrap, .ai-exam-gen-btn').forEach(el => {
+                el.style.display = canUseAiExams ? '' : 'none';
+            });
 
             // تطبيق صلاحيات الإضافة / التعديل / الحذف (allowedSensitive)
             if (emp.allowedSensitive && emp.allowedSensitive !== 'ALL' && emp.allowedSensitive !== 'الكل') {
@@ -14203,59 +14379,25 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     targetLessonsText += `- في ${bd.name}:
 ` + branchLines.join('\n') + '\n';
 
-                    if (bd.key === 'read') {
-                        instructionsDynamic += `* فرع القراءة: التزم بعدد الأسئلة ونوعها لكل درس محدد أعلاه، مع فقرة من الدرس (معاني ومفردات + فهم${!isPrimary ? ' + المفاهيم الأدبية المحددة أو الفكرة الرئيسية' : ''}).\n`;
-                    } else if (bd.key === 'poetry') {
-                        instructionsDynamic += `* فرع النصوص: التزم بعدد الأسئلة ونوعها لكل نص محدد أعلاه، مع أبيات من النص (معاني ومفردات + شرح وفهم${!isPrimary ? ' + المفاهيم البلاغية ومواطن الجمال المحددة' : ''}).\n`;
-                    } else if (bd.key === 'grammar') {
-                        instructionsDynamic += `* فرع النحو: التزم بعدد الأسئلة ونوعها لكل قاعدة نحوية محددة أعلاه (تطبيق عملي مباشر بدون أسئلة نظرية + سؤال تراكمي).\n`;
-                    } else if (bd.key === 'dict') {
-                        instructionsDynamic += `* فرع الإملاء: التزم بعدد الأسئلة ونوعها لكل قاعدة إملائية محددة أعلاه (تطبيق عملي + سؤال تراكمي).\n`;
-                    }
+                    if (bd.key === 'read') instructionsDynamic += `* القراءة: فقرة من الدرس (مفردات + فهم${!isPrimary ? ' + مفاهيم أدبية' : ''}).\n`;
+                    else if (bd.key === 'poetry') instructionsDynamic += `* النصوص: أبيات من النص (مفردات + فهم${!isPrimary ? ' + جماليات' : ''}).\n`;
+                    else if (bd.key === 'grammar') instructionsDynamic += `* النحو: تطبيق عملي + تراكمي.\n`;
+                    else if (bd.key === 'dict') instructionsDynamic += `* الإملاء: تطبيق عملي.\n`;
                 }
 
                 if (branches.length === 0) return showNotify('warning', 'يرجى اختيار فرع واحد على الأقل.');
 
-                let mainInstructions = '';
-                let ic = 1;
-                if (branches.includes('القراءة') || branches.includes('النصوص الشعرية')) {
-                    mainInstructions += `${ic++}. نصوص القراءة والشعر: استخرج الفقرات والأبيات بالنص حرفياً من المستندات المرفقة للمنهج دون تأليف.\n`;
-                }
-                if (branches.includes('النحو') || branches.includes('الإملاء')) {
-                    mainInstructions += `${ic++}. النحو والإملاء: ألّف أمثلة وجمل جديدة تطبق القاعدة المقررة عملياً دون تكرار.\n`;
-                }
-                mainInstructions += `${ic++}. الضبط بالشكل: النصوص والأسئلة والاختيارات خالية من التشكيل الداخلي مع الاكتفاء بوضع العلامة الإعرابية على الحرف الأخير فقط عند الحاجة.\n`;
-                mainInstructions += `${ic++}. توزيع الإجابات: وزّع الإجابات الصحيحة عشوائياً على الاختيارات الأربعة.\n`;
-                if (specificInstructions) mainInstructions += `\nملاحظات إضافية من المعلم:\n${specificInstructions}`;
+                let mainInstructions = specificInstructions ? (`ملاحظات إضافية من المعلم:\n${specificInstructions}`) : '';
 
                 let jsonExamples = [];
-                if (branches.includes('القراءة')) jsonExamples.push(`  {
-    "section_title": "أولاً: القراءة",
-    "context_type": "paragraph",
-    "context_text": "الفقرة المستخرجة بالنص.",
-    "questions": [{ "text": "السؤال", "options": ["أ", "ب", "ج", "د"], "correctIndex": 2 }]
-  }`);
-                if (branches.includes('النصوص الشعرية')) jsonExamples.push(`  {
-    "section_title": "ثانياً: النصوص",
-    "context_type": "poetry",
-    "verses": [{ "part1": "الشطر الأول", "part2": "الشطر الثاني" }],
-    "questions": [{ "text": "السؤال", "options": ["أ", "ب", "ج", "د"], "correctIndex": 1 }]
-  }`);
-                if (branches.includes('النحو')) jsonExamples.push(`  {
-    "section_title": "ثالثاً: النحو",
-    "context_type": "paragraph",
-    "context_text": "الفقرة النحوية.",
-    "questions": [{ "text": "السؤال", "options": ["أ", "ب", "ج", "د"], "correctIndex": 3 }]
-  }`);
-                if (branches.includes('الإملاء')) jsonExamples.push(`  {
-    "section_title": "رابعاً: الإملاء",
-    "context_type": "none",
-    "questions": [{ "text": "السؤال", "options": ["أ", "ب", "ج", "د"], "correctIndex": 0 }]
-  }`);
+                if (branches.includes('القراءة')) jsonExamples.push('{"section_title":"أولاً: القراءة","context_type":"paragraph","context_text":"الفقرة","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":2}]}');
+                if (branches.includes('النصوص الشعرية')) jsonExamples.push('{"section_title":"ثانياً: النصوص","context_type":"poetry","verses":[{"part1":"الشطر1","part2":"الشطر2"}],"questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":1}]}');
+                if (branches.includes('النحو')) jsonExamples.push('{"section_title":"ثالثاً: النحو","context_type":"none","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":3}]}');
+                if (branches.includes('الإملاء')) jsonExamples.push('{"section_title":"رابعاً: الإملاء","context_type":"none","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":0}]}');
 
                 const promptTemplate = (window.currentPlatformSettings && window.currentPlatformSettings.examPromptTemplate)
-                    ? window.currentPlatformSettings.examPromptTemplate
-                    : document.getElementById('examPromptTemplateInput').value;
+                    || (document.getElementById('examPromptTemplateInput') && document.getElementById('examPromptTemplateInput').value.trim())
+                    || window.DEFAULT_EXAM_PROMPT_TEMPLATE_;
 
                 const prompt = promptTemplate
                     .replace(/\{\{GRADE\}\}/g, grade)
@@ -14341,7 +14483,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 </script>
 
     <!-- Modal: Add / Edit Exam Section -->
-    <div id="examSectionEditModal" class="modal" style="display:none; z-index: 6200;">
+    <div id="examSectionEditModal" class="modal" style="display:none; z-index: 10040;">
         <div class="modal-content" style="max-width: 550px;">
             <h3><i class="fas fa-layer-group"></i> إعدادات القسم</h3>
             <input type="hidden" id="esTarget">
@@ -14376,7 +14518,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
  </div>
 
     <!-- Modal: Add / Edit Exam Question (MCQ, True/False, Essay, Correction, Matching) -->
-    <div id="examQuestionEditModal" class="modal" style="display:none; z-index: 6300;">
+    <div id="examQuestionEditModal" class="modal" style="display:none; z-index: 10050;">
         <div class="modal-content" style="max-width: 650px;">
             <h3 id="eqModalTitle"><i class="fas fa-question-circle"></i> إضافة / تعديل سؤال</h3>
             <input type="hidden" id="eqTarget">
@@ -14457,21 +14599,194 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         // ==============================================================
         window.manualExamSections = [];
         window.jsonPreviewSections = [];
+        window.guidedPreviewSections = [];
+
+        window.normalizeExamSections_ = function(raw) {
+            const normAr = function(s) {
+                return String(s || '')
+                    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+                    .replace(/[أإآٱ]/g, 'ا')
+                    .replace(/ة/g, 'ه')
+                    .replace(/ى/g, 'ي')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+            };
+
+            let list = raw;
+            if (list && !Array.isArray(list)) {
+                if (Array.isArray(list.content)) list = list.content;
+                else if (Array.isArray(list.sections)) list = list.sections;
+                else if (Array.isArray(list.exam)) list = list.exam;
+                else if (Array.isArray(list.questions)) list = [{ section_title: list.title || list.section_title || 'الاختبار', context_type: 'none', questions: list.questions }];
+                else list = [];
+            }
+            if (!Array.isArray(list)) return [];
+
+            return list.map(function(sec, sIdx) {
+                sec = sec || {};
+                const sectionTitle = String(
+                    sec.section_title || sec.title || sec.sectionTitle || sec.section || sec.branch || sec.name || ('القسم ' + (sIdx + 1))
+                ).trim();
+
+                let contextText = String(
+                    sec.context_text || sec.passage || sec.paragraph || sec.content || sec.text_passage || sec.text || ''
+                ).trim();
+
+                let rawVerses = sec.verses || sec.poetry || sec.lines || null;
+                let verses = null;
+                if (Array.isArray(rawVerses) && rawVerses.length > 0) {
+                    verses = rawVerses.map(function(v) {
+                        if (typeof v === 'string') {
+                            const parts = v.split(/\s*[|،\u2026]|\.{3,}/);
+                            return { part1: (parts[0] || v).trim(), part2: (parts.slice(1).join(' ') || '').trim() };
+                        }
+                        return {
+                            part1: String((v && (v.part1 || v.first || v.right || v.shatr1)) || '').trim(),
+                            part2: String((v && (v.part2 || v.second || v.left || v.shatr2)) || '').trim()
+                        };
+                    });
+                }
+
+                let contextType = String(sec.context_type || sec.contextType || '').trim().toLowerCase();
+                if (!contextType) {
+                    if (verses && verses.length > 0) contextType = 'poetry';
+                    else if (contextText) contextType = 'paragraph';
+                    else contextType = 'none';
+                }
+
+                const rawQs = Array.isArray(sec.questions) ? sec.questions : (Array.isArray(sec.items) ? sec.items : []);
+                const questions = rawQs.map(function(q) {
+                    q = q || {};
+                    const qText = String(q.text || q.question || q.q || q.prompt || q.stem || '').trim();
+                    const qType = String(q.question_type || q.type || 'mcq').trim().toLowerCase();
+                    let opts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : (Array.isArray(q.answers) ? q.answers : []));
+                    opts = opts.map(function(o) {
+                        if (o && typeof o === 'object') return String(o.text || o.label || o.value || '').trim();
+                        return String(o === null || o === undefined ? '' : o).trim();
+                    });
+
+                    // استخراج correctIndex سواء كان رقماً أو نصاً يطابق أحد البدائل
+                    let cIdx = -1;
+                    const idxCandidates = [q.correctIndex, q.correct_index, q.answerIndex, q.answer_index, q.correctOptionIndex, q.correct_option_index];
+                    for (let k = 0; k < idxCandidates.length; k++) {
+                        const v = idxCandidates[k];
+                        if (v !== undefined && v !== null && v !== '' && !isNaN(Number(v))) {
+                            const n = parseInt(v, 10);
+                            if (n >= 0 && (opts.length === 0 || n < opts.length)) { cIdx = n; break; }
+                        }
+                    }
+
+                    if (cIdx === -1 && opts.length > 0) {
+                        const ansTextRaw = q.correct_answer !== undefined ? q.correct_answer :
+                                           (q.correctAnswer !== undefined ? q.correctAnswer :
+                                           (q.answer !== undefined ? q.answer : q.correct));
+                        if (ansTextRaw !== undefined && ansTextRaw !== null && ansTextRaw !== '') {
+                            if (!isNaN(Number(ansTextRaw)) && String(ansTextRaw).trim().length <= 2) {
+                                const n = parseInt(ansTextRaw, 10);
+                                if (n >= 0 && n < opts.length) cIdx = n;
+                                else if (n >= 1 && n <= opts.length) cIdx = n - 1;
+                            } else {
+                                const ansClean = String(ansTextRaw).trim();
+                                const letterMap = { 'أ': 0, 'ا': 0, 'a': 0, 'A': 0, 'ب': 1, 'b': 1, 'B': 1, 'ج': 2, 'c': 2, 'C': 2, 'د': 3, 'd': 3, 'D': 3 };
+                                if (ansClean.length <= 2 && letterMap[ansClean.replace(/[)\-\.]/g, '')] !== undefined) {
+                                    cIdx = letterMap[ansClean.replace(/[)\-\.]/g, '')];
+                                } else {
+                                    const targetNorm = normAr(ansClean);
+                                    for (let oi = 0; oi < opts.length; oi++) {
+                                        if (normAr(opts[oi]) === targetNorm) { cIdx = oi; break; }
+                                    }
+                                    if (cIdx === -1) {
+                                        for (let oi = 0; oi < opts.length; oi++) {
+                                            const oN = normAr(opts[oi]);
+                                            if (oN && targetNorm && (oN.indexOf(targetNorm) !== -1 || targetNorm.indexOf(oN) !== -1)) { cIdx = oi; break; }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (cIdx < 0) cIdx = 0;
+
+                    const outQ = {
+                        question_type: (qType === 'true_false' || qType === 'essay' || qType === 'correction' || qType === 'matching') ? qType : 'mcq',
+                        text: qText
+                    };
+                    if (outQ.question_type === 'mcq' || outQ.question_type === 'true_false') {
+                        outQ.options = opts.length > 0 ? opts : (outQ.question_type === 'true_false' ? ['صح', 'خطأ'] : ['', '', '', '']);
+                        outQ.correctIndex = cIdx;
+                    } else if (outQ.question_type === 'essay') {
+                        outQ.modelAnswer = q.modelAnswer || q.answer || '';
+                    } else if (outQ.question_type === 'correction') {
+                        outQ.wrongPart = q.wrongPart || '';
+                        outQ.correctAnswer = q.correctAnswer || q.answer || '';
+                    } else if (outQ.question_type === 'matching') {
+                        outQ.pairs = Array.isArray(q.pairs) ? q.pairs : [];
+                    }
+                    return outQ;
+                });
+
+                const outSec = {
+                    section_title: sectionTitle,
+                    context_type: contextType,
+                    questions: questions
+                };
+                if (contextType === 'paragraph') outSec.context_text = contextText;
+                if (contextType === 'poetry') outSec.verses = verses || [];
+                return outSec;
+            });
+        };
 
         function getExamStore(target) {
-            return target === 'manual' ? window.manualExamSections : window.jsonPreviewSections;
+            if (target === 'manual') return window.manualExamSections;
+            if (target === 'guidedPreview') return window.guidedPreviewSections;
+            return window.jsonPreviewSections;
         }
 
         function syncExamPreviewTarget(target) {
             if (target === 'manual') {
                 renderManualExamBuilder();
                 if (document.getElementById('manualExamPreviewArea').innerHTML.trim() !== '') previewManualExam();
+            } else if (target === 'guidedPreview') {
+                const ta = document.getElementById('gepJsonInput');
+                if (ta) ta.value = JSON.stringify(window.guidedPreviewSections, null, 2);
+                const area = document.getElementById('gepPreviewArea');
+                if (area && typeof renderExamSectionsHtml === 'function') {
+                    area.innerHTML = '<div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+                                     '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="stripExamDiacritics(\'guidedPreview\')"><i class="fas fa-eraser"></i> إزالة التشكيل الزائد</button>' +
+                                     '<button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddManualSectionModal(\'guidedPreview\', -1)"><i class="fas fa-plus"></i> إضافة قسم جديد</button></div>' +
+                                     renderExamSectionsHtml(window.guidedPreviewSections, 'guidedPreview');
+                }
             } else {
                 const ta = document.getElementById('ikhtibaratPastedJson');
                 if (ta) ta.value = JSON.stringify(window.jsonPreviewSections, null, 2);
                 previewExamJson();
             }
         }
+
+        window.stripExamDiacritics = function(target) {
+            const store = getExamStore(target);
+            if (!Array.isArray(store) || store.length === 0) return;
+            const clean = function(s) { return String(s || '').replace(/[\u064B-\u065F\u0670]/g, ''); };
+            store.forEach(function(sec) {
+                if (sec.section_title) sec.section_title = clean(sec.section_title);
+                if (sec.context_text) sec.context_text = clean(sec.context_text);
+                if (Array.isArray(sec.verses)) {
+                    sec.verses.forEach(function(v) {
+                        v.part1 = clean(v.part1);
+                        v.part2 = clean(v.part2);
+                    });
+                }
+                if (Array.isArray(sec.questions)) {
+                    sec.questions.forEach(function(q) {
+                        q.text = clean(q.text);
+                        if (Array.isArray(q.options)) q.options = q.options.map(clean);
+                    });
+                }
+            });
+            syncExamPreviewTarget(target);
+            showNotify('success', 'تمت إزالة التشكيل الزائد من الاختبار بنجاح!');
+        };
 
         function openAddManualSectionModal(target = 'manual', secIdx = -1) {
             document.getElementById('esTarget').value = target;
@@ -14714,16 +15029,59 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             try {
                 jsonStr = jsonStr.replace(/```json/gi, '').replace(/```/g, '').trim();
                 let examData = JSON.parse(jsonStr);
-                if (!Array.isArray(examData)) return showNotify('error', 'الكود يجب أن يكون مصفوفة JSON للأقسام.');
-                window.jsonPreviewSections = examData;
+                let normalized = typeof window.normalizeExamSections_ === 'function' ? window.normalizeExamSections_(examData) : examData;
+                if (!Array.isArray(normalized) || normalized.length === 0) return showNotify('error', 'الكود يجب أن يكون مصفوفة JSON صالحة للأقسام.');
+                window.jsonPreviewSections = normalized;
+                document.getElementById('ikhtibaratPastedJson').value = JSON.stringify(normalized, null, 2);
                 const area = document.getElementById('examPreviewArea');
                 if (area) {
-                    area.innerHTML = '<div style="margin-bottom:10px; display:flex; justify-content:flex-end;"><button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddManualSectionModal(\'json\', -1)"><i class="fas fa-plus"></i> إضافة قسم</button></div>' +
+                    area.innerHTML = '<div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+                                     '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="stripExamDiacritics(\'json\')"><i class="fas fa-eraser"></i> إزالة التشكيل الزائد</button>' +
+                                     '<button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddManualSectionModal(\'json\', -1)"><i class="fas fa-plus"></i> إضافة قسم</button></div>' +
                                      renderExamSectionsHtml(window.jsonPreviewSections, 'json');
                 }
                 showNotify('success', 'تمت المعاينة! يمكنك تعديل أو إضافة أو حذف أي سؤال قبل النشر.');
             } catch (e) {
                 showNotify('error', 'صيغة الكود غير صحيحة، تأكد من نسخ JSON بالكامل.');
+            }
+        };
+
+        window.generateRegularExamAutoAI = function(btn) {
+            try {
+                if (typeof window.generateExamPrompt === 'function') window.generateExamPrompt();
+                const promptText = (document.getElementById('generatedPrompt')?.value || '').trim();
+                const grade = (document.getElementById('ikhtibaratPromptGrade')?.value || '').trim();
+                if (!promptText) return showNotify('warning', 'يرجى تحديد الفروع والدروس أولاً.');
+
+                const origHtml = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> (1/2) جاري تجهيز كتاب الصف من درايف...';
+                }
+                runGS('prepareCurriculumForGeminiGS', grade).then(function(prep) {
+                    if (!prep || !prep.success) throw new Error((prep && prep.message) || 'تعذر تجهيز ملف الكتاب من درايف');
+                    if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> (2/2) تم تجهيز الكتاب — جاري توليد الأسئلة...';
+                    return runGS('generateExamWithGeminiGS', { grade: grade, prompt: promptText, preparedFiles: prep.files || [] });
+                }).then(function(res) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+                    if (res && res.success && res.jsonText) {
+                        const ta = document.getElementById('ikhtibaratPastedJson');
+                        if (ta) ta.value = res.jsonText;
+                        const filesMsg = (res.filesUsed && res.filesUsed.length) ? (' (المصادر: ' + res.filesUsed.join('، ') + ')') : '';
+                        showNotify('success', 'تم توليد الاختبار بنجاح عبر ' + (res.modelUsed || 'Gemini') + filesMsg + '!');
+                        if (typeof openSectionToolModal === 'function') {
+                            openSectionToolModal('ikhtibaratBuild', 'الخطوة 2: معاينة وتعديل ونشر الاختبار (JSON)');
+                        }
+                        setTimeout(function() { if (typeof window.previewExamJson === 'function') window.previewExamJson(); }, 120);
+                    } else {
+                        showNotify('error', (res && res.message) || 'تعذر توليد الاختبار تلقائياً.');
+                    }
+                }).catch(function(err) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+                    showNotify('error', err.message || 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.');
+                });
+            } catch (e) {
+                showNotify('error', e.message);
             }
         };
 
@@ -17396,6 +17754,15 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }
 
             onPcPerfEmpChange();
+            var tpSel = document.getElementById('tpEmpSelect');
+            if (tpSel) {
+                var prevTp = tpSel.value || 'ALL';
+                tpSel.innerHTML = '<option value="ALL">جميع الموظفين</option>' + staff.map(function(e) {
+                    return '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name || e.code) + ' (' + escapeHtml_(e.role || 'موظف') + ')</option>';
+                }).join('');
+                tpSel.value = prevTp;
+            }
+            if (typeof loadTaskPausesUI === 'function') loadTaskPausesUI();
 
             // 1. الجدول الموحد لإعدادات الأداء والمهل والتقفيل
             var enabledCount = staff.filter(function(e) { return !!e.perfEnabled; }).length;
@@ -17673,6 +18040,87 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
         // ====================================================================
         window._guidedExamCtx = null;
 
+        function loadTaskPausesUI() {
+            var wrap = document.getElementById('taskPausesListWrap');
+            if (!wrap) return;
+            wrap.innerHTML = '<div style="font-size:0.8rem; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل التعليقات النشطة...</div>';
+            runGS('getTaskPausesGS').then(function(res) {
+                if (!res || !res.success) {
+                    wrap.innerHTML = '<div style="font-size:0.8rem; color:#dc2626;">تعذر تحميل قائمة التعليقات</div>';
+                    return;
+                }
+                var list = res.pauses || [];
+                if (list.length === 0) {
+                    wrap.innerHTML = '<div style="font-size:0.8rem; color:#64748b; background:#FAF9F5; padding:8px 12px; border-radius:8px;">لا توجد إجازات أو تعليقات مسجلة حالياً.</div>';
+                    return;
+                }
+                var secLabels = { wajib: 'الواجب', tasmiya: 'التسميع', ikhtibarat: 'الاختبارات', ALL: 'الكل' };
+                wrap.innerHTML = list.map(function(p) {
+                    var secs = (p.sections || []).map(function(s) { return secLabels[s] || s; }).join('، ');
+                    var dateRange = (p.startDate === p.endDate) ? p.startDate : (p.startDate + ' ← ' + p.endDate);
+                    var safeId = escapeHtml_(p.id).replace(/'/g, "\\'");
+                    return '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#FFFBEB; border:1px solid #FDE68A; border-radius:9px; padding:8px 12px; font-size:0.82rem;">' +
+                        '<div><strong>' + escapeHtml_(p.employeeName || 'جميع الموظفين') + '</strong> • <span dir="ltr" style="font-weight:700; color:#92400E;">' + escapeHtml_(dateRange) + '</span> • <span style="background:#FEF3C7; padding:2px 8px; border-radius:99px; font-weight:700; color:#92400E;">' + escapeHtml_(secs) + '</span>' +
+                        (p.reason ? (' — <span style="color:#475569;">' + escapeHtml_(p.reason) + '</span>') : '') + '</div>' +
+                        '<button type="button" class="btn btn-sm btn-danger" style="padding:2px 9px; font-size:0.75rem;" onclick="deleteTaskPauseUI(\'' + safeId + '\', this)"><i class="fas fa-trash-alt"></i> إلغاء</button>' +
+                    '</div>';
+                }).join('');
+            }).catch(function() {
+                if (wrap) wrap.innerHTML = '';
+            });
+        }
+
+        function saveTaskPauseUI(btn) {
+            var empSel = document.getElementById('tpEmpSelect');
+            var empCode = empSel ? empSel.value : 'ALL';
+            var empName = (empSel && empSel.selectedIndex >= 0) ? empSel.options[empSel.selectedIndex].text : 'جميع الموظفين';
+            var startDate = (document.getElementById('tpStartDate') || {}).value || '';
+            var endDate = (document.getElementById('tpEndDate') || {}).value || startDate;
+            var reason = ((document.getElementById('tpReason') || {}).value || '').trim();
+            var sections = Array.from(document.querySelectorAll('.tp-sec-cb:checked')).map(function(cb) { return cb.value; });
+
+            if (!startDate) return showNotify('warning', 'يرجى تحديد تاريخ البداية أولاً.');
+            if (sections.length === 0) return showNotify('warning', 'اختر قسماً واحداً على الأقل لتعليقه.');
+
+            if (btn) toggleLoading(btn, true);
+            runGS('saveTaskPauseGS', {
+                employeeCode: empCode,
+                employeeName: empName,
+                startDate: startDate,
+                endDate: endDate,
+                sections: sections,
+                reason: reason
+            }).then(function(res) {
+                if (btn) toggleLoading(btn, false);
+                if (res && res.success) {
+                    showNotify('success', res.message || 'تم حفظ التعليق بنجاح!');
+                    if (document.getElementById('tpReason')) document.getElementById('tpReason').value = '';
+                    loadTaskPausesUI();
+                } else {
+                    showNotify('error', (res && res.message) || 'تعذر حفظ التعليق');
+                }
+            }).catch(function(err) {
+                if (btn) toggleLoading(btn, false);
+                showNotify('error', err.message);
+            });
+        }
+
+        function deleteTaskPauseUI(id, btn) {
+            if (btn) toggleLoading(btn, true);
+            runGS('deleteTaskPauseGS', id).then(function(res) {
+                if (btn) toggleLoading(btn, false);
+                if (res && res.success) {
+                    showNotify('success', res.message || 'تم إلغاء التعليق');
+                    loadTaskPausesUI();
+                } else {
+                    showNotify('error', (res && res.message) || 'تعذر الإلغاء');
+                }
+            }).catch(function(err) {
+                if (btn) toggleLoading(btn, false);
+                showNotify('error', err.message);
+            });
+        }
+
         function initAssistantExamScheduleView() {
             var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
             var schedWrap = document.getElementById('assistantExamScheduleView');
@@ -17706,6 +18154,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 var brNames = { read: 'القراءة', poetry: 'النصوص', grammar: 'النحو', dict: 'الإملاء' };
                 var activeBranches = (bp.branches || []).filter(function(b) { return b.enabled; });
                 var brSummary = activeBranches.map(function(b) { return (brNames[b.key] || b.key) + ' (' + (b.count || 5) + ')'; }).join(' • ');
+                var postponeBannerHtml = res.postponedFrom
+                    ? ('<div style="background:#FFFBEB; border:1.5px solid #F59E0B; color:#92400E; padding:10px 14px; border-radius:12px; margin-bottom:12px; font-size:0.84rem; font-weight:700;"><i class="fas fa-calendar-alt"></i> تم ترحيل موعد نزول الاختبارات من <b>' + escapeHtml_(res.postponedFrom) + '</b> إلى <b>' + escapeHtml_(res.releaseDate) + '</b>' + (res.postponeReason ? (' (' + escapeHtml_(res.postponeReason) + ')') : '') + ' — دون أي خصم في التقييم.</div>')
+                    : '';
 
                 function buildExamTable_(list, emptyText) {
                     if (!list || list.length === 0) {
@@ -17765,7 +18216,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 }
 
                 htmlOut += buildExamTable_(weekTasks, 'لا توجد اختبارات مجدولة لك هذا الأسبوع.');
-                schedWrap.innerHTML = htmlOut;
+                schedWrap.innerHTML = postponeBannerHtml + htmlOut;
             }).catch(function(err) {
                 schedWrap.innerHTML = '<div style="text-align:center; padding:24px; color:#dc2626;">' + escapeHtml_(err.message) + '</div>';
             });
@@ -17815,6 +18266,29 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     '<span class="emp-perf-chip"><i class="fas fa-graduation-cap" style="color:#0f766e;"></i> ' + escapeHtml_(task.grade) + '</span>' +
                     '<span class="emp-perf-chip"><i class="fas fa-list-ol" style="color:#1A563E;"></i> ' + totalQ + ' سؤال</span>' +
                     '<span class="emp-perf-chip"><i class="fas fa-calendar-day" style="color:#b45309;"></i> موعد النزول: ' + escapeHtml_(task.releaseDayName) + ' ' + escapeHtml_(task.releaseDate) + '</span>';
+            }
+            var srcInfoEl = document.getElementById('gewDriveSourcesInfo');
+            if (srcInfoEl) {
+                srcInfoEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري فحص كتب الصف على جوجل درايف...';
+                runGS('listCurriculumFilesForGradeGS', task.grade).then(function(r) {
+                    if (!srcInfoEl) return;
+                    if (!r || !r.success) {
+                        srcInfoEl.innerHTML = '<span style="color:#991b1b;"><i class="fas fa-exclamation-triangle"></i> ' + escapeHtml_((r && r.message) || 'تعذر فحص مجلد الكتب') + '</span>';
+                        return;
+                    }
+                    if (!r.apiKeyConfigured || !r.folderConfigured) {
+                        srcInfoEl.innerHTML = '<span style="color:#92400e;"><i class="fas fa-info-circle"></i> لتفعيل التوليد التلقائي بالذكاء الاصطناعي، أضف مفتاح Gemini ومجلد الكتب من تبويب «إعدادات البرومبت».</span>';
+                        return;
+                    }
+                    if (r.files && r.files.length > 0) {
+                        var names = r.files.map(function(f) { return '<b>' + escapeHtml_(f.name) + '</b> (' + f.sizeMB + 'MB)'; }).join(' • ');
+                        srcInfoEl.innerHTML = '<span style="color:#166534;"><i class="fas fa-check-circle"></i> مصادر درايف المكتشفة للصف: ' + names + '</span>';
+                    } else {
+                        srcInfoEl.innerHTML = '<span style="color:#b45309;"><i class="fas fa-folder-open"></i> لم يُعثر على ملف باسم «' + escapeHtml_(task.grade) + '» في مجلد «' + escapeHtml_(r.folderName || 'الكتب') + '».</span>';
+                    }
+                }).catch(function() {
+                    if (srcInfoEl) srcInfoEl.innerHTML = '';
+                });
             }
 
             var brNames = { read: 'القراءة', poetry: 'النصوص الشعرية', grammar: 'النحو', dict: 'الإملاء' };
@@ -17869,9 +18343,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (el) { el.classList.toggle('hidden'); if (!el.classList.contains('hidden')) el.focus(); }
         }
 
-        function generateAndCopyGuidedPrompt() {
+        function buildGuidedExamPromptPayload_() {
             var ctx = window._guidedExamCtx;
-            if (!ctx) return;
+            if (!ctx) return null;
             var brNames = { read: 'القراءة', poetry: 'النصوص الشعرية', grammar: 'النحو', dict: 'الإملاء' };
             var grade = ctx.task.grade || '';
             var diff = ctx.blueprint.difficulty || 'متوسط يحاكي الامتحانات الرسمية';
@@ -17880,6 +18354,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var targetLessonsText = '';
             var specificInstructions = '';
             var instructionsDynamic = '';
+            var jsonExamples = [];
 
             for (var i = 0; i < ctx.branches.length; i++) {
                 var b = ctx.branches[i];
@@ -17887,7 +18362,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 var inputs = Array.from(document.querySelectorAll('#gewLessons_' + b.key + ' .gew-lesson-inp'));
                 var lessons = inputs.map(function(inp) { return inp.value.trim(); }).filter(Boolean);
                 if (lessons.length === 0) {
-                    return showNotify('warning', 'يرجى كتابة اسم درس واحد على الأقل في فرع ' + bName);
+                    showNotify('warning', 'يرجى كتابة اسم درس واحد على الأقل في فرع ' + bName);
+                    return null;
                 }
                 var cnt = Number(b.count) || 5;
                 totalQ += cnt;
@@ -17898,31 +18374,54 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 targetLessonsText += '\n';
                 if (notes.trim()) specificInstructions += '- ملاحظات (' + bName + '): ' + notes.trim() + '\n';
 
-                if (b.key === 'read') instructionsDynamic += '* فرع القراءة: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') مع فقرة من الدرس (معاني ومفردات + فهم' + (!isPrimary ? ' + المفاهيم الأدبية المحددة' : '') + ').\n';
-                else if (b.key === 'poetry') instructionsDynamic += '* فرع النصوص: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') مع أبيات من النص (معاني ومفردات + شرح وفهم' + (!isPrimary ? ' + مواطن الجمال والبلاغة' : '') + ').\n';
-                else if (b.key === 'grammar') instructionsDynamic += '* فرع النحو: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') تطبيقية مباشرة على القواعد المحددة.\n';
-                else if (b.key === 'dict') instructionsDynamic += '* فرع الإملاء: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') على القواعد الإملائية المحددة.\n';
+                if (b.key === 'read') {
+                    instructionsDynamic += '* فرع القراءة: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') مع فقرة مستخرجة حرفياً من الدرس (معاني ومفردات + فهم' + (!isPrimary ? ' + المفاهيم الأدبية المحددة' : '') + ').\n';
+                    jsonExamples.push('{"section_title":"أولاً: القراءة","context_type":"paragraph","context_text":"الفقرة","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":2}]}');
+                } else if (b.key === 'poetry') {
+                    instructionsDynamic += '* فرع النصوص: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') مع أبيات مستخرجة حرفياً من النص (معاني ومفردات + شرح وفهم' + (!isPrimary ? ' + مواطن الجمال والبلاغة' : '') + ').\n';
+                    jsonExamples.push('{"section_title":"ثانياً: النصوص","context_type":"poetry","verses":[{"part1":"الشطر1","part2":"الشطر2"}],"questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":1}]}');
+                } else if (b.key === 'grammar') {
+                    instructionsDynamic += '* فرع النحو: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') تطبيقية مباشرة بأمثلة جديدة (مع نسبة التراكمي المحددة للصف).\n';
+                    jsonExamples.push('{"section_title":"ثالثاً: النحو","context_type":"none","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":3}]}');
+                } else if (b.key === 'dict') {
+                    instructionsDynamic += '* فرع الإملاء: التزم بـ ' + cnt + ' أسئلة (' + (b.qtype || 'عادي') + ') تطبيقية على القواعد الإملائية المحددة.\n';
+                    jsonExamples.push('{"section_title":"رابعاً: الإملاء","context_type":"none","questions":[{"text":"السؤال","options":["أ","ب","ج","د"],"correctIndex":0}]}');
+                }
             }
 
-            var template = (typeof window.examPromptTemplate === 'string' && window.examPromptTemplate.trim())
-                ? window.examPromptTemplate
-                : 'بصفتك خبيراً في وضع امتحانات اللغة العربية، صمّم اختباراً تفاعلياً للصف ({grade}) بمستوى ({difficulty}) بإجمالي ({count}) سؤالاً، بصيغة JSON صالحة مباشرة بدون أي نص خارج JSON.\n\nالدروس والفروع المطلوبة:\n{lessons}\n\nالتعليمات:\n{instructions}\n{notes}';
+            var notesSection = specificInstructions ? ('ملاحظات إضافية من المعلم:\n' + specificInstructions) : '';
+            var template = (window.currentPlatformSettings && window.currentPlatformSettings.examPromptTemplate)
+                || (document.getElementById('examPromptTemplateInput') && document.getElementById('examPromptTemplateInput').value.trim())
+                || window.DEFAULT_EXAM_PROMPT_TEMPLATE_;
 
             var finalPrompt = template
+                .replace(/\{\{GRADE\}\}/g, grade)
+                .replace(/\{\{COUNT\}\}/g, String(totalQ))
+                .replace(/\{\{DIFF\}\}/g, diff)
+                .replace(/\{\{TARGET_LESSONS\}\}/g, targetLessonsText)
+                .replace(/\{\{SPECIFIC_INSTRUCTIONS\}\}/g, notesSection)
+                .replace(/\{\{INSTRUCTIONS_DYNAMIC\}\}/g, instructionsDynamic)
+                .replace(/\{\{JSON_EXAMPLES\}\}/g, jsonExamples.join(',\n'))
                 .replace(/\{grade\}/g, grade)
                 .replace(/\{difficulty\}/g, diff)
                 .replace(/\{count\}/g, String(totalQ))
                 .replace(/\{lessons\}/g, targetLessonsText)
                 .replace(/\{instructions\}/g, instructionsDynamic)
-                .replace(/\{notes\}/g, specificInstructions || 'لا توجد ملاحظات إضافية.');
+                .replace(/\{notes\}/g, notesSection);
 
+            return { grade: grade, totalQ: totalQ, finalPrompt: finalPrompt };
+        }
+
+        function generateAndCopyGuidedPrompt() {
+            var built = buildGuidedExamPromptPayload_();
+            if (!built) return;
             var ta = document.getElementById('gewGeneratedPrompt');
-            if (ta) ta.value = finalPrompt;
+            if (ta) ta.value = built.finalPrompt;
             var wrap = document.getElementById('gewPromptPreviewWrap');
             if (wrap) wrap.classList.remove('hidden');
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(finalPrompt).then(function() {
+                navigator.clipboard.writeText(built.finalPrompt).then(function() {
                     showNotify('success', 'تم توليد البرومبت ونسخه تلقائياً! الصقه في NotebookLM الآن.');
                 }).catch(function() {
                     showNotify('success', 'تم توليد البرومبت! يمكنك نسخه من الزر بالأسفل.');
@@ -17930,6 +18429,43 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             } else {
                 showNotify('success', 'تم توليد البرومبت بنجاح!');
             }
+        }
+
+        function generateGuidedExamAutoAI(btn) {
+            var built = buildGuidedExamPromptPayload_();
+            if (!built) return;
+            var ctx = window._guidedExamCtx;
+            var t = ctx && ctx.task ? ctx.task : {};
+
+            var origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> (1/2) جاري تجهيز كتاب الصف من درايف...';
+            }
+
+            runGS('prepareCurriculumForGeminiGS', built.grade).then(function(prep) {
+                if (!prep || !prep.success) throw new Error((prep && prep.message) || 'تعذر تجهيز ملف الكتاب من درايف');
+                if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> (2/2) تم تجهيز الكتاب — جاري توليد الأسئلة...';
+                return runGS('generateExamWithGeminiGS', { grade: built.grade, prompt: built.finalPrompt, preparedFiles: prep.files || [] });
+            }).then(function(res) {
+                if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+                if (res && res.success && res.jsonText) {
+                    var titleEl = document.getElementById('gepExamTitle');
+                    if (titleEl && !titleEl.value.trim()) {
+                        titleEl.value = 'اختبار ' + (t.grade || built.grade) + (t.releaseDate ? (' - ' + t.releaseDate) : '');
+                    }
+                    var jsonEl = document.getElementById('gepJsonInput');
+                    if (jsonEl) jsonEl.value = res.jsonText;
+                    var filesMsg = (res.filesUsed && res.filesUsed.length) ? (' — المصادر: ' + res.filesUsed.join('، ')) : '';
+                    showNotify('success', 'تم توليد الاختبار بنجاح (' + (res.modelUsed || 'Gemini') + ')' + filesMsg + ' — يمكنك المراجعة والتعديل الآن!');
+                    openGuidedPreviewStep();
+                } else {
+                    showNotify('error', (res && res.message) || 'تعذر توليد الاختبار تلقائياً.');
+                }
+            }).catch(function(err) {
+                if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+                showNotify('error', (err && err.message) || 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.');
+            });
         }
 
         function copyGuidedExamPromptAgain() {
@@ -17979,10 +18515,18 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
             try {
                 var parsed = JSON.parse(cleaned);
-                var sections = Array.isArray(parsed) ? parsed : (parsed.content || parsed.sections || []);
+                var sections = typeof window.normalizeExamSections_ === 'function'
+                    ? window.normalizeExamSections_(parsed)
+                    : (Array.isArray(parsed) ? parsed : (parsed.content || parsed.sections || []));
                 if (!Array.isArray(sections) || sections.length === 0) throw new Error('تنسيق JSON غير متوقع');
+                window.guidedPreviewSections = sections;
+                var jsonInputEl = document.getElementById('gepJsonInput');
+                if (jsonInputEl) jsonInputEl.value = JSON.stringify(sections, null, 2);
                 if (typeof renderExamSectionsHtml === 'function') {
-                    area.innerHTML = renderExamSectionsHtml(sections, 'guidedPreview');
+                    area.innerHTML = '<div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+                                     '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="stripExamDiacritics(\'guidedPreview\')"><i class="fas fa-eraser"></i> إزالة التشكيل الزائد</button>' +
+                                     '<button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddManualSectionModal(\'guidedPreview\', -1)"><i class="fas fa-plus"></i> إضافة قسم جديد</button></div>' +
+                                     renderExamSectionsHtml(window.guidedPreviewSections, 'guidedPreview');
                 } else {
                     area.innerHTML = '<div style="padding:16px; background:#EAF4EF; color:#134230; border-radius:12px; font-weight:700;"><i class="fas fa-check-circle"></i> كود JSON صالح ويحتوي على ' + sections.length + ' أقسام جاهزة للنشر!</div>';
                 }
@@ -18057,7 +18601,12 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
 
             rawJson = rawJson.replace(/```json/gi, '').replace(/```/g, '').trim();
             var parsedJson;
-            try { parsedJson = JSON.parse(rawJson); } catch (e) { return showNotify('error', 'كود JSON غير صالح للرفع.'); }
+            try {
+                parsedJson = JSON.parse(rawJson);
+                if (typeof window.normalizeExamSections_ === 'function') {
+                    parsedJson = window.normalizeExamSections_(parsedJson);
+                }
+            } catch (e) { return showNotify('error', 'كود JSON غير صالح للرفع.'); }
 
             var t = ctx.task;
             var adv = (ctx.blueprint && ctx.blueprint.advanced) || {};
@@ -18463,6 +19012,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             </div>
             <div style="padding:16px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:12px;">
                 <div id="gewSummaryChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                <div id="gewDriveSourcesInfo" style="font-size:0.8rem; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:8px 12px; color:#334155;"></div>
                 <div id="gewBranchesContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
                 <div id="gewPromptPreviewWrap" class="hidden" style="background:#f8fafc; border:1.5px dashed #94a3b8; border-radius:12px; padding:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -18473,8 +19023,9 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 </div>
             </div>
             <div style="padding:12px 16px; border-top:1px solid #e2e8f0; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <button type="button" class="btn btn-primary" onclick="generateAndCopyGuidedPrompt()" style="flex:1; min-width:200px;"><i class="fas fa-wand-magic-sparkles"></i> توليد ونسخ البرومبت تلقائياً</button>
-                <button type="button" class="btn btn-success" onclick="openGuidedPublishStep()" style="flex:1; min-width:200px;">التالي: لصق الكود ونشر الاختبار <i class="fas fa-arrow-left"></i></button>
+                <button type="button" class="btn btn-success ai-exam-gen-btn" onclick="generateGuidedExamAutoAI(this)" style="flex:1.4; min-width:220px; font-weight:800;"><i class="fas fa-robot"></i> توليد الاختبار تلقائياً من كتب درايف (AI)</button>
+                <button type="button" class="btn btn-outline-primary" onclick="generateAndCopyGuidedPrompt()" style="flex:1; min-width:170px;"><i class="fas fa-copy"></i> نسخ البرومبت لـ NotebookLM</button>
+                <button type="button" class="btn btn-primary" onclick="openGuidedPublishStep()" style="flex:0.9; min-width:160px;">لصق الكود يدوياً <i class="fas fa-arrow-left"></i></button>
             </div>
         </div>
     </div>
