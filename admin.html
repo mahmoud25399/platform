@@ -170,7 +170,7 @@
         .scm-tab.active { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; box-shadow: 0 4px 12px var(--primary-glow); }
         .login-container { position: fixed; inset: 0; background: var(--bg-body); display: flex; justify-content: center; align-items: center; z-index: 2000; }
         .login-card { padding: 40px 32px; width: 90%; max-width: 420px; text-align: center; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(12px); padding: 10px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.62); align-items: center; justify-content: center; z-index: 3000; padding: 10px; }
         .modal-content { background: var(--surface); padding: 24px; border-radius: var(--radius-xl); width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.3); border: 1px solid var(--border); animation: modalPopIn 0.4s cubic-bezier(0.16,1,0.3,1); }
         @keyframes modalPopIn { 0%{opacity:0;transform:scale(0.92) translateY(20px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; }
@@ -1158,6 +1158,23 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="dashStaffQuickActionsWrap" class="hidden" style="margin-top: 0; padding-top: 30px; border-top: 1.5px solid #EFECE3;">
                         <div class="eh-launchpad-grid" id="dashStaffQuickActionsGrid"></div>
                     </div>
+
+                    <!-- Phase 3: رادار الطلاب المتعثرين (إنذار مبكر للمدير والمعلم) -->
+                    <div id="ehAtRiskRadarWrap" class="eh-admin-or-sec-btn" data-sec-check="students" style="margin-top:24px; background:var(--surface,#fff); border:1px solid var(--border); border-right:4px solid #E6B450; border-radius:16px; padding:16px 18px; box-shadow:0 4px 14px rgba(15,23,42,0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:38px; height:38px; border-radius:11px; background:rgba(230,180,80,0.16); color:#B45309; display:flex; align-items:center; justify-content:center; font-size:1.1rem;"><i class="fas fa-radar fa-exclamation-triangle"></i></div>
+                                <div>
+                                    <div style="font-weight:900; color:var(--text-primary); font-size:0.98rem;">رادار الطلاب المتعثرين <span id="ehAtRiskCountBadge" style="background:#FEF3C7; color:#92400E; padding:2px 9px; border-radius:99px; font-size:0.76rem; margin-right:6px;">جاهز للفحص</span></div>
+                                    <div style="font-size:0.8rem; color:var(--gray);">يرصد تلقائيًا من لم يسلّم واجبين فأكثر أو قلّ متوسط اختباراته عن 60% مع زر متابعة فوري لولي الأمر</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadAtRiskStudentsRadarUI(this)" style="border-radius:10px; font-weight:800;">
+                                <i class="fas fa-sync-alt"></i> فحص / تحديث الرادار
+                            </button>
+                        </div>
+                        <div id="ehAtRiskRadarList" style="margin-top:12px; display:none;"></div>
+                    </div>
  </div>
                 <div id="studentsSection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
@@ -1545,23 +1562,42 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <button class="sub-tab" onclick="switchTab('tasmiya', 'reserve')"><i class="fas fa-calendar-check"></i> الحجوزات</button>
                         <button class="sub-tab admin-only-tasmiya-sched-tab" onclick="switchTab('tasmiya', 'schedule'); loadTasmiyaScheduleManager();"><i class="fas fa-clock"></i> مواعيد التسميع والرابط</button>
  </div>
-                    <div id="tasmiyaAdd" class="tab-content">
+                    <div id="tasmiyaAdd" class="tab-content hidden">
                         <div class="form-container">
                             <div class="form-group">
                                 <label>نوع التسجيل</label>
-                                <select class="form-control" onchange="toggleGroupMode(this.value, 'tasmiya')">
+                                <select class="form-control" id="tasmiyaTargetMode" onchange="toggleGroupMode(this.value, 'tasmiya')">
                                     <option value="single">طالب مفرد</option>
                                     <option value="group">صف كامل</option>
+                                    <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                                 </select>
  </div>
                             <div class="form-group tasmiya-single">
                                 <label>الطالب</label>
                                 <select class="form-control student-select" id="tasmiyaStudent"></select>
  </div>
-                            <div class="form-group tasmiya-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="form-group tasmiya-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                                  <div><label>الصف الدراسي</label><select class="form-control grade-select" id="tasmiyaGrade"></select></div>
                                  <div><label>المجموعة</label><select class="form-control group-select" id="tasmiyaGroup"></select></div>
  </div>
+                            <div class="form-group full-width tasmiya-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="tasmiyaMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('tasmiya', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('tasmiya', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="tasmiyaMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('tasmiya', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('tasmiya', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('tasmiya', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('tasmiya', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="tasmiyaMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('tasmiya')" style="margin-bottom:10px;">
+                                <div id="tasmiyaMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
                             <div class="form-group">
                                 <label>التاريخ</label>
                                 <input type="date" class="form-control" id="tasmiyaDate">
@@ -1686,23 +1722,42 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <button class="sub-tab active" onclick="switchTab('wajib', 'add')"><i class="fas fa-plus-circle"></i> تسجيل جديد</button>
                         <button class="sub-tab" onclick="switchTab('wajib', 'correct')"><i class="fas fa-check-double"></i> تصحيح</button>
  </div>
-                    <div id="wajibAdd" class="tab-content">
+                    <div id="wajibAdd" class="tab-content hidden">
                         <div class="form-container">
                             <div class="form-group">
                                 <label>نوع التسجيل</label>
-                                <select class="form-control" onchange="toggleGroupMode(this.value, 'wajib')">
+                                <select class="form-control" id="wajibTargetMode" onchange="toggleGroupMode(this.value, 'wajib')">
                                     <option value="single">طالب مفرد</option>
                                     <option value="group">صف كامل</option>
+                                    <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                                 </select>
  </div>
                             <div class="form-group wajib-single">
                                 <label>الطالب</label>
                                 <select class="form-control student-select" id="wajibStudent"></select>
  </div>
-                            <div class="form-group wajib-group hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="form-group wajib-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                                  <div><label>الصف الدراسي</label><select class="form-control grade-select" id="wajibGrade"></select></div>
                                  <div><label>المجموعة</label><select class="form-control group-select" id="wajibGroup"></select></div>
  </div>
+                            <div class="form-group full-width wajib-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="wajibMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('wajib', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('wajib', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="wajibMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('wajib', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('wajib', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('wajib', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('wajib', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="wajibMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('wajib')" style="margin-bottom:10px;">
+                                <div id="wajibMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
                             <div class="form-group">
                                 <label>التاريخ</label>
                                 <input type="date" class="form-control" id="wajibDate">
@@ -1762,23 +1817,42 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
 
                                         <!-- التبويب الأول: بناء اختبار يدوي متكامل -->
-                    <div id="ikhtibaratManual" class="tab-content">
+                    <div id="ikhtibaratManual" class="tab-content hidden">
                         <div class="form-container">
                             <div class="form-group">
                                 <label>نوع التعيين (لمن هذا الاختبار؟)</label>
                                 <select class="form-control" id="manualExamTargetMode" onchange="toggleGroupMode(this.value, 'ikhtibaratManual')">
                                     <option value="single">طالب مفرد</option>
                                     <option value="group">صف أو مجموعة كاملة</option>
+                                    <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                                 </select>
  </div>
                             <div class="form-group ikhtibaratManual-single">
                                 <label>الطالب</label>
                                 <select class="form-control student-select" id="ikhtibaratManualStudent"></select>
  </div>
-                            <div class="form-group ikhtibaratManual-group hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="form-group ikhtibaratManual-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                                 <div><label>الصف الدراسي</label><select class="form-control grade-select" id="ikhtibaratManualGradeSelect"></select></div>
                                 <div><label>المجموعة</label><select class="form-control group-select" id="ikhtibaratManualGroup"></select></div>
  </div>
+                            <div class="form-group full-width ikhtibaratManual-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="ikhtibaratManualMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('ikhtibaratManual', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('ikhtibaratManual', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="ikhtibaratManualMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('ikhtibaratManual', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('ikhtibaratManual', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('ikhtibaratManual', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('ikhtibaratManual', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="ikhtibaratManualMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('ikhtibaratManual')" style="margin-bottom:10px;">
+                                <div id="ikhtibaratManualMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
                             <div class="form-group full-width">
                                 <label>اسم الاختبار (ليظهر للطلاب)</label>
                                 <input type="text" class="form-control" id="ikhtibaratManualName" placeholder="مثال: اختبار الوحدة الأولى - قراءة ونحو">
@@ -1960,9 +2034,10 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <div class="form-container">
                             <div class="form-group">
                                 <label>نوع التعيين (لمن هذا الاختبار؟)</label>
-                                <select class="form-control" onchange="toggleGroupMode(this.value, 'ikhtibaratJSON')">
+                                <select class="form-control" id="ikhtibaratJSONTargetMode" onchange="toggleGroupMode(this.value, 'ikhtibaratJSON')">
                                     <option value="single">طالب مفرد</option>
                                     <option value="group">صف أو مجموعة كاملة</option>
+                                    <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                                 </select>
  </div>
                             
@@ -1970,10 +2045,28 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                                 <label>الطالب</label>
                                 <select class="form-control student-select" id="ikhtibaratJSONStudent"></select>
  </div>
-                            <div class="form-group ikhtibaratJSON-group hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="form-group ikhtibaratJSON-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                                  <div><label>الصف الدراسي</label><select class="form-control grade-select" id="ikhtibaratJSONGradeSelect"></select></div>
                                  <div><label>المجموعة</label><select class="form-control group-select" id="ikhtibaratJSONGroup"></select></div>
  </div>
+                            <div class="form-group full-width ikhtibaratJSON-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="ikhtibaratJSONMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('ikhtibaratJSON', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('ikhtibaratJSON', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="ikhtibaratJSONMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('ikhtibaratJSON', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('ikhtibaratJSON', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('ikhtibaratJSON', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('ikhtibaratJSON', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="ikhtibaratJSONMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('ikhtibaratJSON')" style="margin-bottom:10px;">
+                                <div id="ikhtibaratJSONMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
                             
                             <div class="form-group full-width">
                                 <label>اسم الاختبار (ليظهر للطلاب)</label>
@@ -2332,23 +2425,43 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                     <div id="hossasSection" class="hidden">
                      <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-video"></i> الحصص</h2>
+                        <div class="eh-sec-actions" style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn btn-sm btn-primary" onclick="openSectionToolModal('hossasAddFormWrap', 'إضافة حصة جديدة')"><i class="fas fa-plus"></i> إضافة حصة جديدة</button></div>
  </div>
-                    <div class="form-container" id="hossasAddFormWrap">
+                    <div class="form-container hidden" id="hossasAddFormWrap">
                         <div class="form-group">
                             <label>نوع التسجيل</label>
-                            <select class="form-control" onchange="toggleGroupMode(this.value, 'hossas')">
+                            <select class="form-control" id="hossasTargetMode" onchange="toggleGroupMode(this.value, 'hossas')">
                                 <option value="single">طالب مفرد</option>
                                 <option value="group">صف كامل</option>
+                                <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                             </select>
  </div>
                         <div class="form-group hossas-single">
                             <label>الطالب</label>
                             <select class="form-control student-select" id="hossasStudent"></select>
  </div>
-                        <div class="form-group hossas-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group hossas-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                              <div><label>اختر الصف</label><select class="form-control grade-select" id="hossasGrade"></select></div>
                              <div><label>اختر المجموعة</label><select class="form-control group-select" id="hossasGroup"></select></div>
  </div>
+                            <div class="form-group full-width hossas-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="hossasMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('hossas', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('hossas', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="hossasMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('hossas', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('hossas', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('hossas', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('hossas', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="hossasMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('hossas')" style="margin-bottom:10px;">
+                                <div id="hossasMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
                         <div class="form-group">
                             <label>عنوان الحصة</label>
                             <input type="text" class="form-control" id="hossasTitle">
@@ -2421,7 +2534,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
                     <div class="sub-tabs" id="perfControlSubTabs" style="margin-bottom:18px;">
                         <button type="button" class="sub-tab active" id="pcTabBtn_analytics" onclick="switchPerfControlTab('analytics')">
-                            <i class="fas fa-chart-line"></i> 1. تحليل أداء الموظفين
+                            <i class="fas fa-chart-line"></i> 1. تحليل الأداء والتقرير اليومي
                         </button>
                         <button type="button" class="sub-tab" id="pcTabBtn_perf" onclick="switchPerfControlTab('perf')">
                             <i class="fas fa-sliders-h"></i> 2. الإعدادات والمهل والتقفيل <span id="pcBadge_perf" style="background:#EAF4EF; color:#134230; padding:1px 8px; border-radius:99px; font-size:0.72rem; font-weight:800; margin-right:6px;">—</span>
@@ -2429,20 +2542,15 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <button type="button" class="sub-tab" id="pcTabBtn_schedule" onclick="switchPerfControlTab('schedule')">
                             <i class="fas fa-calendar-week"></i> 3. جدولة وتوزيع المهام
                         </button>
-                        <button type="button" class="sub-tab" id="pcTabBtn_perms" onclick="switchPerfControlTab('perms')">
-                            <i class="fas fa-user-lock"></i> 4. صلاحيات المساعدين <span id="pcBadge_perms" style="background:#fef3c7; color:#92400e; padding:1px 8px; border-radius:99px; font-size:0.72rem; font-weight:800; margin-right:6px;">—</span>
-                        </button>
-                        <button type="button" class="sub-tab" id="pcTabBtn_daily" onclick="switchPerfControlTab('daily')">
-                            <i class="fas fa-chart-bar"></i> 5. التقرير اليومي الشامل
-                        </button>
                     </div>
 
                     <!-- تبويب 1: تحليل أداء الموظفين -->
                     <div id="pcTab_analytics" class="pc-tab-pane">
                     <div id="employeePerformanceSection" style="margin-top: 0;">
                         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
-                            <h2 style="margin:0; font-size: 1.15rem; color: var(--dark); font-weight: 800;"><i class="fas fa-chart-line" style="color: var(--success);"></i> تحليل أداء الموظفين</h2>
+                            <h2 style="margin:0; font-size: 1.15rem; color: var(--dark); font-weight: 800;"><i class="fas fa-chart-line" style="color: var(--success);"></i> تحليل الأداء والتقرير اليومي</h2>
                             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <select id="empPerfEmployeeSelect" class="form-control" style="width:auto; min-width:185px; font-size:0.85rem; font-weight:700;" onchange="onEmpPerfEmployeeChange(this.value)"></select>
                                 <select id="empPerfRangePreset" class="form-control" style="width:auto; font-size:0.85rem;" onchange="onEmployeePerfPresetChange(this.value)">
                                     <option value="current_month" selected>هذا الشهر (من يوم 1)</option>
                                     <option value="today">اليوم</option>
@@ -2461,6 +2569,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         <p id="empPerfRangeLabel" style="display:none !important;"></p>
                         <div id="employeePerformanceContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
  </div>
+                        <!-- التقرير اليومي الشامل (يوم بيوم) مرتبط تلقائياً بنفس الموظف والفترة المختارة بالأعلى -->
+                        <div style="margin-top:20px;">
+                            <h3 style="margin:0 0 10px 0; font-size:1.02rem; font-weight:800; color:var(--dark);"><i class="fas fa-calendar-alt" style="color:var(--primary); margin-left:6px;"></i>التقرير اليومي (يوم بيوم)</h3>
+                            <div style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; padding:14px;">
+                                <div id="pcDailyReportTable" class="table-responsive"><div style="text-align:center; padding:24px; color:var(--gray);">جاري تحميل التقرير اليومي...</div></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- تبويب 2: إعدادات الأداء + مهل الـ SLA + وقت تقفيل اليوم -->
@@ -2754,51 +2869,21 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                         </div>
                     </div>
 
-                    <!-- تبويب 3: صلاحيات وأقسام المساعدين والموظفين -->
-                    <div id="pcTab_perms" class="pc-tab-pane hidden">
-                        <div style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; padding:16px;">
-                            <div id="pcPermsDataTable" class="table-responsive"></div>
-                        </div>
-                    </div>
 
-                    <!-- تبويب 4: التقرير اليومي الشامل للمدير (الواجب + التسميع + الاختبارات يوم بيوم) -->
-                    <div id="pcTab_daily" class="pc-tab-pane hidden">
-                        <div style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; padding:16px; margin-bottom:14px;">
-                            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; align-items:end;">
-                                <div class="form-group" style="margin:0;">
-                                    <label style="font-size:0.8rem; font-weight:700;">الموظف</label>
-                                    <select id="pcDailyEmpSelect" class="form-control"></select>
-                                </div>
-                                <div class="form-group" style="margin:0;">
-                                    <label style="font-size:0.8rem; font-weight:700;">من تاريخ</label>
-                                    <input type="date" id="pcDailyFromDate" class="form-control">
-                                </div>
-                                <div class="form-group" style="margin:0;">
-                                    <label style="font-size:0.8rem; font-weight:700;">إلى تاريخ</label>
-                                    <input type="date" id="pcDailyToDate" class="form-control">
-                                </div>
-                                <div class="form-group" style="margin:0;">
-                                    <button type="button" class="btn btn-primary" style="width:100%;" onclick="loadManagerDailyReportUI(this)"><i class="fas fa-search"></i> عرض التقرير</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="pcDailySummaryStrip" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:14px;"></div>
-                        <div style="background:var(--surface, #fff); border:1.5px solid var(--border, #e2e8f0); border-radius:14px; padding:14px;">
-                            <div id="pcDailyReportTable" class="table-responsive"><div style="text-align:center; padding:24px; color:var(--gray);">اختر الموظف والفترة لعرض التقرير اليومي الشامل</div></div>
-                        </div>
-                    </div>
                 </div>
 
                 <div id="librarySection" class="hidden">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
                         <h2 class="section-title" style="padding-bottom: 0; border-bottom: none; margin-bottom: 0;"><i class="fas fa-book"></i> المكتبة</h2>
+                        <div class="eh-sec-actions" style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn btn-sm btn-primary" onclick="openSectionToolModal('libraryAddFormWrap', 'إضافة ملف للمكتبة')"><i class="fas fa-plus"></i> إضافة ملف للمكتبة</button></div>
  </div>
-                    <div class="form-container" id="libraryAddFormWrap">
+                    <div class="form-container hidden" id="libraryAddFormWrap">
                         <div class="form-group">
                             <label>نوع الإضافة</label>
-                            <select class="form-control" onchange="toggleGroupMode(this.value, 'library')">
+                            <select class="form-control" id="libraryTargetMode" onchange="toggleGroupMode(this.value, 'library')">
                                 <option value="single">طالب مفرد</option>
                                 <option value="group">صف كامل</option>
+                                <option value="multi">تحديد متعدد (أكتر من صف / مجموعة / طالب)</option>
                             </select>
  </div>
                         
@@ -2807,10 +2892,28 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                             <select class="form-control student-select" id="libraryStudent"></select>
  </div>
                         
-                        <div class="form-group library-group hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group library-group hidden" style="display:none; grid-template-columns:1fr 1fr; gap:10px;">
                              <div><label>اختر الصف</label><select class="form-control grade-select" id="libraryGrade"></select></div>
                              <div><label>اختر المجموعة</label><select class="form-control group-select" id="libraryGroup"></select></div>
  </div>
+                            <div class="form-group full-width library-multi hidden" style="background:var(--surface-hover, #f8fafc); padding:14px; border-radius:12px; border:1px solid var(--border, #e2e8f0);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <label style="margin:0; font-weight:800; color:var(--dark);"><i class="fas fa-tasks" style="color:var(--primary); margin-left:6px;"></i>تحديد متعدد (صفوف / مجموعات / طلاب)</label>
+                                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                        <span id="libraryMultiCount" style="background:var(--primary); color:#fff; padding:3px 10px; border-radius:999px; font-size:0.8rem; font-weight:700;">0 محدد</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleMultiTargets('library', true)">تحديد الظاهر</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectVisibleMultiTargets('library', false)">مسح الكل</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="libraryMultiTabs">
+                                    <button type="button" class="btn btn-sm btn-primary eh-mt-tab" data-tab="all" onclick="setMultiTargetTab('library', 'all', this)">الكل</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="grade" onclick="setMultiTargetTab('library', 'grade', this)">صفوف كاملة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="group" onclick="setMultiTargetTab('library', 'group', this)">صف ومجموعة</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary eh-mt-tab" data-tab="student" onclick="setMultiTargetTab('library', 'student', this)">طلاب</button>
+                                </div>
+                                <input type="text" class="form-control" id="libraryMultiSearch" placeholder="ابحث باسم الصف أو المجموعة أو الطالب..." oninput="filterMultiTargetBox('library')" style="margin-bottom:10px;">
+                                <div id="libraryMultiGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; max-height:240px; overflow-y:auto; padding:4px;"></div>
+                            </div>
 
                         <div class="form-group full-width">
                             <label>اسم الملف (عنوان الظهور)</label>
@@ -3511,7 +3614,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
  </div>
  </div>
     <!-- Start Live Lesson Modal -->
-    <div id="startLiveLessonModal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 1050;">
+    <div id="startLiveLessonModal" class="modal" style="display:none; align-items:center; justify-content:center; z-index: 5500;">
         <div class="modal-content" style="max-width: 550px; width: 92%; padding: 25px; border-radius: 18px; position: relative; background: var(--surface);">
             <span class="close-modal-btn" onclick="closeModal('startLiveLessonModal')" style="position: absolute; left: 20px; top: 20px; cursor: pointer; font-size: 1.3rem; color: var(--gray);"><i class="fas fa-times"></i></span>
             
@@ -4332,6 +4435,15 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         function openModal(modalId) {
             const m = document.getElementById(modalId);
             if(m) {
+                var maxZ = 5500;
+                document.querySelectorAll('.modal, #ehSectionFormModal, #guidedExamWizardModal, #guidedExamPublishModal, #guidedExamPreviewModal').forEach(function(el) {
+                    if (el !== m && !el.classList.contains('hidden') && el.style.display !== 'none' && getComputedStyle(el).display !== 'none') {
+                        var z = parseInt(getComputedStyle(el).zIndex, 10) || 0;
+                        if (z > maxZ) maxZ = z;
+                    }
+                });
+                window.__ehModalZ = Math.max(window.__ehModalZ || 5500, maxZ) + 10;
+                m.style.zIndex = String(window.__ehModalZ);
                 m.classList.remove('hidden');
                 m.style.display = 'flex';
             }
@@ -4764,7 +4876,15 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             // ── المرحلة الأولى (أولوية قصوى للرئيسية وشريط الانضمام السريع) ──
             function fetchScheduleWithRetry_(attempt) {
                 runGS('getScheduleDataAdmin').then(function(data) {
-                    var items = Array.isArray(data) ? data : (data && Array.isArray(data.slots) ? data.slots : []);
+                    var parsed = data;
+                    if (typeof parsed === 'string') {
+                        try { parsed = JSON.parse(parsed); } catch (_pe) { parsed = null; }
+                    }
+                    var items = Array.isArray(parsed)
+                        ? parsed
+                        : (parsed && Array.isArray(parsed.slots) ? parsed.slots
+                        : (parsed && Array.isArray(parsed.items) ? parsed.items : null));
+                    if (!Array.isArray(items)) return;
                     allScheduleData = items;
                     window.allScheduleData  = items;
                     window.__rawScheduleItems = items;
@@ -4777,6 +4897,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 });
             }
             fetchScheduleWithRetry_(1);
+            if (typeof pollTasmiyaForAssistantAlert_ === 'function') pollTasmiyaForAssistantAlert_();
 
             loadDashboardStats();
 
@@ -4962,7 +5083,17 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             handleHashRouting();
         });
 
-        function showSection(id, el) {
+        window._ehSectionLoadedAt = window._ehSectionLoadedAt || {};
+        function shouldReloadSection_(secId, forceRefresh) {
+            if (forceRefresh) return true;
+            const last = window._ehSectionLoadedAt[secId] || 0;
+            const TTL_MS = 5 * 60 * 1000; // 5 دقائق كاش للتنقل الفوري بين الأقسام
+            if (last && (Date.now() - last) < TTL_MS) return false;
+            window._ehSectionLoadedAt[secId] = Date.now();
+            return true;
+        }
+
+        function showSection(id, el, forceRefresh) {
             if (window.location.hash !== '#/' + id) {
                 isRoutingProgrammatically = true;
                 window.location.hash = '/' + id;
@@ -4990,51 +5121,58 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             if (window.innerWidth <= 1024) closeSidebar();
             
-            // تحديث رسالة الترحيب كل ما دخل على الرئيسية
-            if (id === 'dashboard') {
-                updateAdminMotivation();
-                if (typeof initEmpPerfDefaultRange_ === 'function') initEmpPerfDefaultRange_();
-            } else if (id === 'adminFiles') {
-                if (typeof loadAdminFilesUI === 'function') loadAdminFilesUI();
-            } else if (id === 'perfControl') {
+            if (id === 'perfControl') {
                 if (typeof isPlatformAdmin === 'function' && !isPlatformAdmin(window.currentEmployee)) {
                     showNotify('warning', 'هذا القسم متاح للمدير فقط');
                     showSection('dashboard');
                     return;
                 }
+            }
+
+            const _needsLoad = shouldReloadSection_(id, forceRefresh);
+
+            // تحديث رسالة الترحيب كل ما دخل على الرئيسية
+            if (id === 'dashboard') {
+                updateAdminMotivation();
+                if (_needsLoad && typeof initEmpPerfDefaultRange_ === 'function') initEmpPerfDefaultRange_();
+            } else if (id === 'adminFiles' && _needsLoad) {
+                if (typeof loadAdminFilesUI === 'function') loadAdminFilesUI();
+            } else if (id === 'perfControl' && _needsLoad) {
                 if (typeof loadPerfControlHub === 'function') loadPerfControlHub();
             }
 
-            // Refresh & Initialize section data (Protected with Try-Catch)
+            // Refresh & Initialize section data (Protected with Try-Catch — cached for 5 min on tab switch)
             try {
-                if (id === 'students') {
-                    if (typeof loadStudentsManagement === 'function') loadStudentsManagement();
-                } else if (id === 'dashboard') {
-                    if (typeof loadDashboardStats === 'function') loadDashboardStats();
-                } else if (id === 'liveAttendance') {
+                if (id === 'hossas' || id === 'library' || id === 'wajib' || id === 'tasmiya' || id === 'ikhtibarat') {
                     populateAllGradeAndGroupSelects();
-                    if (typeof initLiveAttendanceSection === 'function') initLiveAttendanceSection();
-                    if (typeof loadLiveAttendanceStudents === 'function') loadLiveAttendanceStudents();
-                } else if (id === 'games') {
-                    if (typeof loadGamesAdminSection === 'function') loadGamesAdminSection();
-                } else if (id === 'hossas' || id === 'library' || id === 'wajib' || id === 'tasmiya' || id === 'ikhtibarat') {
-                    populateAllGradeAndGroupSelects();
-                } else if (id === 'reports') {
-                    switchReportTab('stats');
-                    if (typeof loadReportsSectionData === 'function') loadReportsSectionData();
-                } else if (id === 'platformSettings') {
-                    switchTab('platformSettings', 'types');
-                    loadPlatformSettingsUI();
-                } else if (id === 'schedule') {
-                    switchTab('schedule', 'overview');
-                    loadScheduleManagement();
-                } else if (id === 'whatsappSettings') {
-                    switchTab('whatsappSettings', 'manual');
-                    loadWhatsAppSettingsUI();
-                } else if (id === 'users') {
-                    loadEmployeesManagement();
-                } else if (id === 'notifications') {
-                    if (typeof loadNotificationsHistory === 'function') loadNotificationsHistory();
+                } else if (_needsLoad) {
+                    if (id === 'students') {
+                        if (typeof loadStudentsManagement === 'function') loadStudentsManagement();
+                    } else if (id === 'dashboard') {
+                        if (typeof loadDashboardStats === 'function') loadDashboardStats();
+                    } else if (id === 'liveAttendance') {
+                        populateAllGradeAndGroupSelects();
+                        if (typeof initLiveAttendanceSection === 'function') initLiveAttendanceSection();
+                        if (typeof loadLiveAttendanceStudents === 'function') loadLiveAttendanceStudents();
+                    } else if (id === 'games') {
+                        if (typeof loadGamesAdminSection === 'function') loadGamesAdminSection();
+                    } else if (id === 'reports') {
+                        switchReportTab('stats');
+                        if (typeof loadReportsSectionData === 'function') loadReportsSectionData();
+                    } else if (id === 'platformSettings') {
+                        switchTab('platformSettings', 'types');
+                        loadPlatformSettingsUI();
+                    } else if (id === 'schedule') {
+                        switchTab('schedule', 'overview');
+                        loadScheduleManagement();
+                    } else if (id === 'whatsappSettings') {
+                        switchTab('whatsappSettings', 'manual');
+                        loadWhatsAppSettingsUI();
+                    } else if (id === 'users') {
+                        loadEmployeesManagement();
+                    } else if (id === 'notifications') {
+                        if (typeof loadNotificationsHistory === 'function') loadNotificationsHistory();
+                    }
                 }
             } catch (error) {
                 console.error("Error loading section data:", error);
@@ -5392,7 +5530,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             if (statusEl) statusEl.style.display = 'none';
             var saveBtn = document.getElementById('btnSubmitWajibCorrection');
             if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> حفظ التصحيح ورصد الدرجة'; }
-            document.getElementById('correctionModal').style.display = 'flex';
+            openModal('correctionModal');
             initCorrectionUploadUI();
         }
 
@@ -6127,11 +6265,13 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function saveIkhtibaratJSON(btn) {
-            const mode = document.querySelector('.ikhtibaratJSON-single').classList.contains('hidden') ? 'group' : 'single';
+            const modeEl = document.getElementById('ikhtibaratJSONTargetMode') || document.querySelector('#ikhtibaratBuild select[onchange*="toggleGroupMode"]');
+            const mode = modeEl ? modeEl.value : (document.querySelector('.ikhtibaratJSON-single').classList.contains('hidden') ? 'group' : 'single');
             const student = document.getElementById('ikhtibaratJSONStudent').value;
             const gradeName = document.getElementById('ikhtibaratJSONGradeSelect').value;
             const groupName = document.getElementById('ikhtibaratJSONGroup').value;
-            const className = (gradeName && groupName) ? (gradeName + ' - ' + groupName) : gradeName;
+            const multiTargets = mode === 'multi' ? getMultiTargets('ikhtibaratJSON') : [];
+            const className = mode === 'multi' ? multiTargets : ((gradeName && groupName) ? (gradeName + ' - ' + groupName) : gradeName);
             const examName = document.getElementById('ikhtibaratJSONName').value.trim();
             const deadline = document.getElementById('ikhtibaratJSONDeadline').value;
             let rawJson = document.getElementById('ikhtibaratPastedJson').value.trim();
@@ -6140,6 +6280,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             if(!rawJson) return showNotify('error', 'يرجى لصق كود الاختبار (JSON).');
             if(mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب.');
             if(mode === 'group' && !className) return showNotify('error', 'يرجى اختيار الصف.');
+            if(mode === 'multi' && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل.');
 
             rawJson = rawJson.replace(/```json/gi, '').replace(/```/g, '').trim();
             let parsedJson;
@@ -6226,7 +6367,7 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             document.getElementById('tasmiyaEvalGrade').value = '';
             document.getElementById('tasmiyaEvalNotes').value = '';
             onTasmiyaEvalStatusChange('تم التسميع');
-            document.getElementById('tasmiyaEvalModal').style.display = 'flex';
+            openModal('tasmiyaEvalModal');
         }
 
         window._tasmiyaEvalSubmitting = false;
@@ -6338,15 +6479,172 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             });
         }
 
+        window._multiTargetTabState = window._multiTargetTabState || {};
+
         function toggleGroupMode(val, prefix) {
             const singleDiv = document.querySelector(`.${prefix}-single`);
             const groupDiv = document.querySelector(`.${prefix}-group`);
-            if(groupDiv) groupDiv.classList.remove('hidden');
-            if(val === 'group') {
-                if(singleDiv) singleDiv.classList.add('hidden');
+            const multiDiv = document.querySelector(`.${prefix}-multi`);
+            if (val === 'multi') {
+                if (singleDiv) singleDiv.classList.add('hidden');
+                if (groupDiv) { groupDiv.classList.add('hidden'); groupDiv.style.display = 'none'; }
+                if (multiDiv) {
+                    multiDiv.classList.remove('hidden');
+                    renderMultiTargetBox(prefix);
+                }
+            } else if (val === 'group') {
+                if (singleDiv) singleDiv.classList.add('hidden');
+                if (multiDiv) multiDiv.classList.add('hidden');
+                if (groupDiv) { groupDiv.classList.remove('hidden'); groupDiv.style.display = 'grid'; }
             } else {
-                if(singleDiv) singleDiv.classList.remove('hidden');
+                if (singleDiv) singleDiv.classList.remove('hidden');
+                if (multiDiv) multiDiv.classList.add('hidden');
+                if (groupDiv) {
+                    if (prefix === 'report') {
+                        groupDiv.classList.remove('hidden');
+                        groupDiv.style.display = 'grid';
+                    } else {
+                        groupDiv.classList.add('hidden');
+                        groupDiv.style.display = 'none';
+                    }
+                }
             }
+        }
+
+        function ehEscapeAttr_(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderMultiTargetBox(prefix) {
+            const grid = document.getElementById(prefix + 'MultiGrid');
+            if (!grid) return;
+
+            // Preserve any existing checked selections on re-render
+            const prevChecked = new Set(getMultiTargets(prefix));
+            const students = Array.isArray(window.allStudentsFullData) && window.allStudentsFullData.length
+                ? window.allStudentsFullData
+                : (typeof allStudentsFullData !== 'undefined' && Array.isArray(allStudentsFullData) ? allStudentsFullData : []);
+
+            // 1. Whole grades
+            const gradeSet = new Set();
+            const settingsGrades = (window.currentPlatformSettings && Array.isArray(window.currentPlatformSettings.grades)) ? window.currentPlatformSettings.grades : [];
+            settingsGrades.forEach(g => { const s = String(g || '').trim(); if (s) gradeSet.add(s); });
+            const rels = typeof getFilteredRelations === 'function' ? (getFilteredRelations() || []) : [];
+            rels.forEach(r => { if (r && r.grade) gradeSet.add(String(r.grade).trim()); });
+            students.forEach(st => { if (st && st.grade) gradeSet.add(String(st.grade).trim()); });
+
+            // 2. Grade - Group pairs
+            const pairSet = new Set();
+            rels.forEach(r => {
+                if (r && r.grade && r.group) pairSet.add(String(r.grade).trim() + ' - ' + String(r.group).trim());
+            });
+            students.forEach(st => {
+                if (st && st.grade && st.group) pairSet.add(String(st.grade).trim() + ' - ' + String(st.group).trim());
+            });
+
+            // 3. Individual students
+            const studentList = [];
+            const seenSt = new Set();
+            students.forEach(st => {
+                const name = String((st && st.name) || '').trim();
+                if (!name || seenSt.has(name)) return;
+                seenSt.add(name);
+                const sub = [st.grade, st.group].filter(Boolean).join(' - ');
+                studentList.push({ name, sub });
+            });
+            if (studentList.length === 0) {
+                const fallbackSel = document.querySelector(`.${prefix}-single select`);
+                if (fallbackSel) {
+                    Array.from(fallbackSel.options).forEach(opt => {
+                        const v = String(opt.value || '').trim();
+                        if (v && !seenSt.has(v)) { seenSt.add(v); studentList.push({ name: v, sub: '' }); }
+                    });
+                }
+            }
+
+            const items = [];
+            Array.from(gradeSet).forEach(g => items.push({ type: 'grade', value: g, label: g, badge: 'صف كامل' }));
+            Array.from(pairSet).forEach(p => items.push({ type: 'group', value: p, label: p, badge: 'صف ومجموعة' }));
+            studentList.forEach(st => items.push({ type: 'student', value: st.name, label: st.name, badge: st.sub || 'طالب' }));
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--gray); padding:16px;">لا توجد صفوف أو مجموعات أو طلاب متاحين حالياً.</div>';
+                updateMultiTargetCount(prefix);
+                return;
+            }
+
+            grid.innerHTML = items.map(it => {
+                const checkedAttr = prevChecked.has(it.value) ? 'checked' : '';
+                const badgeBg = it.type === 'grade' ? '#e6f4ea' : (it.type === 'group' ? '#eff6ff' : '#fef3c7');
+                const badgeColor = it.type === 'grade' ? '#137333' : (it.type === 'group' ? '#1d4ed8' : '#92400e');
+                return `<label class="eh-mt-item" data-type="${it.type}" data-search="${ehEscapeAttr_((it.label + ' ' + it.badge).toLowerCase())}" style="display:flex; align-items:flex-start; gap:8px; background:var(--surface, #fff); border:1px solid var(--border, #e2e8f0); border-radius:10px; padding:8px 10px; cursor:pointer; margin:0; transition:border-color 0.15s;">` +
+                    `<input type="checkbox" class="eh-mt-cb" value="${ehEscapeAttr_(it.value)}" ${checkedAttr} onchange="updateMultiTargetCount('${prefix}')" style="margin-top:3px; accent-color:var(--primary);">` +
+                    `<span style="display:flex; flex-direction:column; gap:3px; min-width:0; flex:1;">` +
+                        `<span style="font-size:0.86rem; font-weight:700; color:var(--dark); word-break:break-word;">${ehEscapeAttr_(it.label)}</span>` +
+                        `<span style="align-self:flex-start; font-size:0.72rem; font-weight:700; padding:1px 7px; border-radius:999px; background:${badgeBg}; color:${badgeColor};">${ehEscapeAttr_(it.badge)}</span>` +
+                    `</span>` +
+                `</label>`;
+            }).join('');
+
+            filterMultiTargetBox(prefix);
+            updateMultiTargetCount(prefix);
+        }
+
+        function setMultiTargetTab(prefix, tab, btnEl) {
+            window._multiTargetTabState[prefix] = tab;
+            const tabsWrap = document.getElementById(prefix + 'MultiTabs');
+            if (tabsWrap) {
+                tabsWrap.querySelectorAll('.eh-mt-tab').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+            }
+            if (btnEl) {
+                btnEl.classList.remove('btn-outline-secondary');
+                btnEl.classList.add('btn-primary');
+            }
+            filterMultiTargetBox(prefix);
+        }
+
+        function filterMultiTargetBox(prefix) {
+            const grid = document.getElementById(prefix + 'MultiGrid');
+            if (!grid) return;
+            const q = String((document.getElementById(prefix + 'MultiSearch') || {}).value || '').trim().toLowerCase();
+            const activeTab = window._multiTargetTabState[prefix] || 'all';
+            grid.querySelectorAll('.eh-mt-item').forEach(el => {
+                const matchTab = (activeTab === 'all' || el.getAttribute('data-type') === activeTab);
+                const matchQ = (!q || (el.getAttribute('data-search') || '').indexOf(q) !== -1);
+                el.style.display = (matchTab && matchQ) ? 'flex' : 'none';
+            });
+        }
+
+        function selectVisibleMultiTargets(prefix, shouldCheck) {
+            const grid = document.getElementById(prefix + 'MultiGrid');
+            if (!grid) return;
+            if (!shouldCheck) {
+                grid.querySelectorAll('.eh-mt-cb').forEach(cb => { cb.checked = false; });
+            } else {
+                grid.querySelectorAll('.eh-mt-item').forEach(el => {
+                    if (el.style.display !== 'none') {
+                        const cb = el.querySelector('.eh-mt-cb');
+                        if (cb) cb.checked = true;
+                    }
+                });
+            }
+            updateMultiTargetCount(prefix);
+        }
+
+        function updateMultiTargetCount(prefix) {
+            const countEl = document.getElementById(prefix + 'MultiCount');
+            if (!countEl) return;
+            const n = getMultiTargets(prefix).length;
+            countEl.textContent = n + ' محدد';
+        }
+
+        function getMultiTargets(prefix) {
+            const grid = document.getElementById(prefix + 'MultiGrid');
+            if (!grid) return [];
+            return Array.from(grid.querySelectorAll('.eh-mt-cb:checked')).map(cb => cb.value).filter(Boolean);
         }
 
         function getFilteredRelations() {
@@ -6552,6 +6850,8 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
                 { gradeId: 'wajibGrade', groupId: 'wajibGroup' },
                 { gradeId: 'tasmiyaGrade', groupId: 'tasmiyaGroup' },
                 { gradeId: 'ikhtibaratGradeSelect', groupId: 'ikhtibaratGroup' },
+                { gradeId: 'ikhtibaratJSONGradeSelect', groupId: 'ikhtibaratJSONGroup' },
+                { gradeId: 'ikhtibaratManualGradeSelect', groupId: 'ikhtibaratManualGroup' },
                 { gradeId: 'hossasGrade', groupId: 'hossasGroup' },
                 { gradeId: 'libraryGrade', groupId: 'libraryGroup' },
                 { gradeId: 'liveAttendanceGrade', groupId: 'liveAttendanceGroup', onLiveChange: true },
@@ -10144,6 +10444,22 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             if (typeof Swal !== 'undefined') {
                 const hasHtml = /<[a-z][\s\S]*>/i.test(rawMsg);
+                if ((normalizedType === 'success' || normalizedType === 'info') && !hasHtml && rawMsg.length <= 150) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: normalizedType,
+                        title: rawMsg || titles[normalizedType],
+                        showConfirmButton: false,
+                        timer: 2600,
+                        timerProgressBar: true,
+                        didOpen: function(t) {
+                            t.addEventListener('mouseenter', Swal.stopTimer);
+                            t.addEventListener('mouseleave', Swal.resumeTimer);
+                        }
+                    });
+                    return;
+                }
                 const opts = {
                     icon: normalizedType,
                     title: titles[normalizedType],
@@ -10931,9 +11247,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         // ===============================================
 
         function saveWajib(btn) {
-            const modeEl = document.querySelector('#wajibAdd select[onchange*="toggleGroupMode"]');
+            const modeEl = document.getElementById('wajibTargetMode') || (btn && btn.closest('.form-container') && btn.closest('.form-container').querySelector('select[onchange*="toggleGroupMode"]')) || document.querySelector('#wajibAdd select[onchange*="toggleGroupMode"]');
             const mode = modeEl ? modeEl.value : 'single';
             const isGroup = mode === 'group';
+            const isMulti = mode === 'multi';
+            const multiTargets = isMulti ? getMultiTargets('wajib') : [];
             const student = document.getElementById('wajibStudent').value;
             const grade = document.getElementById('wajibGrade').value;
             const group = document.getElementById('wajibGroup').value;
@@ -10945,16 +11263,18 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const deadline = (dlToggle && dlToggle.checked) ? document.getElementById('wajibDeadline').value : '';
 
             if (!lesson) return showNotify('error', 'يرجى إدخال عنوان الدرس');
+            if (isMulti && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل');
             if (isGroup && !grade) return showNotify('error', 'يرجى اختيار الصف');
-            if (!isGroup && !student) return showNotify('error', 'يرجى اختيار الطالب');
+            if (mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب');
 
             const doSave = function(fileBase64, fileName, fileMime) {
                 if (btn) toggleLoading(btn, true);
                 const dataObj = { "تاريخ": date, "عنوان الدرس": lesson, "الصفحات": pages, "تاريخ الانتهاء": deadline };
-                if (!isGroup) dataObj["اسم الطالب"] = student;
+                if (mode === 'single') dataObj["اسم الطالب"] = student;
                 const fileData = fileBase64 ? { base64: fileBase64, name: fileName, mimeType: fileMime } : null;
+                const targetArg = isMulti ? multiTargets : (isGroup ? (group ? (grade + ' - ' + group) : grade) : '');
 
-                runGS('uploadAndSaveWajib', mode, dataObj, isGroup ? (grade + ' - ' + group) : '', fileData)
+                runGS('uploadAndSaveWajib', mode, dataObj, targetArg, fileData)
                     .then(r => showNotify(r && r.success ? 'success' : 'error', r && r.message ? r.message : 'تم الحفظ'))
                     .catch(e => showNotify('error', e.message))
                     .finally(() => { if (btn) toggleLoading(btn, false); });
@@ -10970,9 +11290,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function saveTasmiya(btn) {
-            const modeEl = document.querySelector('#tasmiyaAdd select[onchange*="toggleGroupMode"]');
+            const modeEl = document.getElementById('tasmiyaTargetMode') || (btn && btn.closest('.form-container') && btn.closest('.form-container').querySelector('select[onchange*="toggleGroupMode"]')) || document.querySelector('#tasmiyaAdd select[onchange*="toggleGroupMode"]');
             const mode = modeEl ? modeEl.value : 'single';
             const isGroup = mode === 'group';
+            const isMulti = mode === 'multi';
+            const multiTargets = isMulti ? getMultiTargets('tasmiya') : [];
             const student = document.getElementById('tasmiyaStudent').value;
             const grade = document.getElementById('tasmiyaGrade').value;
             const group = document.getElementById('tasmiyaGroup').value;
@@ -10984,14 +11306,17 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const deadline = (dlToggle && dlToggle.checked) ? document.getElementById('tasmiyaDeadline').value : '';
 
             if (!lesson) return showNotify('error', 'يرجى إدخال عنوان الدرس');
+            if (isMulti && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل');
             if (isGroup && !grade) return showNotify('error', 'يرجى اختيار الصف');
-            if (!isGroup && !student) return showNotify('error', 'يرجى اختيار الطالب');
+            if (mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب');
 
             if (btn) toggleLoading(btn, true);
             const dataObj = { "تاريخ": date, "عنوان الدرس": lesson, "الصفحات": pages, "ملاحظات": notes, "تاريخ الانتهاء": deadline };
-            if (!isGroup) dataObj["اسم الطالب"] = student;
+            if (mode === 'single') dataObj["اسم الطالب"] = student;
 
-            const req = isGroup ? runGS('saveGroupData', 'التسميع', grade, group, dataObj) : runGS('saveTasmiyaData', dataObj);
+            const req = isMulti
+                ? runGS('saveGroupData', 'التسميع', multiTargets, '__MULTI__', dataObj)
+                : (isGroup ? runGS('saveGroupData', 'التسميع', grade, group, dataObj) : runGS('saveTasmiyaData', dataObj));
             req.then(r => showNotify(r && r.success ? 'success' : 'error', r && r.message ? r.message : 'تم الحفظ'))
                .catch(e => showNotify('error', e.message))
                .finally(() => { if (btn) toggleLoading(btn, false); });
@@ -11038,9 +11363,11 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
         }
 
         function saveHossas(btn) {
-            const modeEl = document.querySelector('#hossasSection select[onchange*="toggleGroupMode"]');
+            const modeEl = document.getElementById('hossasTargetMode') || (btn && btn.closest('.form-container') && btn.closest('.form-container').querySelector('select[onchange*="toggleGroupMode"]')) || document.querySelector('#hossasAddFormWrap select[onchange*="toggleGroupMode"]');
             const mode = modeEl ? modeEl.value : 'single';
             const isGroup = mode === 'group';
+            const isMulti = mode === 'multi';
+            const multiTargets = isMulti ? getMultiTargets('hossas') : [];
             const student = document.getElementById('hossasStudent').value;
             const grade = document.getElementById('hossasGrade').value;
             const group = document.getElementById('hossasGroup').value;
@@ -11049,23 +11376,28 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
 
             if (!title) return showNotify('error', 'يرجى إدخال عنوان الحصة');
             if (!link) return showNotify('error', 'يرجى إدخال رابط الحصة');
+            if (isMulti && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل');
             if (isGroup && !grade) return showNotify('error', 'يرجى اختيار الصف');
-            if (!isGroup && !student) return showNotify('error', 'يرجى اختيار الطالب');
+            if (mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب');
 
             if (btn) toggleLoading(btn, true);
             const dataObj = { "عنوان الحصة": title, "الرابط": link };
-            if (!isGroup) dataObj["اسم الطالب"] = student;
+            if (mode === 'single') dataObj["اسم الطالب"] = student;
 
-            const req = isGroup ? runGS('saveGroupData', 'الحصص', grade, group, dataObj) : runGS('saveHossasData', dataObj);
+            const req = isMulti
+                ? runGS('saveGroupData', 'الحصص', multiTargets, '__MULTI__', dataObj)
+                : (isGroup ? runGS('saveGroupData', 'الحصص', grade, group, dataObj) : runGS('saveHossasData', dataObj));
             req.then(r => showNotify(r && r.success ? 'success' : 'error', r && r.message ? r.message : 'تم الحفظ'))
                .catch(e => showNotify('error', e.message))
                .finally(() => { if (btn) toggleLoading(btn, false); });
         }
 
         function saveLibrary(btn) {
-            const modeEl = document.querySelector('#librarySection select[onchange*="toggleGroupMode"]');
+            const modeEl = document.getElementById('libraryTargetMode') || (btn && btn.closest('.form-container') && btn.closest('.form-container').querySelector('select[onchange*="toggleGroupMode"]')) || document.querySelector('#libraryAddFormWrap select[onchange*="toggleGroupMode"]');
             const mode = modeEl ? modeEl.value : 'single';
             const isGroup = mode === 'group';
+            const isMulti = mode === 'multi';
+            const multiTargets = isMulti ? getMultiTargets('library') : [];
             const student = document.getElementById('libraryStudent').value;
             const grade = document.getElementById('libraryGrade').value;
             const group = document.getElementById('libraryGroup').value;
@@ -11075,16 +11407,18 @@ body.dark-mode .swal2-icon.swal2-success [class^=swal2-success-circular-line],
             const fileInp = document.getElementById('libraryFile');
 
             if (!name) return showNotify('error', 'يرجى إدخال اسم الملف');
+            if (isMulti && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل');
             if (isGroup && !grade) return showNotify('error', 'يرجى اختيار الصف');
-            if (!isGroup && !student) return showNotify('error', 'يرجى اختيار الطالب');
+            if (mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب');
 
             const doSave = function(fileBase64, fileName, fileMime) {
                 if (btn) toggleLoading(btn, true);
                 const dataObj = { "اسم الملف": name, "النوع": type, "الرابط": link };
-                if (!isGroup) dataObj["اسم الطالب"] = student;
+                if (mode === 'single') dataObj["اسم الطالب"] = student;
                 const fileData = fileBase64 ? { base64: fileBase64, name: fileName, mimeType: fileMime } : null;
+                const targetArg = isMulti ? multiTargets : (isGroup ? (group ? (grade + ' - ' + group) : grade) : '');
 
-                runGS('uploadAndSaveLibrary', mode, dataObj, isGroup ? (grade + ' - ' + group) : '', fileData)
+                runGS('uploadAndSaveLibrary', mode, dataObj, targetArg, fileData)
                     .then(r => showNotify(r && r.success ? 'success' : 'error', r && r.message ? r.message : 'تم الحفظ'))
                     .catch(e => showNotify('error', e.message))
                     .finally(() => { if (btn) toggleLoading(btn, false); });
@@ -11342,7 +11676,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
         var _heroPillTxt = document.getElementById('myPerfHeroPillText');
         if (_heroPill) { _heroPill.classList.remove('hidden'); _heroPill.style.display = 'inline-flex'; }
         if (_heroPillTxt) _heroPillTxt.innerHTML = comp !== null ? (comp + '<small style="font-size:0.88rem; opacity:0.75; font-weight:700;">/100</small>') : '—';
-        if (!alertWrap.closest('#sectionToolModal')) alertWrap.classList.add('hidden');
+        if (!alertWrap.closest('#ehSectionFormModal')) alertWrap.classList.add('hidden');
         else { alertWrap.classList.remove('hidden'); alertWrap.style.display = 'block'; }
         alertWrap.innerHTML =
         '<div style="background:var(--surface); border:1.5px solid ' + borderCol + '; border-radius:16px; padding:18px; box-shadow:var(--shadow-sm);">' +
@@ -11396,7 +11730,7 @@ function loadMyEmployeePerformanceAlert(forceRefresh) {
             return;
         }
     } else {
-        if (!alertWrap.closest('#sectionToolModal')) alertWrap.classList.add('hidden');
+        if (!alertWrap.closest('#ehSectionFormModal')) alertWrap.classList.add('hidden');
     }
 
     runGS('getEmployeesKPIDashboardGS', firstDayStr, todayStr).then(function(res) {
@@ -11432,6 +11766,7 @@ function refreshEmpPerfDashboard(btn) {
     const to = document.getElementById('empPerfToDate') ? document.getElementById('empPerfToDate').value : '';
     if (btn) toggleLoading(btn, true);
     loadEmployeesPerformanceDashboard(from, to);
+    if (typeof loadManagerDailyReportUI === 'function') loadManagerDailyReportUI();
     setTimeout(function() { if (btn) toggleLoading(btn, false); }, 700);
 }
 
@@ -11521,6 +11856,7 @@ function formatDateYMD_(d) {
 
             if (preset !== 'custom') {
                 loadEmployeesPerformanceDashboard(fromEl.value, toEl.value);
+                if (typeof loadManagerDailyReportUI === 'function') loadManagerDailyReportUI();
             }
         }
 
@@ -11532,6 +11868,16 @@ function applyEmployeePerfDateFilter() {
     //  نمسح الكاش عشان "عرض" يبقى دايماً بيجيب بيانات جديدة
     __empPerfCache = { data: null, timestamp: 0, range: null };
     loadEmployeesPerformanceDashboard(from, to);
+    if (typeof loadManagerDailyReportUI === 'function') loadManagerDailyReportUI();
+}
+
+function onEmpPerfEmployeeChange(empCode) {
+    window._selectedPerfEmpCode = empCode;
+    if (window._lastEmpPerfRes && typeof renderCleanPerf_ === 'function') {
+        var container = document.getElementById('employeePerformanceContainer');
+        if (container) renderCleanPerf_(window._lastEmpPerfRes, document.getElementById('empPerfRangeLabel'), container);
+    }
+    if (typeof loadManagerDailyReportUI === 'function') loadManagerDailyReportUI();
 }
 
 // عرض تحليل أداء الموظفين لفترة معينة (افتراضيًا: اليوم الحالي)
@@ -14986,12 +15332,14 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             const student = document.getElementById('ikhtibaratManualStudent').value;
             const gradeName = document.getElementById('ikhtibaratManualGradeSelect').value;
             const groupName = document.getElementById('ikhtibaratManualGroup').value;
-            const className = (gradeName && groupName) ? (gradeName + ' - ' + groupName) : gradeName;
+            const multiTargets = mode === 'multi' ? getMultiTargets('ikhtibaratManual') : [];
+            const className = mode === 'multi' ? multiTargets : ((gradeName && groupName) ? (gradeName + ' - ' + groupName) : gradeName);
             const examName = document.getElementById('ikhtibaratManualName').value.trim();
 
             if (!examName) return showNotify('error', 'يرجى كتابة اسم الاختبار.');
             if (mode === 'single' && !student) return showNotify('error', 'يرجى اختيار الطالب.');
             if (mode === 'group' && !className) return showNotify('error', 'يرجى اختيار الصف.');
+            if (mode === 'multi' && multiTargets.length === 0) return showNotify('error', 'يرجى تحديد صف أو مجموعة أو طالب واحد على الأقل.');
             if (!window.manualExamSections || window.manualExamSections.length === 0) return showNotify('error', 'أضف قسماً وسؤالاً واحداً على الأقل.');
 
             const examConfig = {
@@ -15699,7 +16047,8 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }
             var sel = document.getElementById('bsEmployeeSelect');
             var wrap = document.getElementById('bsEmpSelectWrap');
-            var targetCode = empCode || (sel && sel.value) || (window.currentEmployee ? window.currentEmployee.code : '');
+            var firstActiveEmp = (Array.isArray(window.allEmployees) ? window.allEmployees.find(function(e) { return e && e.perfEnabled; }) : null);
+            var targetCode = empCode || (sel && sel.value) || (firstActiveEmp ? firstActiveEmp.code : (window.currentEmployee ? window.currentEmployee.code : ''));
 
             if (sel) {
                 var prevVal = sel.value;
@@ -17263,127 +17612,136 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 return sum + wDue + tDue;
             }, 0);
 
-            var html = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">' +
-                '<div class="stat-card" style="padding:16px !important; display:flex; align-items:center; gap:12px;">' +
-                    '<div style="width:42px; height:42px; border-radius:12px; background:' + scoreColor_(avgScore) + '1a; color:' + scoreColor_(avgScore) + '; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-chart-pie"></i></div>' +
-                    '<div><div style="font-size:0.78rem; color:var(--gray); font-weight:700;">متوسط أداء الفريق</div><div style="font-size:1.45rem; font-weight:900; color:' + scoreColor_(avgScore) + ';">' + (avgScore !== null ? avgScore + '%' : '—') + '</div></div>' +
-                '</div>' +
-                '<div class="stat-card" style="padding:16px !important; display:flex; align-items:center; gap:12px;">' +
-                    '<div style="width:42px; height:42px; border-radius:12px; background:rgba(16,185,129,0.12); color:#10b981; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-award"></i></div>' +
-                    '<div style="min-width:0;"><div style="font-size:0.78rem; color:var(--gray); font-weight:700;">الأعلى أداءً</div><div style="font-size:0.98rem; font-weight:800; color:var(--dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (bestEmp ? escapeHtml_(bestEmp.name) : '—') + '</div><div style="font-size:0.74rem; color:#10b981; font-weight:700;">' + (bestEmp ? bestEmp.composite + '/100' : '') + '</div></div>' +
-                '</div>' +
-                '<div class="stat-card" style="padding:16px !important; display:flex; align-items:center; gap:12px;">' +
-                    '<div style="width:42px; height:42px; border-radius:12px; background:rgba(245,158,11,0.12); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-user-clock"></i></div>' +
-                    '<div><div style="font-size:0.78rem; color:var(--gray); font-weight:700;">موظفون يحتاجون متابعة</div><div style="font-size:1.45rem; font-weight:900; color:' + (attentionCount > 0 ? '#f59e0b' : '#10b981') + ';">' + attentionCount + '</div></div>' +
-                '</div>' +
-                '<div class="stat-card" style="padding:16px !important; display:flex; align-items:center; gap:12px;">' +
-                    '<div style="width:42px; height:42px; border-radius:12px; background:rgba(239,68,68,0.12); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;"><i class="fas fa-hourglass-half"></i></div>' +
-                    '<div><div style="font-size:0.78rem; color:var(--gray); font-weight:700;">إجمالي المهام المعلقة</div><div style="font-size:1.45rem; font-weight:900; color:' + (totalPending > 0 ? '#ef4444' : '#10b981') + ';">' + totalPending + '</div></div>' +
-                '</div>' +
-            '</div>';
+            window._lastEmpPerfRes = res;
 
-            var secMeta = {
-                wajib:      { label: 'تصحيح الواجبات',   icon: 'fa-tasks',         color: '#f59e0b', go: ['wajib', 'correct'] },
-                tasmiya:    { label: 'حجوزات التسميع',    icon: 'fa-microphone',    color: '#1A563E', go: ['tasmiya', 'reserve'] },
-                ikhtibarat: { label: 'إعداد الاختبارات',  icon: 'fa-file-contract', color: '#ef4444', go: ['ikhtibarat', 'build'] }
-            };
-
-            var isAdmin = (typeof isPlatformAdmin === 'function' && isPlatformAdmin(window.currentEmployee));
-
-            // 2. Clean Flat Employee Cards (NO nested box-inside-box!)
-            html += '<div style="display:flex; flex-direction:column; gap:16px;">';
-            emps.forEach(function(emp) {
-                var comp = (emp.composite !== null && emp.composite !== undefined) ? emp.composite : null;
-                var c = scoreColor_(comp);
-                var sla = emp.perfSla || { wajib: 48, tasmiya: 48 };
-                var safeCode = escapeHtml_(emp.code || '').replace(/'/g, "\'");
-                var safeName = escapeHtml_(emp.name || 'موظف').replace(/'/g, "\'");
-                var initial = (emp.name || 'م').trim().charAt(0);
-
-                var rowsHtml = '';
-                var kpis = emp.kpis || {};
-                ['wajib', 'tasmiya', 'ikhtibarat'].forEach(function(key) {
-                    var k = kpis[key];
-                    var m = secMeta[key];
-                    if (!k || !m) return;
-                    var hasW = (k.hasWork !== false && k.score !== null && k.score !== undefined);
-                    var sc = hasW ? k.score : null;
-                    var scCol = scoreColor_(sc);
-                    var bl = k.backlog || { total: 0, critical: 0, oldestDays: 0 };
-
-                    var chips = [];
-                    if (!hasW) {
-                        var emptyMsg = (key === 'ikhtibarat' && k.examDayNote) ? k.examDayNote : 'لا توجد مهام مستحقة حتى الآن في هذه الفترة';
-                        chips.push('<span class="emp-perf-chip">' + escapeHtml_(emptyMsg) + '</span>');
-                    } else if (key === 'wajib') {
-                        var overdueW = (bl.aging || 0) + (bl.critical || 0);
-                        var todayPendingW = bl.dueToday || 0;
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#16a34a;"></i> منجز: ' + (k.totalAchievements || 0) + '</span>');
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-exclamation-triangle" style="color:' + (overdueW > 0 ? '#dc2626' : '#16a34a') + ';"></i> متراكم: ' + overdueW + '</span>');
-                        if (bl.upcoming) chips.push('<span class="emp-perf-chip">استحقاق لاحق: ' + bl.upcoming + '</span>');
-                        if (todayPendingW > 0) chips.push('<span class="emp-perf-chip"><i class="fas fa-hourglass-half" style="color:#b45309;"></i> بانتظار اليوم: ' + todayPendingW + '</span>');
-                        chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
-                        chips.push('<span class="emp-perf-chip">الإنتاجية: <b style="color:' + scoreColor_(k.volume) + ';">' + (k.volume != null ? k.volume + '%' : '—') + '</b></span>');
-                        chips.push('<span class="emp-perf-chip">الانتظام: <b style="color:' + scoreColor_(k.consistency) + ';">' + (k.consistency != null ? k.consistency + '%' : '—') + '</b></span>');
-                        if (bl.oldestDays > 0) chips.push('<span class="emp-perf-chip" style="color:#ef4444;">أقدم مهمة: ' + bl.oldestDays + ' يوم</span>');
-                    } else if (key === 'tasmiya') {
-                        var overdueT = (bl.aging || 0) + (bl.critical || 0);
-                        var todayPendingT = bl.dueToday || 0;
-                        var upcomingT = bl.upcoming || 0;
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#10b981;"></i> مقيّم: ' + (k.evaluatedTotal ?? k.totalAchievements ?? 0) + '/' + (k.targetTotal ?? k.totalAchievements ?? 0) + '</span>');
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-exclamation-triangle" style="color:' + (overdueT > 0 ? '#ef4444' : '#10b981') + ';"></i> متأخر: ' + overdueT + '</span>');
-                        if (todayPendingT > 0) chips.push('<span class="emp-perf-chip"><i class="fas fa-hourglass-half" style="color:#b45309;"></i> ضمن المهلة: ' + todayPendingT + '</span>');
-                        if (upcomingT > 0) chips.push('<span class="emp-perf-chip"><i class="fas fa-calendar-alt" style="color:#1A563E;"></i> حجوزات قادمة: ' + upcomingT + '</span>');
-                        chips.push('<span class="emp-perf-chip">الاستجابة: <b style="color:' + scoreColor_(k.responseRate) + ';">' + (k.responseRate != null ? k.responseRate + '%' : '100%') + '</b></span>');
-                        chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
-                        chips.push('<span class="emp-perf-chip">الانتظام: <b style="color:' + scoreColor_(k.consistency) + ';">' + (k.consistency != null ? k.consistency + '%' : '—') + '</b></span>');
-                        if (bl.oldestDays > 0) chips.push('<span class="emp-perf-chip" style="color:#ef4444;">أقدم حجز: ' + bl.oldestDays + ' يوم</span>');
-                    } else if (key === 'ikhtibarat') {
-                        chips.push('<span class="emp-perf-chip"><i class="fas fa-upload" style="color:#1A563E;"></i> مرفوع: ' + (k.publishedCount || k.totalAchievements || 0) + ' اختبار</span>');
-                        chips.push('<span class="emp-perf-chip">تغطية الصفوف: <b style="color:' + scoreColor_(k.gradeCoverage) + ';">' + (k.coveredGrades || 0) + '/' + (k.totalGrades || 0) + ' (' + (k.gradeCoverage || 0) + '%)</b></span>');
-                        if (k.examDayNote) chips.push('<span class="emp-perf-chip" style="color:#0f5d57;"><i class="fas fa-calendar-day"></i> ' + escapeHtml_(k.examDayNote) + '</span>');
+            // تعبئة قائمة الموظف الموحدة أعلى القسم (وتحديد أول موظف مفعّل عليه تحليل الأداء تلقائياً)
+            var empSel = document.getElementById('empPerfEmployeeSelect');
+            var selectedCode = window._selectedPerfEmpCode || (empSel ? empSel.value : '');
+            if (empSel) {
+                var allList = (Array.isArray(emps) && emps.length > 0) ? emps : (Array.isArray(window.allEmployees) ? window.allEmployees : []);
+                empSel.innerHTML = allList.map(function(e) {
+                    return '<option value="' + escapeHtml_(e.code) + '">' + escapeHtml_(e.name || e.code) + (e.role ? (' (' + escapeHtml_(e.role) + ')') : '') + '</option>';
+                }).join('');
+                if (selectedCode && allList.some(function(e) { return String(e.code) === String(selectedCode); })) {
+                    empSel.value = selectedCode;
+                } else {
+                    var defaultEmp = allList.find(function(e) { return e && e.perfEnabled !== false; }) || allList[0];
+                    if (defaultEmp) {
+                        empSel.value = defaultEmp.code;
+                        selectedCode = defaultEmp.code;
+                        window._selectedPerfEmpCode = selectedCode;
                     }
+                }
+            }
 
-                    var accumPill = k.isAccumulating
-                        ? '<span style="background:rgba(239,68,68,0.12); color:#ef4444; padding:3px 10px; border-radius:20px; font-size:0.74rem; font-weight:700;">' + escapeHtml_(k.accumulationSummary || 'مراكم') + '</span>'
-                        : (hasW ? '<span style="background:rgba(16,185,129,0.12); color:#10b981; padding:3px 10px; border-radius:20px; font-size:0.74rem; font-weight:700;">منتظم</span>' : '');
+            var emp = emps.find(function(e) { return String(e.code) === String(selectedCode); }) || emps[0];
+            if (!emp) {
+                container.innerHTML = '<div style="text-align:center; padding:24px; color:var(--gray);">لا توجد بيانات أداء لهذا الموظف في الفترة المحددة.</div>';
+                return;
+            }
+            window._selectedPerfEmpCode = emp.code;
 
-                    rowsHtml += '<div class="emp-perf-row" onclick="showSection(\'' + m.go[0] + '\'); setTimeout(function(){ switchTab(\'' + m.go[0] + '\', \'' + m.go[1] + '\'); }, 60);">' +
-                        '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
-                            '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
-                                '<span style="width:32px; height:32px; border-radius:9px; background:' + m.color + '1a; color:' + m.color + '; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;"><i class="fas ' + m.icon + '"></i></span>' +
-                                '<strong style="font-size:0.96rem; color:var(--dark);">' + m.label + '</strong>' +
-                                accumPill +
-                            '</div>' +
-                            '<div style="display:flex; align-items:center; gap:10px;">' +
-                                '<div style="width:90px; height:7px; background:rgba(148,163,184,0.2); border-radius:99px; overflow:hidden;"><div style="width:' + (sc !== null ? sc : 0) + '%; height:100%; background:' + scCol + '; border-radius:99px;"></div></div>' +
-                                '<strong style="font-size:1.05rem; color:' + scCol + '; min-width:52px; text-align:left;">' + (sc !== null ? sc + '<span style="font-size:0.72rem; color:var(--gray);">/100</span>' : '—') + '</strong>' +
-                            '</div>' +
+            // تشغيل التقرير اليومي تلقائياً لنفس الموظف والفترة
+            var _curFrom = (document.getElementById('empPerfFromDate') || {}).value || '';
+            var _curTo = (document.getElementById('empPerfToDate') || {}).value || '';
+            var _syncKey = String(emp.code) + '|' + _curFrom + '|' + _curTo;
+            if (window._lastDailySyncedKey !== _syncKey && typeof loadManagerDailyReportUI === 'function') {
+                window._lastDailySyncedKey = _syncKey;
+                setTimeout(function() { loadManagerDailyReportUI(); }, 30);
+            }
+
+            var comp = (emp.composite !== null && emp.composite !== undefined) ? emp.composite : null;
+            var c = scoreColor_(comp);
+            var kpis = emp.kpis || {};
+            var overallBadgeText = comp === null ? 'جاري' : (comp >= 85 ? 'ممتاز' : (comp >= 70 ? 'جيد جداً' : (comp >= 50 ? 'جيد' : 'يحتاج متابعة')));
+
+            function buildSectionCardHtml_(key, title, icon, accent, goTarget) {
+                var k = kpis[key];
+                if (!k) {
+                    return '<div class="stat-card" style="padding:16px !important; display:flex; flex-direction:column; gap:10px;">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                            '<div style="display:flex; align-items:center; gap:8px;"><span style="width:32px; height:32px; border-radius:9px; background:' + accent + '1a; color:' + accent + '; display:inline-flex; align-items:center; justify-content:center;"><i class="fas ' + icon + '"></i></span><strong style="font-size:0.95rem; color:var(--dark);">' + title + '</strong></div>' +
+                            '<strong style="font-size:1.05rem; color:var(--gray);">—</strong>' +
                         '</div>' +
-                        '<div style="display:flex; flex-wrap:wrap; gap:7px; padding-right:42px;">' + chips.join('') + '</div>' +
+                        '<div style="font-size:0.8rem; color:var(--gray);">غير مفعّل لهذا الموظف</div>' +
                     '</div>';
-                });
+                }
+                var hasW = (k.hasWork !== false && k.score !== null && k.score !== undefined);
+                var sc = hasW ? k.score : null;
+                var scCol = scoreColor_(sc);
+                var bl = k.backlog || { total: 0, critical: 0, aging: 0, dueToday: 0 };
+                var chips = [];
 
-                html += '<div class="emp-perf-flat-card">' +
-                    '<div class="emp-perf-flat-head">' +
-                        '<div style="display:flex; align-items:center; gap:12px;">' +
-                            '<div style="width:42px; height:42px; border-radius:50%; background:' + c + '1f; color:' + c + '; font-weight:900; font-size:1.05rem; display:flex; align-items:center; justify-content:center;">' + escapeHtml_(initial) + '</div>' +
-                            '<div>' +
-                                '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
-                                    '<strong style="font-size:1.05rem; color:var(--dark);">' + escapeHtml_(emp.name || 'موظف') + '</strong>' +
-                                    '<span class="emp-perf-chip" style="padding:2px 8px; font-size:0.73rem;">' + escapeHtml_(emp.role || '') + '</span>' +
-                                '</div>' +
-                            '</div>' +
+                if (!hasW) {
+                    var emptyMsg = '';
+                    if (key === 'ikhtibarat' && k.examDayNote) emptyMsg = k.examDayNote;
+                    else if (key === 'tasmiya' && (bl.dueToday || 0) > 0) emptyMsg = 'بانتظار اليوم: ' + bl.dueToday + ' حجز (لم يحن موعدها بعد)';
+                    else if (key === 'wajib' && (bl.dueToday || 0) > 0) emptyMsg = 'بانتظار اليوم: ' + bl.dueToday + ' واجب مجدول';
+                    else emptyMsg = 'لا توجد مهام مستحقة في هذه الفترة';
+                    chips.push('<span class="emp-perf-chip">' + escapeHtml_(emptyMsg) + '</span>');
+                } else if (key === 'wajib') {
+                    var overdueW = (bl.aging || 0) + (bl.critical || 0);
+                    var todayPendingW = bl.dueToday || 0;
+                    var wDoneCnt = k.totalAchievements || 0;
+                    var wExpCnt = (k.expectedTotal != null && k.expectedTotal > 0) ? k.expectedTotal : wDoneCnt;
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#16a34a;"></i> منجز: ' + wDoneCnt + '/' + wExpCnt + '</span>');
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-exclamation-triangle" style="color:' + (overdueW > 0 ? '#dc2626' : '#16a34a') + ';"></i> متأخر: ' + overdueW + '</span>');
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-hourglass-half" style="color:#b45309;"></i> بانتظار اليوم: ' + todayPendingW + '</span>');
+                    chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
+                    chips.push('<span class="emp-perf-chip">الإنتاجية: <b style="color:' + scoreColor_(k.volume) + ';">' + (k.volume != null ? k.volume + '%' : '—') + '</b></span>');
+                    chips.push('<span class="emp-perf-chip">الانتظام: <b style="color:' + scoreColor_(k.consistency) + ';">' + (k.consistency != null ? k.consistency + '%' : '—') + '</b></span>');
+                } else if (key === 'tasmiya') {
+                    var overdueT = (bl.aging || 0) + (bl.critical || 0);
+                    var todayPendingT = bl.dueToday || 0;
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-check" style="color:#10b981;"></i> منجز: ' + (k.evaluatedTotal ?? k.totalAchievements ?? 0) + '/' + (k.targetTotal ?? k.totalAchievements ?? 0) + '</span>');
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-exclamation-triangle" style="color:' + (overdueT > 0 ? '#ef4444' : '#10b981') + ';"></i> متأخر: ' + overdueT + '</span>');
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-hourglass-half" style="color:#b45309;"></i> بانتظار اليوم: ' + todayPendingT + '</span>');
+                    chips.push('<span class="emp-perf-chip">الالتزام بالوقت: <b style="color:' + scoreColor_(k.timeliness) + ';">' + (k.timeliness != null ? k.timeliness + '%' : '—') + '</b></span>');
+                    chips.push('<span class="emp-perf-chip">الإنتاجية: <b style="color:' + scoreColor_(k.responseRate) + ';">' + (k.responseRate != null ? k.responseRate + '%' : '100%') + '</b></span>');
+                    chips.push('<span class="emp-perf-chip">الانتظام: <b style="color:' + scoreColor_(k.consistency) + ';">' + (k.consistency != null ? k.consistency + '%' : '—') + '</b></span>');
+                } else if (key === 'ikhtibarat') {
+                    chips.push('<span class="emp-perf-chip"><i class="fas fa-upload" style="color:#1A563E;"></i> منجز: ' + (k.publishedCount || k.totalAchievements || 0) + ' اختبار</span>');
+                    chips.push('<span class="emp-perf-chip">تغطية الصفوف: <b style="color:' + scoreColor_(k.gradeCoverage) + ';">' + (k.coveredGrades || 0) + '/' + (k.totalGrades || 0) + ' (' + (k.gradeCoverage || 0) + '%)</b></span>');
+                    if (k.examDayNote) chips.push('<span class="emp-perf-chip" style="color:#0f5d57;"><i class="fas fa-calendar-day"></i> ' + escapeHtml_(k.examDayNote) + '</span>');
+                }
+
+                var statusPill = k.isAccumulating
+                    ? '<span style="background:rgba(239,68,68,0.12); color:#ef4444; padding:2px 9px; border-radius:20px; font-size:0.72rem; font-weight:700;">متأخر</span>'
+                    : (hasW ? '<span style="background:rgba(16,185,129,0.12); color:#10b981; padding:2px 9px; border-radius:20px; font-size:0.72rem; font-weight:700;">منتظم</span>' : '');
+
+                return '<div class="stat-card" onclick="showSection(\'' + goTarget[0] + '\'); setTimeout(function(){ switchTab(\'' + goTarget[0] + '\', \'' + goTarget[1] + '\'); }, 60);" style="cursor:pointer; padding:16px !important; display:flex; flex-direction:column; gap:10px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">' +
+                        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                            '<span style="width:32px; height:32px; border-radius:9px; background:' + accent + '1a; color:' + accent + '; display:inline-flex; align-items:center; justify-content:center;"><i class="fas ' + icon + '"></i></span>' +
+                            '<strong style="font-size:0.95rem; color:var(--dark);">' + title + '</strong>' +
+                            statusPill +
                         '</div>' +
-                        '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
-                            ((emp.activeSchedule && emp.activeSchedule.missedCount > 0) ? ('<span style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; padding:5px 10px; border-radius:10px; font-size:0.76rem; font-weight:800;"><i class="fas fa-exclamation-triangle"></i> متأخر عن الجدولة: ' + emp.activeSchedule.missedCount + ' مهمة</span>') : '') +
-                            '<div style="background:' + c + '1a; border:1px solid ' + c + '44; color:' + c + '; padding:6px 14px; border-radius:12px; font-weight:900; font-size:0.95rem;">' + scoreLabel_(comp) + ' &nbsp;' + (comp !== null ? comp + '/100' : '—') + '</div>' +
+                        '<strong style="font-size:1.1rem; color:' + scCol + ';">' + (sc !== null ? (sc + '<span style="font-size:0.72rem; color:var(--gray);">/100</span>') : '—') + '</strong>' +
+                    '</div>' +
+                    '<div style="width:100%; height:6px; background:rgba(148,163,184,0.18); border-radius:99px; overflow:hidden;"><div style="width:' + (sc !== null ? sc : 0) + '%; height:100%; background:' + scCol + '; border-radius:99px;"></div></div>' +
+                    '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + chips.join('') + '</div>' +
+                '</div>';
+            }
+
+            var html = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">' +
+                '<div class="stat-card" style="padding:18px !important; display:flex; flex-direction:column; justify-content:space-between; gap:10px; border:1.5px solid ' + c + '44; background:linear-gradient(135deg, ' + c + '0d, var(--surface, #fff));">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div>' +
+                            '<div style="font-size:0.76rem; color:var(--gray); font-weight:700;">التقييم الإجمالي</div>' +
+                            '<div style="font-size:1rem; font-weight:800; color:var(--dark); margin-top:2px;">' + escapeHtml_(emp.name || emp.code) + '</div>' +
+                            '<div style="font-size:0.74rem; color:var(--gray);">' + escapeHtml_(emp.role || 'مساعد معلم') + '</div>' +
+                        '</div>' +
+                        '<div style="text-align:left;">' +
+                            '<div style="font-size:1.85rem; font-weight:900; color:' + c + '; line-height:1;">' + (comp !== null ? (comp + '%') : '—') + '</div>' +
+                            '<span style="display:inline-block; margin-top:4px; background:' + c + '1a; color:' + c + '; padding:2px 10px; border-radius:99px; font-size:0.74rem; font-weight:800;">' + overallBadgeText + '</span>' +
                         '</div>' +
                     '</div>' +
-                    '<div>' + (emp.notStartedYet ? ('<div style="padding:18px; text-align:center; color:#134230; background:#EAF4EF; font-weight:700; font-size:0.9rem;"><i class="fas fa-hourglass-start" style="margin-left:6px;"></i> لم يبدأ التقييم بعد — يبدأ احتساب أداء هذا الموظف تلقائياً اعتباراً من يوم ' + escapeHtml_(emp.perfStartDate || '') + ' (مع عزل كل التراكمات والاختبارات السابقة)</div>') : (rowsHtml || '<div style="padding:18px; text-align:center; color:var(--gray);">لا توجد أقسام مراقبة لهذا الموظف.</div>')) + '</div>' +
-                '</div>';
-            });
-            html += '</div>';
+                    '<div style="width:100%; height:7px; background:rgba(148,163,184,0.2); border-radius:99px; overflow:hidden;"><div style="width:' + (comp !== null ? comp : 0) + '%; height:100%; background:' + c + '; border-radius:99px;"></div></div>' +
+                '</div>' +
+                buildSectionCardHtml_('wajib', 'تصحيح الواجبات', 'fa-tasks', '#f59e0b', ['wajib', 'correct']) +
+                buildSectionCardHtml_('tasmiya', 'حجوزات التسميع', 'fa-microphone', '#1A563E', ['tasmiya', 'reserve']) +
+                buildSectionCardHtml_('ikhtibarat', 'إعداد الاختبارات', 'fa-file-contract', '#ef4444', ['ikhtibarat', 'build']) +
+            '</div>';
 
             container.innerHTML = html;
         }
@@ -17699,20 +18057,27 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             }).join('');
         }
 
-        function switchPerfControlTab(tabKey, empCodeForSchedule) {
-            var tabs = ['analytics', 'perf', 'schedule', 'perms', 'daily'];
+        window._pcTabLoadedAt = window._pcTabLoadedAt || {};
+        function switchPerfControlTab(tabKey, empCodeForSchedule, forceRefresh) {
+            if (tabKey === 'daily' || tabKey === 'perms') tabKey = 'analytics';
+            var tabs = ['analytics', 'perf', 'schedule'];
             tabs.forEach(function(k) {
                 var pane = document.getElementById('pcTab_' + k);
                 var btn = document.getElementById('pcTabBtn_' + k);
                 if (pane) pane.classList.toggle('hidden', k !== tabKey);
                 if (btn) btn.classList.toggle('active', k === tabKey);
             });
+            var nowTs = Date.now();
+            var lastTs = window._pcTabLoadedAt[tabKey] || 0;
+            var isFresh = !forceRefresh && !empCodeForSchedule && lastTs && (nowTs - lastTs) < (5 * 60 * 1000);
+            if (isFresh) return;
+            window._pcTabLoadedAt[tabKey] = nowTs;
+
             if (tabKey === 'analytics') {
                 if (typeof loadEmployeesPerformanceDashboard === 'function') loadEmployeesPerformanceDashboard();
+                if (typeof initManagerDailyReportTab_ === 'function') initManagerDailyReportTab_(empCodeForSchedule);
             } else if (tabKey === 'schedule') {
                 initWajibScheduleTab(empCodeForSchedule);
-            } else if (tabKey === 'daily') {
-                initManagerDailyReportTab_(empCodeForSchedule);
             }
         }
 
@@ -17734,6 +18099,10 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                 }
                 window.allEmployees = res.employees || [];
                 renderPerfControlHubUI_();
+                if (btn) window._pcTabLoadedAt = {};
+                var activePcBtn = document.querySelector('#perfControlSubTabs .sub-tab.active');
+                var activePcKey = activePcBtn ? activePcBtn.id.replace('pcTabBtn_', '') : 'analytics';
+                switchPerfControlTab(activePcKey, null, !!btn);
             }).catch(function(err) {
                 if (btn) toggleLoading(btn, false);
                 showNotify('error', err.message);
@@ -17977,21 +18346,35 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             var toEl = document.getElementById('pcDailyToDate');
             var fromEl = document.getElementById('pcDailyFromDate');
             var nowD = new Date();
-            if (toEl && !toEl.value) toEl.value = getLocalDateString();
-            if (fromEl && !fromEl.value) {
-                var d7 = new Date(nowD.getTime() - 6 * 86400000);
-                fromEl.value = d7.getFullYear() + '-' + String(d7.getMonth() + 1).padStart(2, '0') + '-' + String(d7.getDate()).padStart(2, '0');
+            if (!window._pcDailyRangeInitialized) {
+                window._pcDailyRangeInitialized = true;
+                var firstOfMonth = nowD.getFullYear() + '-' + String(nowD.getMonth() + 1).padStart(2, '0') + '-01';
+                if (fromEl) fromEl.value = firstOfMonth;
+                if (toEl) toEl.value = getLocalDateString();
+            } else {
+                if (toEl && !toEl.value) toEl.value = getLocalDateString();
+                if (fromEl && !fromEl.value) {
+                    fromEl.value = nowD.getFullYear() + '-' + String(nowD.getMonth() + 1).padStart(2, '0') + '-01';
+                }
             }
             loadManagerDailyReportUI();
         }
 
         function loadManagerDailyReportUI(btn) {
-            var empCode = (document.getElementById('pcDailyEmpSelect') || {}).value;
-            var fromD = (document.getElementById('pcDailyFromDate') || {}).value;
-            var toD = (document.getElementById('pcDailyToDate') || {}).value;
+            var topSel = document.getElementById('empPerfEmployeeSelect');
+            var empCode = window._selectedPerfEmpCode || (topSel && topSel.value) || ((Array.isArray(window.allEmployees) && (window.allEmployees.find(function(e){ return e && e.perfEnabled; }) || window.allEmployees[0])) || {}).code || '';
+            var nowD = new Date();
+            var defaultFrom = nowD.getFullYear() + '-' + String(nowD.getMonth() + 1).padStart(2, '0') + '-01';
+            var defaultTo = getLocalDateString();
+            var fromD = (document.getElementById('empPerfFromDate') || {}).value || defaultFrom;
+            var toD = (document.getElementById('empPerfToDate') || {}).value || defaultTo;
             var tbl = document.getElementById('pcDailyReportTable');
             var strip = document.getElementById('pcDailySummaryStrip');
-            if (!empCode) return;
+            if (!empCode) {
+                if (tbl) tbl.innerHTML = '<div style="text-align:center; padding:24px; color:var(--gray);">لا يوجد موظف محدد لعرض التقرير اليومي.</div>';
+                return;
+            }
+            window._lastDailySyncedKey = String(empCode) + '|' + fromD + '|' + toD;
             if (btn) toggleLoading(btn, true);
             if (tbl) tbl.innerHTML = '<div class="eh-skel-box"><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div><div class="eh-skel-row"></div></div>';
 
@@ -20173,7 +20556,7 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
     </style>
 
     <!-- النافذة المنبثقة الموحدة لإضافة وتسجيل المهام (الواجب / التسميع / الاختبارات) -->
-    <div id="ehSectionFormModal" class="hidden" style="position:fixed; inset:0; z-index:9940; background:rgba(15,23,42,0.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:12px;">
+    <div id="ehSectionFormModal" class="hidden" style="position:fixed; inset:0; z-index:3200; background:rgba(15,23,42,0.55); display:none; align-items:center; justify-content:center; padding:12px;">
         <div style="background:var(--surface, #fff); width:min(980px, 96vw); max-height:90vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 22px 55px rgba(10,32,22,0.28); border:1px solid var(--border);">
             <div style="background:linear-gradient(135deg, #1E6146, #154733); color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
                 <strong id="ehSectionFormModalTitle" style="font-size:1rem; font-weight:900; display:flex; align-items:center; gap:8px;"><i class="fas fa-layer-group" style="color:#E6B450;"></i> <span></span></strong>
@@ -20258,7 +20641,14 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (m && ev.target === m) closeSectionToolModal();
         });
         document.addEventListener('keydown', function(ev) {
-            if (ev.key === 'Escape') closeSectionToolModal();
+            if (ev.key !== 'Escape') return;
+            var hasHigherModal = false;
+            document.querySelectorAll('.modal, #guidedExamWizardModal, #guidedExamPublishModal, #guidedExamPreviewModal').forEach(function(el) {
+                if (!el.classList.contains('hidden') && el.style.display !== 'none' && getComputedStyle(el).display !== 'none') {
+                    hasHigherModal = true;
+                }
+            });
+            if (!hasHigherModal) closeSectionToolModal();
         });
 
         function syncFooterWhiteboardAndSectionButtons_() {
@@ -20711,8 +21101,11 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
                     }
                     if (Array.isArray(items)) {
                         window.allScheduleData = items;
+                        window.__rawScheduleItems = items;
                         if (typeof allScheduleData !== 'undefined') allScheduleData = items;
+                        try { if (typeof adminCacheKey_ === 'function') localStorage.setItem(adminCacheKey_('cachedAdminSchedule_v1'), JSON.stringify(items)); } catch(_se) {}
                         if (typeof renderScheduleCardsOverview === 'function') renderScheduleCardsOverview(items);
+                        if (typeof updateDashboardUpcomingLessonBanner === 'function') updateDashboardUpcomingLessonBanner();
                     }
                 }).catch(function() {});
             }
@@ -20948,7 +21341,12 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             if (!canTasmiya) return;
             if (typeof runGS === 'function') {
                 runGS('getPendingReservedTasmiya').then(function(data) {
-                    window._ehCachedTasmiyaList = Array.isArray(data) ? data : [];
+                    var parsed = data;
+                    if (typeof parsed === 'string') {
+                        try { parsed = JSON.parse(parsed); } catch (_pe) { parsed = null; }
+                    }
+                    if (!Array.isArray(parsed)) return;
+                    window._ehCachedTasmiyaList = parsed;
                     updateUpcomingTasmiyaBanner_();
                 }).catch(function() {});
             }
@@ -20960,5 +21358,246 @@ function loadEmployeesPerformanceDashboard(startDate, endDate) {
             setInterval(pollTasmiyaForAssistantAlert_, 120000);
         });
     </script>
+
+    <style id="eh-phase2-3-upgrades">
+        /* Phase 2: تثبيت رؤوس الجداول عند التمرير لتحسين قراءة البيانات الكثيفة */
+        .table-responsive {
+            max-height: 70vh;
+            overflow: auto;
+        }
+        .table-responsive table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--surface-hover, #F3F6F4);
+            box-shadow: 0 1px 0 var(--border, #E5E7EB);
+        }
+        /* Compact clean toast styling */
+        .swal2-popup.swal2-toast {
+            border-radius: 12px !important;
+            border-right: 4px solid #1A563E !important;
+            font-family: 'Cairo', sans-serif !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14) !important;
+        }
+    </style>
+
+    <script>
+        window.loadAtRiskStudentsRadarUI = function(btn) {
+            var listEl = document.getElementById('ehAtRiskRadarList');
+            var badgeEl = document.getElementById('ehAtRiskCountBadge');
+            if (!listEl) return;
+            if (btn && typeof toggleLoading === 'function') toggleLoading(btn, true);
+            listEl.style.display = 'block';
+            listEl.innerHTML = '<div style="padding:14px; text-align:center; color:var(--gray); font-size:0.86rem;"><i class="fas fa-spinner fa-spin"></i> جاري فحص الواجبات والاختبارات...</div>';
+            var empCode = (window.currentEmployee && window.currentEmployee.code) ? window.currentEmployee.code : '';
+            runGS('getAtRiskStudentsRadarGS', empCode).then(function(res) {
+                if (!res || !res.success) {
+                    listEl.innerHTML = '<div style="padding:12px; color:#dc2626; font-size:0.86rem;">تعذر تحميل بيانات الرادار حاليًا.</div>';
+                    return;
+                }
+                var items = Array.isArray(res.items) ? res.items : [];
+                if (badgeEl) {
+                    badgeEl.textContent = items.length > 0 ? (items.length + ' طالب يحتاج متابعة') : 'الجميع منتظم ✓';
+                    badgeEl.style.background = items.length > 0 ? '#FEE2E2' : '#EAF4EF';
+                    badgeEl.style.color = items.length > 0 ? '#991B1B' : '#134230';
+                }
+                if (items.length === 0) {
+                    listEl.innerHTML = '<div style="padding:14px; text-align:center; color:#134230; background:#EAF4EF; border-radius:12px; font-weight:700; font-size:0.88rem;"><i class="fas fa-check-circle"></i> ممتاز! لا يوجد طلاب متعثرون حاليًا وفق المعايير.</div>';
+                    return;
+                }
+                var rowsHtml = items.map(function(st) {
+                    var phone = String(st.parentPhone || '').replace(/[^\d]/g, '');
+                    if (phone.indexOf('01') === 0) phone = '2' + phone;
+                    var msg = 'السلام عليكم ولي أمر الطالب ' + st.name + '، نود المتابعة معكم بخصوص مستوى الطالب في منصة الهليهي (' + (st.reasons || []).join('، ') + ').';
+                    var waBtn = phone
+                        ? '<a href="https://wa.me/' + phone + '?text=' + encodeURIComponent(msg) + '" target="_blank" class="btn btn-sm" style="background:#1A563E; color:#fff; border-radius:8px; font-size:0.78rem; padding:5px 10px; white-space:nowrap;"><i class="fab fa-whatsapp" style="color:#E6B450;"></i> واتساب ولي الأمر</a>'
+                        : '<span style="font-size:0.76rem; color:var(--gray);">لا يوجد رقم</span>';
+                    var tags = (st.reasons || []).map(function(r) {
+                        return '<span style="display:inline-block; background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:99px; font-size:0.75rem; font-weight:700; margin-left:4px;">' + r + '</span>';
+                    }).join('');
+                    return '<tr>' +
+                        '<td style="font-weight:800;">' + st.name + (st.code ? ' <small style="color:var(--gray);">(' + st.code + ')</small>' : '') + '</td>' +
+                        '<td>' + (st.grade || '—') + (st.group ? ' — ' + st.group : '') + '</td>' +
+                        '<td>' + tags + '</td>' +
+                        '<td>' + waBtn + '</td>' +
+                    '</tr>';
+                }).join('');
+                listEl.innerHTML =
+                    '<div class="table-responsive" style="max-height:320px; border:1px solid var(--border); border-radius:12px;">' +
+                        '<table class="table" style="margin:0; font-size:0.86rem;">' +
+                            '<thead><tr><th>الطالب</th><th>الصف والمجموعة</th><th>سبب التنبيه</th><th>متابعة سريعة</th></tr></thead>' +
+                            '<tbody>' + rowsHtml + '</tbody>' +
+                        '</table>' +
+                    '</div>';
+            }).catch(function() {
+                listEl.innerHTML = '<div style="padding:12px; color:#dc2626; font-size:0.86rem;">حدث خطأ أثناء الاتصال بالخادم.</div>';
+            }).finally(function() {
+                if (btn && typeof toggleLoading === 'function') toggleLoading(btn, false);
+            });
+        };
+    </script>
+
+
+    <script>
+        // ====================================================================
+        // Data-First Section Records Browser (بحث فوري + عرض كامل لبيانات القسم)
+        // ====================================================================
+        (function() {
+            var CONFIG = {
+                hossas:     { secId: 'hossasSection',     endpoint: 'getHossasData',       title: 'سجل جميع الحصص المسجلة',    placeholder: 'ابحث باسم الطالب أو عنوان الحصة...', insertFirst: true },
+                library:    { secId: 'librarySection',    endpoint: 'getLibraryAdminData', title: 'سجل جميع ملفات المكتبة',     placeholder: 'ابحث باسم الطالب أو اسم الملف أو النوع...', insertFirst: true },
+                wajib:      { secId: 'wajibSection',      endpoint: 'getWajibData',        title: 'سجل جميع الواجبات',          placeholder: 'ابحث باسم الطالب أو الدرس أو التاريخ أو الدرجة...', insertFirst: false },
+                tasmiya:    { secId: 'tasmiyaSection',    endpoint: 'getTasmiyaData',      title: 'سجل جميع التسميعات',         placeholder: 'ابحث باسم الطالب أو الدرس أو التاريخ أو التقييم...', insertFirst: false },
+                ikhtibarat: { secId: 'ikhtibaratSection', endpoint: 'getIkhtibaratData',   title: 'سجل جميع الاختبارات',        placeholder: 'ابحث باسم الطالب أو اسم الاختبار أو الدرجة...', insertFirst: false }
+            };
+            var CACHE = {};
+            var LIMITS = {};
+
+            function escHtml_(v) {
+                return String(v === undefined || v === null ? '' : v)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            function ensureContainer_(key) {
+                var cfg = CONFIG[key];
+                if (!cfg) return null;
+                var sec = document.getElementById(cfg.secId);
+                if (!sec) return null;
+                var wrapId = 'ehSecBrowser_' + key;
+                var existing = document.getElementById(wrapId);
+                if (existing) return existing;
+
+                var wrap = document.createElement('div');
+                wrap.id = wrapId;
+                wrap.style.cssText = 'margin-top:18px; background:var(--surface,#fff); border:1px solid var(--border,#e5e7eb); border-radius:16px; padding:16px 18px; box-shadow:0 4px 14px rgba(15,23,42,0.04);';
+                wrap.innerHTML =
+                    '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">' +
+                        '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                            '<strong style="font-size:0.98rem; font-weight:900; color:var(--text-primary);"><i class="fas fa-database" style="color:#1A563E; margin-left:6px;"></i>' + cfg.title + '</strong>' +
+                            '<span id="ehSecCount_' + key + '" style="background:#EAF4EF; color:#134230; padding:2px 10px; border-radius:99px; font-size:0.78rem; font-weight:800;">—</span>' +
+                        '</div>' +
+                        '<div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end; min-width:240px; flex-wrap:wrap;">' +
+                            '<div style="position:relative; flex:1; max-width:360px; min-width:190px;">' +
+                                '<i class="fas fa-search" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--gray); font-size:0.85rem; pointer-events:none;"></i>' +
+                                '<input type="text" id="ehSecSearch_' + key + '" class="form-control" placeholder="' + cfg.placeholder + '" oninput="ehFilterSectionRecords(\'' + key + '\')" style="padding-right:34px; border-radius:10px; height:38px; font-size:0.86rem;">' +
+                            '</div>' +
+                            '<button type="button" class="btn btn-sm btn-outline-primary" onclick="ehLoadSectionRecords(\'' + key + '\', true, this)" style="border-radius:10px; height:38px; white-space:nowrap;"><i class="fas fa-sync-alt"></i> تحديث</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div id="ehSecTableWrap_' + key + '" style="min-height:60px;"></div>';
+
+                sec.appendChild(wrap);
+                return wrap;
+            }
+
+            window.ehFilterSectionRecords = function(key, increaseLimit) {
+                var state = CACHE[key];
+                var tableWrap = document.getElementById('ehSecTableWrap_' + key);
+                var countEl = document.getElementById('ehSecCount_' + key);
+                var searchInp = document.getElementById('ehSecSearch_' + key);
+                if (!tableWrap) return;
+                if (!state) {
+                    window.ehLoadSectionRecords(key, false);
+                    return;
+                }
+                if (increaseLimit) LIMITS[key] = (LIMITS[key] || 100) + 100;
+                var limit = LIMITS[key] || 100;
+                var q = (searchInp ? searchInp.value : '').trim().toLowerCase();
+                var rows = state.data || [];
+                var headers = (state.headers && state.headers.length)
+                    ? state.headers
+                    : (rows.length ? Object.keys(rows[0]).filter(function(k) { return k !== 'serial' && k !== 'rowIndex'; }) : []);
+
+                var filtered = q ? rows.filter(function(r) {
+                    for (var i = 0; i < headers.length; i++) {
+                        if (String(r[headers[i]] || '').toLowerCase().indexOf(q) !== -1) return true;
+                    }
+                    return false;
+                }) : rows;
+
+                if (countEl) {
+                    countEl.textContent = q
+                        ? (filtered.length + ' من ' + rows.length + ' سجل')
+                        : (rows.length + ' سجل');
+                }
+
+                if (filtered.length === 0) {
+                    tableWrap.innerHTML = '<div style="text-align:center; padding:26px 12px; color:var(--gray); font-size:0.88rem;">لا توجد سجلات مطابقة.</div>';
+                    return;
+                }
+
+                var shown = filtered.slice(0, limit);
+                var ths = headers.map(function(h) { return '<th>' + escHtml_(h) + '</th>'; }).join('');
+                var trs = shown.map(function(r) {
+                    var tds = headers.map(function(h) {
+                        var val = r[h];
+                        var s = String(val === undefined || val === null ? '' : val).trim();
+                        if (/^https?:\/\//i.test(s)) {
+                            return '<td><a href="' + escHtml_(s) + '" target="_blank" class="btn btn-sm btn-outline-primary" style="padding:3px 9px; font-size:0.76rem; border-radius:8px; white-space:nowrap;"><i class="fas fa-external-link-alt"></i> فتح</a></td>';
+                        }
+                        if ((h === 'اسم الطالب' || h === 'الطالب') && typeof stripCode === 'function') {
+                            return '<td style="font-weight:700;">' + escHtml_(stripCode(s)) + '</td>';
+                        }
+                        return '<td>' + (s ? escHtml_(s) : '<span style="color:var(--gray);">—</span>') + '</td>';
+                    }).join('');
+                    return '<tr>' + tds + '</tr>';
+                }).join('');
+
+                var moreBtn = filtered.length > shown.length
+                    ? '<div style="text-align:center; padding:12px;"><button type="button" class="btn btn-sm btn-outline-primary" onclick="ehFilterSectionRecords(\'' + key + '\', true)">عرض المزيد (' + (filtered.length - shown.length) + ' متبقٍ)</button></div>'
+                    : '';
+
+                tableWrap.innerHTML =
+                    '<div class="table-responsive" style="border:1px solid var(--border,#e5e7eb); border-radius:12px;">' +
+                        '<table class="table" style="margin:0; font-size:0.86rem;">' +
+                            '<thead><tr>' + ths + '</tr></thead>' +
+                            '<tbody>' + trs + '</tbody>' +
+                        '</table>' +
+                    '</div>' + moreBtn;
+            };
+
+            window.ehLoadSectionRecords = function(key, forceRefresh, btn) {
+                var cfg = CONFIG[key];
+                if (!cfg) return;
+                ensureContainer_(key);
+                if (!forceRefresh && CACHE[key]) {
+                    window.ehFilterSectionRecords(key);
+                    return;
+                }
+                var tableWrap = document.getElementById('ehSecTableWrap_' + key);
+                if (tableWrap) {
+                    tableWrap.innerHTML = '<div style="text-align:center; padding:24px; color:var(--gray); font-size:0.86rem;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل السجلات...</div>';
+                }
+                if (btn && typeof toggleLoading === 'function') toggleLoading(btn, true);
+                var empCode = (window.currentEmployee && window.currentEmployee.code) ? window.currentEmployee.code : '';
+                runGS(cfg.endpoint, null, empCode).then(function(res) {
+                    if (typeof res === 'string') {
+                        try { res = JSON.parse(res); } catch (_e) { res = null; }
+                    }
+                    var list = (res && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
+                    var headers = (res && Array.isArray(res.headers)) ? res.headers : [];
+                    CACHE[key] = { headers: headers, data: list.slice().reverse() };
+                    LIMITS[key] = 100;
+                    window.ehFilterSectionRecords(key);
+                }).catch(function() {
+                    if (tableWrap) tableWrap.innerHTML = '<div style="text-align:center; padding:18px; color:#dc2626; font-size:0.86rem;">تعذر تحميل السجلات، اضغط تحديث للمحاولة مجددًا.</div>';
+                }).finally(function() {
+                    if (btn && typeof toggleLoading === 'function') toggleLoading(btn, false);
+                });
+            };
+
+            var _prevShowSecBrowser = window.showSection;
+            if (typeof _prevShowSecBrowser === 'function') {
+                window.showSection = function(secId) {
+                    var res = _prevShowSecBrowser.apply(this, arguments);
+                    if (CONFIG[secId]) {
+                        setTimeout(function() { window.ehLoadSectionRecords(secId, false); }, 60);
+                    }
+                    return res;
+                };
+            }
+        })();
+    </script>
+
 </body>
 </html>
